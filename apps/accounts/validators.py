@@ -11,25 +11,13 @@ from django.core.exceptions import ValidationError
 # ── Validador de DNI peruano ──────────────────────────────────────────────────
 
 # Tabla de conversión del dígito verificador peruano
-_TABLA_VERIFICADOR = {
-    0: "1", 1: "0", 2: "5", 3: "4", 4: "3",
-    5: "2", 6: "1", 7: "0", 8: "9", 9: "8", 10: "7"
-}
-
-# Factores de multiplicación para los primeros 7 dígitos
-_FACTORES_DNI = [3, 2, 7, 6, 5, 4, 3]
-
-
-def validar_dni_peruano(dni: str) -> None:
+def validar_dni_peruano(dni: str, verificador: str) -> None:
     """
     Valida un DNI peruano mediante el algoritmo del dígito verificador.
 
-    El DNI tiene 8 dígitos:
-      - Los primeros 7 son los dígitos de datos.
-      - El dígito 8 es el verificador calculado con módulo 11.
-
     Args:
         dni: Cadena de 8 dígitos numéricos.
+        verificador: El dígito verificador (usualmente 1 caracter numérico o letra).
 
     Raises:
         ValidationError: Si el DNI no es válido.
@@ -39,13 +27,17 @@ def validar_dni_peruano(dni: str) -> None:
             "El DNI debe contener exactamente 8 dígitos numéricos."
         )
 
-    suma = sum(int(dni[i]) * _FACTORES_DNI[i] for i in range(7))
+    factores = [3, 2, 7, 6, 5, 4, 3, 2]
+    suma = sum(int(dni[i]) * factores[i] for i in range(8))
     residuo = suma % 11
-    digito_esperado = _TABLA_VERIFICADOR.get(residuo)
+    
+    # Tabla estándar usada comúnmente para validar
+    tabla = [6, 5, 4, 3, 2, 1, 1, 0, 9, 8, 7]
+    digito_esperado = str(tabla[residuo])
 
-    if dni[7] != digito_esperado:
+    if str(verificador).upper() != digito_esperado:
         raise ValidationError(
-            f"DNI inválido: el dígito verificador no coincide."
+            "DNI inválido: el dígito verificador no coincide con tu número de DNI."
         )
 
 

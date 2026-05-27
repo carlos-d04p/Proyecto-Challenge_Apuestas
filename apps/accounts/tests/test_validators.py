@@ -13,47 +13,41 @@ class TestValidadorDNI:
 
     def test_dni_valido_ejemplo_1(self):
         """Un DNI con dígito verificador correcto no lanza excepción."""
-        # DNI de ejemplo: primeros 7 = 1234567, verificador calculado = ?
-        # Suma: 1*3 + 2*2 + 3*7 + 4*6 + 5*5 + 6*4 + 7*3 = 3+4+21+24+25+24+21 = 122
-        # 122 % 11 = 1 → tabla[1] = '0'
-        validar_dni_peruano("12345670")
+        validar_dni_peruano("12345678", "1")
 
     def test_dni_valido_ejemplo_2(self):
         """Otro DNI válido no lanza excepción."""
-        # 4 5 6 7 8 9 0 ?
-        # 4*3 + 5*2 + 6*7 + 7*6 + 8*5 + 9*4 + 0*3 = 12+10+42+42+40+36+0 = 182
-        # 182 % 11 = 6 → tabla[6] = '1'
-        validar_dni_peruano("45678901")
+        validar_dni_peruano("45678901", "9")
 
     def test_dni_invalido_digito_verificador(self):
         """DNI con dígito verificador incorrecto lanza ValidationError."""
         with pytest.raises(ValidationError, match="dígito verificador"):
-            validar_dni_peruano("12345679")  # verificador correcto sería '0'
+            validar_dni_peruano("12345678", "2")  # verificador correcto sería '1'
 
     def test_dni_longitud_incorrecta(self):
         """DNI con menos de 8 dígitos lanza ValidationError."""
         with pytest.raises(ValidationError):
-            validar_dni_peruano("1234567")
+            validar_dni_peruano("1234567", "1")
 
     def test_dni_con_letras(self):
         """DNI con letras lanza ValidationError."""
         with pytest.raises(ValidationError):
-            validar_dni_peruano("1234ABCD")
+            validar_dni_peruano("1234ABCD", "1")
 
     def test_dni_vacio(self):
         """DNI vacío lanza ValidationError."""
         with pytest.raises(ValidationError):
-            validar_dni_peruano("")
+            validar_dni_peruano("", "1")
 
     def test_dni_con_espacios(self):
         """DNI con espacios lanza ValidationError."""
         with pytest.raises(ValidationError):
-            validar_dni_peruano("1234 678")
+            validar_dni_peruano("1234 678", "1")
 
     def test_dni_9_digitos(self):
         """DNI con 9 dígitos lanza ValidationError."""
         with pytest.raises(ValidationError):
-            validar_dni_peruano("123456789")
+            validar_dni_peruano("123456789", "1")
 
 
 class TestValidadorMayoriaDeEdad:

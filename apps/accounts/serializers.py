@@ -35,6 +35,7 @@ class RegistroSerializer(serializers.Serializer):
     password_confirm = serializers.CharField(write_only=True)
     birth_date = serializers.DateField()
     dni = serializers.CharField(max_length=8, min_length=8)
+    dni_verificador = serializers.CharField(max_length=1, min_length=1, write_only=True)
 
     def validate_username(self, value):
         if CustomUser.objects.filter(username=value).exists():
@@ -44,10 +45,6 @@ class RegistroSerializer(serializers.Serializer):
         return value
 
     def validate_dni(self, value):
-        try:
-            validar_dni_peruano(value)
-        except Exception as e:
-            raise serializers.ValidationError(str(e))
         if PerfilKYC.objects.filter(dni=value).exists():
             raise serializers.ValidationError(
                 "Este DNI ya está registrado en el sistema."
@@ -66,10 +63,21 @@ class RegistroSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 {"password_confirm": "Las contraseñas no coinciden."}
             )
+        
+        # Validar algoritmo del DNI
+        dni = attrs.get("dni")
+        verificador = attrs.get("dni_verificador")
+        if dni and verificador:
+            try:
+                validar_dni_peruano(dni, verificador)
+            except Exception as e:
+                raise serializers.ValidationError({"dni": str(e)})
+
         return attrs
 
     def create(self, validated_data):
         validated_data.pop("password_confirm")
+        validated_data.pop("dni_verificador", None)
         password = validated_data.pop("password")
         birth_date = validated_data.pop("birth_date")
         dni = validated_data.pop("dni")

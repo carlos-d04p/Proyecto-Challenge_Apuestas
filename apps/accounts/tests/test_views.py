@@ -82,7 +82,8 @@ class TestRegistroView:
             "password": "seguro123",
             "password_confirm": "seguro123",
             "birth_date": "1995-05-15",
-            "dni": "12345670",  # DNI válido
+            "dni": "12345678",  # DNI válido
+            "dni_verificador": "1",  # Verificador correcto
         })
         assert response.status_code == 201
         assert PerfilKYC.objects.filter(user__username="nuevo_user").exists()
@@ -99,6 +100,7 @@ class TestRegistroView:
             "password_confirm": "seguro123",
             "birth_date": menor,
             "dni": "45678901",
+            "dni_verificador": "9",
         })
         assert response.status_code == 400
         assert "birth_date" in response.data.get("errors", {})
@@ -110,7 +112,8 @@ class TestRegistroView:
             "password": "seguro123",
             "password_confirm": "seguro123",
             "birth_date": "1995-05-15",
-            "dni": "12345678",  # dígito verificador incorrecto
+            "dni": "12345678",
+            "dni_verificador": "2",  # dígito verificador incorrecto (debería ser 1)
         })
         assert response.status_code == 400
         assert "dni" in response.data.get("errors", {})
@@ -122,7 +125,8 @@ class TestRegistroView:
             "password": "pass1234",
             "password_confirm": "pass9999",
             "birth_date": "1995-05-15",
-            "dni": "12345670",
+            "dni": "12345678",
+            "dni_verificador": "1",
         })
         assert response.status_code == 400
 
@@ -134,6 +138,7 @@ class TestRegistroView:
             "password_confirm": "seguro123",
             "birth_date": "1995-05-15",
             "dni": "45678901",
+            "dni_verificador": "9",
         })
         assert response.status_code == 400
 
