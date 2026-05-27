@@ -17,6 +17,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import CustomUser, PerfilKYC
 from .validators import validar_dni_peruano, validar_mayoria_de_edad
+from .tasks import verificar_kyc_async
 
 
 # ── Registro ──────────────────────────────────────────────────────────────────
@@ -80,6 +81,10 @@ class RegistroSerializer(serializers.Serializer):
             birth_date=birth_date,
             status=PerfilKYC.Status.PENDING,
         )
+        
+        # 🚀 Encolar la tarea de validación asíncrona en Celery
+        verificar_kyc_async.delay(user.id)
+        
         return user
 
 
