@@ -1,0 +1,28 @@
+# Entornos virtuales
+venv/
+env/
+.venv/
+
+# Variables de entorno reales (¡CRÍTICO!)
+.env
+
+# Archivos de caché y compilados de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Base de datos local (por si alguien corre SQLite por error)
+db.sqlite3
+
+# Archivos estáticos recolectados (en producción)
+staticfiles/
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
+
+# Reportes de cobertura y pruebas
+.pytest_cache/
+htmlcov/
+.coverage
