@@ -123,3 +123,26 @@ class TestPlaceAccaBet:
                 stake=Decimal("10.0000"),
                 expected_odds=Decimal("6.3000")
             )
+
+
+class TestCashOutBet:
+    def test_exito_cash_out_calculo_exacto(self, placed_bet):
+        from apps.betting.services import cash_out_bet
+        # placed_bet tiene stake=10.0000 y total_odds=2.5000
+        # Fórmula: 10 * (2.5000 / 2.0000) * 0.9000 = 11.2500
+        bet = cash_out_bet(
+            bet=placed_bet, 
+            current_odds=Decimal("2.0000"), 
+            house_factor=Decimal("0.9000")
+        )
+        assert bet.status == Bet.Status.CASHED_OUT
+        assert bet.payout == Decimal("11.2500")
+
+    def test_bloqueo_cash_out_apuesta_no_activa(self, placed_bet):
+        from apps.betting.services import cash_out_bet, settle_bet
+        # Primero liquidamos la apuesta como ganada
+        settle_bet(placed_bet, Bet.Status.WON)
+        
+        # Intentar cobrar cash-out de una apuesta ya resuelta debe fallar
+        with pytest.raises(ValidationError, match="Solo se puede realizar cash-out en apuestas activas"):
+            cash_out_bet(placed_bet, current_odds=Decimal("2.0000"))
