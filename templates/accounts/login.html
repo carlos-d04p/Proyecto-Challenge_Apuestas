@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Iniciar sesión — FairBet Lab{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+
+  <!-- Banner de consumo responsable -->
+  <div class="responsible-banner">
+    ⚠️ <strong>Juego Responsable:</strong> Si sientes que el juego afecta tu vida,
+    visita <strong>jugarresponsable.pe</strong> o llama al <strong>0800-00-000</strong>.
+  </div>
+
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>Iniciar sesión</h1>
+      <p>FairBet Lab — Simulador educativo</p>
+    </div>
+
+    {% if error %}
+      <div class="alert alert-error">
+        {{ error }}
+      </div>
+    {% endif %}
+
+    <form method="POST" action="{% url 'accounts_web:login' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label for="username">Nombre de usuario</label>
+        <input
+          type="text" id="username" name="username"
+          placeholder="Tu nombre de usuario"
+          required autocomplete="username"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <input
+          type="password" id="password" name="password"
+          placeholder="Tu contraseña"
+          required autocomplete="current-password"
+        >
+      </div>
+
+      <button type="submit" id="btn-login" class="btn-primary btn-full">
+        Iniciar sesión
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      ¿No tienes cuenta?
+      <a href="{% url 'accounts_web:registro' %}">Regístrate aquí</a>
+    </div>
+  </div>
+
+  <div class="legal-note">
+    FairBet Lab — Simulador educativo · DS 005-2023-MINCETUR · Ley 31557<br>
+    Plataforma con moneda virtual. No constituye una casa de apuestas real.
+  </div>
+
+</div>
+{% endblock %}
