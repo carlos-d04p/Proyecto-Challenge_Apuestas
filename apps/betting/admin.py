@@ -1,5 +1,7 @@
 from django.contrib import admin
-from models import Bet, BetSelection
+# pyrefly: ignore [missing-import]
+from apps.betting.models import Bet, BetSelection
+
 
 class BetSelectionInline(admin.TabularInline):
     model = BetSelection

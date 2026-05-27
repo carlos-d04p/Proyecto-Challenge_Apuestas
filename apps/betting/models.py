@@ -3,7 +3,8 @@ import uuid
 from decimal import Decimal
 from django.db import models
 from django.conf import settings
-from markets.models import Selection
+# pyrefly: ignore [missing-import]
+from apps.markets.models import Selection
 
 class Bet(models.Model):
     class Status(models.TextChoices):
