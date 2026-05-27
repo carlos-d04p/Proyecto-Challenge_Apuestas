@@ -7,6 +7,8 @@ services:
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app  # Sincroniza tu código local con el contenedor
+    env_file:
+      - .env
     ports:
       - "8000:8000"
     depends_on:
