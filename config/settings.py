@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django_filters',
     # Apps del proyecto
     'apps.markets',
+    'apps.betting',
 ]
 
 REST_FRAMEWORK = {
