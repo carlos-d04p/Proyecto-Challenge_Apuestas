@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.name }} — FairBet Lab{% endblock %}
+
+{% block content %}
+
+<a href="{% url 'markets:event_list' %}" class="back-link">← Volver a eventos</a>
+
+<!-- Cabecera del evento -->
+<div class="event-hero">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+    <span class="sport-tag" style="background:#0b0f1a; padding:0.3rem 0.8rem; border-radius:6px; font-size:0.8rem; color:#94a3b8;">
+      {{ event.sport }}
+    </span>
+    <span class="badge {{ event.status|lower }}">
+      {% if event.status == 'LIVE' %}EN VIVO
+      {% elif event.status == 'SCHEDULED' %}Programado
+      {% elif event.status == 'FINISHED' %}Finalizado
+      {% elif event.status == 'SUSPENDED' %}Suspendido
+      {% else %}Cancelado{% endif %}
+    </span>
+  </div>
+
+  <h1>{{ event.name }}</h1>
+  <p class="meta">{{ event.starts_at|date:"l d \d\e F \d\e Y · H:i" }}</p>
+</div>
+
+<!-- Mercados con selecciones -->
+{% for market in markets %}
+  {% if market.is_active %}
+    <div class="market-section">
+      <h2>
+        {% if market.kind == '1X2' %}Resultado Final (1X2)
+        {% elif market.kind == 'OU' %}Más / Menos goles
+        {% elif market.kind == 'BTTS' %}Ambos equipos anotan
+        {% elif market.kind == 'HCAP' %}Handicap asiático
+        {% else %}{{ market.name }}{% endif %}
+      </h2>
+
+      <div class="selections-grid">
+        {% for sel in market.selections.all %}
+          {% if sel.is_active %}
+            <div class="selection-btn">
+              <span class="s-name">{{ sel.name }}</span>
+              <span class="s-odds">{{ sel.odds }}</span>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+{% empty %}
+  <div class="empty">
+    <div style="font-size:2.5rem">📋</div>
+    <p>No hay mercados disponibles para este evento.</p>
+  </div>
+{% endfor %}
+
+{% endblock %}
