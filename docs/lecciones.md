@@ -71,3 +71,12 @@ Aprendí que el prefetch hay que aplicarlo al queryset final que se va a iterar.
   productiva. Dejarlo fijo en el seed es suficiente para el simulador educativo.
 - Los tests con `pytest-django` y fixtures son mucho más limpios que el
   `TestCase` de Django por defecto. Vale la pena aprenderlos bien.
+
+
+# Lecciones aprendidas — Sprint 1 (Betting)
+**Autor:** Carlos Cancino | **App:** `betting`
+
+## Intento fallido 1: Validación de estado in-memory en liquidación de apuestas
+* **Qué intenté:** Validar si una apuesta ya estaba resuelta inspeccionando el atributo `.status` de la instancia de Python antes de abrir la transacción con bloqueo.
+* **Qué pasó:** El test de doble liquidación falló porque los cambios en la base de datos no se reflejaban automáticamente en el objeto de memoria del test, permitiendo re-liquidar un ticket.
+* **Cómo lo resolví:** Moví la validación `if bet_lock.status != Bet.Status.PLACED:` adentro del bloque `transaction.atomic()` inmediatamente después del `select_for_update()`. Esto blinda el flujo transaccional contra doble gasto e inconsistencias concurrentes.
