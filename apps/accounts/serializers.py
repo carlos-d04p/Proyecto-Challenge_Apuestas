@@ -17,7 +17,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import CustomUser, PerfilKYC
 from .validators import validar_dni_peruano, validar_mayoria_de_edad
-from .tasks import verificar_kyc_async
+from .tasks import verificar_kyc_async, enviar_email_verificacion_async
+from .utils import generar_token_email, check_and_increment_login_fails, reset_login_fails
 
 
 # ── Registro ──────────────────────────────────────────────────────────────────
@@ -90,8 +91,16 @@ class RegistroSerializer(serializers.Serializer):
             status=PerfilKYC.Status.PENDING,
         )
         
-        # 🚀 Encolar la tarea de validación asíncrona en Celery
-        verificar_kyc_async.delay(user.id)
+        # Generar token de email
+        token = generar_token_email(user.id)
+        request = self.context.get("request")
+        if request:
+            base_url = request.build_absolute_uri('/')[:-1]
+        else:
+            base_url = "http://127.0.0.1:8000"
+
+        # 🚀 Encolar la tarea asíncrona de envío de email
+        enviar_email_verificacion_async.delay(user.id, token, base_url)
         
         return user
 
@@ -107,11 +116,27 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
     def validate(self, attrs):
+        username = attrs["username"]
+        # Check if user is already blocked
+        try:
+            user_obj = CustomUser.objects.get(username=username)
+            if hasattr(user_obj, 'perfil_kyc') and user_obj.perfil_kyc.status == PerfilKYC.Status.BLOCKED:
+                raise serializers.ValidationError(
+                    "Tu cuenta está bloqueada temporalmente por seguridad. Contacta al soporte."
+                )
+        except CustomUser.DoesNotExist:
+            pass
+            
         user = authenticate(
-            username=attrs["username"],
+            username=username,
             password=attrs["password"],
         )
         if not user:
+            bloqueado = check_and_increment_login_fails(username)
+            if bloqueado:
+                raise serializers.ValidationError(
+                    "Has excedido el número de intentos fallidos. Tu cuenta ha sido BLOQUEADA."
+                )
             raise serializers.ValidationError(
                 "Credenciales incorrectas. Verifica tu usuario y contraseña."
             )
@@ -119,6 +144,8 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 "Tu cuenta está inactiva. Contacta al soporte."
             )
+            
+        reset_login_fails(username)
         attrs["user"] = user
         return attrs
 

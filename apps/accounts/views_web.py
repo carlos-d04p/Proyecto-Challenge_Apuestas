@@ -12,10 +12,13 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.utils import timezone
+from django.views import View
 
-from .models import PerfilKYC
+from .models import PerfilKYC, CustomUser
 from .validators import validar_dni_peruano, validar_mayoria_de_edad
 from .serializers import RegistroSerializer, LimitesSerializer, AutoexclusionSerializer
+from .utils import verificar_token_email, check_and_increment_login_fails, reset_login_fails
+from .tasks import verificar_kyc_async
 from django.core.exceptions import ValidationError
 
 
@@ -62,14 +65,30 @@ def login_view(request):
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "")
+        
+        # Check if already blocked
+        try:
+            user_obj = CustomUser.objects.get(username=username)
+            if hasattr(user_obj, 'perfil_kyc') and user_obj.perfil_kyc.status == PerfilKYC.Status.BLOCKED:
+                return render(request, "accounts/login.html", {
+                    "error": "Tu cuenta está bloqueada temporalmente por seguridad. Contacta al soporte."
+                })
+        except CustomUser.DoesNotExist:
+            pass
+            
         user = authenticate(request, username=username, password=password)
 
         if user and user.is_active:
+            reset_login_fails(username)
             login(request, user)
             next_url = request.GET.get("next", "accounts_web:perfil")
             return redirect(next_url)
         else:
-            error = "Usuario o contraseña incorrectos."
+            bloqueado = check_and_increment_login_fails(username)
+            if bloqueado:
+                error = "Has excedido el número de intentos fallidos. Tu cuenta ha sido BLOQUEADA."
+            else:
+                error = "Usuario o contraseña incorrectos."
 
     return render(request, "accounts/login.html", {"error": error})
 
@@ -135,3 +154,26 @@ def perfil_view(request):
         "errores": errores,
         "COOLDOWN_HORAS": 24,
     })
+
+class VerificarEmailView(View):
+    def get(self, request, token):
+        user_id = verificar_token_email(token)
+        if not user_id:
+            messages.error(request, "El enlace de verificación es inválido o ha expirado.")
+            return redirect('accounts_web:login')
+        
+        try:
+            user = CustomUser.objects.get(id=user_id)
+            if user.is_email_verified:
+                messages.info(request, "Tu email ya estaba verificado.")
+            else:
+                user.is_email_verified = True
+                user.save()
+                messages.success(request, "¡Tu email ha sido verificado! Ahora estamos procesando tu KYC...")
+                # Ahora que el email está verificado, disparamos el KYC
+                verificar_kyc_async.delay(user.id)
+                
+            return redirect('accounts_web:login')
+        except CustomUser.DoesNotExist:
+            messages.error(request, "Usuario no encontrado.")
+            return redirect('accounts_web:login')

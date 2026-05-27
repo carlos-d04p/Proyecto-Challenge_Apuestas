@@ -189,4 +189,44 @@
 
   </div>
 </div>
+
+{% if perfil %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+      const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+      const wsUrl = wsScheme + "://" + window.location.host + "/ws/kyc/";
+      
+      const socket = new WebSocket(wsUrl);
+
+      socket.onmessage = function(e) {
+          const data = JSON.parse(e.data);
+          if (data.status === "VERIFIED") {
+              // Actualizar el DOM en tiempo real
+              const badges = document.querySelectorAll(".badge-kyc");
+              badges.forEach(badge => {
+                  badge.className = "badge badge-kyc badge-verified";
+                  badge.innerText = "✅ Verificado";
+              });
+              
+              const notice = document.querySelector(".kyc-notice");
+              if (notice) {
+                  notice.innerHTML = `<p style="color: green; font-weight: bold;">${data.message}</p>`;
+                  setTimeout(() => {
+                      notice.style.display = "none";
+                  }, 5000);
+              }
+              
+              // Recargar si fuera necesario para mostrar la sección de exclusión
+              setTimeout(() => {
+                  window.location.reload();
+              }, 5000);
+          }
+      };
+      
+      socket.onclose = function(e) {
+          console.error("KYC socket closed unexpectedly");
+      };
+  });
+</script>
+{% endif %}
 {% endblock %}

@@ -1,12 +1,13 @@
 """URLs web (HTML) para la app accounts."""
 from django.urls import path
-from .views_web import registro_view, login_view, logout_view, perfil_view
+from . import views_web
 
 app_name = "accounts_web"
 
 urlpatterns = [
-    path("registro/",  registro_view, name="registro"),
-    path("login/",     login_view,    name="login"),
-    path("logout/",    logout_view,   name="logout"),
-    path("perfil/",    perfil_view,   name="perfil"),
+    path("registro/",  views_web.registro_view, name="registro"),
+    path("login/",     views_web.login_view,    name="login"),
+    path("logout/",    views_web.logout_view,   name="logout"),
+    path("perfil/",    views_web.perfil_view,   name="perfil"),
+    path('verify-email/<str:token>/', views_web.VerificarEmailView.as_view(), name='verify_email'),
 ]

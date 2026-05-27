@@ -74,9 +74,11 @@ def staff_client(api_client, staff_user):
 class TestRegistroView:
     URL = "/api/accounts/registro/"
 
-    @patch("apps.accounts.serializers.verificar_kyc_async.delay")
-    def test_registro_exitoso(self, mock_delay, db, api_client):
+    @patch("apps.accounts.serializers.enviar_email_verificacion_async.delay")
+    @patch("apps.accounts.serializers.generar_token_email")
+    def test_registro_exitoso(self, mock_token, mock_delay, db, api_client):
         """Registro con datos válidos devuelve 201 y encola tarea."""
+        mock_token.return_value = "token123"
         response = api_client.post(self.URL, {
             "username": "nuevo_user",
             "password": "seguro123",
@@ -89,7 +91,7 @@ class TestRegistroView:
         assert PerfilKYC.objects.filter(user__username="nuevo_user").exists()
         perfil = PerfilKYC.objects.get(user__username="nuevo_user")
         assert perfil.status == PerfilKYC.Status.PENDING
-        mock_delay.assert_called_once_with(perfil.user.id)
+        mock_delay.assert_called_once_with(perfil.user.id, "token123", "http://127.0.0.1:8000")
 
     def test_registro_menor_de_edad(self, db, api_client):
         """Registro con usuario menor de 18 años devuelve 400."""
