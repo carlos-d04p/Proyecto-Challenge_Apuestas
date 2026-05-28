@@ -74,17 +74,23 @@ class LedgerEntry(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=["transaction"], name="ledger_tx_idx"),
-            models.Index(fields=["account", "account_owner"], name="ledger_account_owner_idx"),
+            models.Index(
+                fields=["account", "account_owner"],
+                name="ledger_account_owner_idx",
+            ),
             models.Index(fields=["created_at"], name="ledger_created_at_idx"),
         ]
         constraints = [
             models.CheckConstraint(
-                condition=models.Q(amount__gt=Decimal("0.0000")),
+                check=models.Q(amount__gt=Decimal("0.0000")),
                 name="ledger_amount_gt_zero",
             ),
             models.CheckConstraint(
-                condition=(
-                    models.Q(account=LedgerAccount.HOUSE, account_owner__isnull=True)
+                check=(
+                    models.Q(
+                        account=LedgerAccount.HOUSE,
+                        account_owner__isnull=True,
+                    )
                     | models.Q(
                         account__in=[
                             LedgerAccount.USER_WALLET,
