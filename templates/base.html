@@ -1,0 +1,34 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}FairBet Lab{% endblock %}</title>
+  <meta name="description" content="Simulador educativo de apuestas deportivas con moneda virtual. Ley 31557.">
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+
+  <header class="navbar">
+    <a href="{% url 'markets:event_list' %}" class="logo">
+      ⚽ Fair<span>Bet</span> Lab
+    </a>
+    <nav>
+      <a href="{% url 'markets:event_list' %}">Eventos</a>
+      <a href="{% url 'markets:event_list' %}?status=LIVE">En Vivo</a>
+      <a href="/api/markets/events/" target="_blank">API</a>
+    </nav>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <strong>FairBet Lab</strong> — Simulador educativo · DS 005-2023-MINCETUR · Ley 31557<br>
+    <em>Plataforma educativa con moneda virtual. No constituye una casa de apuestas.</em>
+  </footer>
+
+</body>
+</html>

@@ -15,11 +15,18 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+
 from django.urls import include, path
 from apps.wallet.views import WalletPageView
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('wallet/', WalletPageView.as_view(), name='wallet-dashboard'),
     path('api/wallet/', include('apps.wallet.urls')),
+    path('', RedirectView.as_view(url='/eventos/', permanent=False)),
+    path('eventos/', include('apps.markets.urls', namespace='markets')),
+    path('api/markets/', include('apps.markets.urls', namespace='markets_api')),
+    path('apuestas/', include('apps.betting.urls', namespace='betting')),
+
 ]

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.name }} — FairBet Lab{% endblock %}
+
+{% block content %}
+
+<a href="{% url 'markets:event_list' %}" class="back-link">← Volver a eventos</a>
+
+<!-- Cabecera del evento -->
+<div class="event-hero">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+    <span class="sport-tag" style="background:#0b0f1a; padding:0.3rem 0.8rem; border-radius:6px; font-size:0.8rem; color:#94a3b8;">
+      {{ event.sport }}
+    </span>
+    <span class="badge {{ event.status|lower }}">
+      {% if event.status == 'LIVE' %}EN VIVO
+      {% elif event.status == 'SCHEDULED' %}Programado
+      {% elif event.status == 'FINISHED' %}Finalizado
+      {% elif event.status == 'SUSPENDED' %}Suspendido
+      {% else %}Cancelado{% endif %}
+    </span>
+  </div>
+
+  <h1>{{ event.name }}</h1>
+  <p class="meta">{{ event.starts_at|date:"l d \d\e F \d\e Y · H:i" }}</p>
+</div>
+
+<!-- Mercados con selecciones -->
+{% for market in markets %}
+  {% if market.is_active %}
+    <div class="market-section">
+      <h2>
+        {% if market.kind == '1X2' %}Resultado Final (1X2)
+        {% elif market.kind == 'OU' %}Más / Menos goles
+        {% elif market.kind == 'BTTS' %}Ambos equipos anotan
+        {% elif market.kind == 'HCAP' %}Handicap asiático
+        {% else %}{{ market.name }}{% endif %}
+      </h2>
+
+      <div class="selections-grid">
+        {% for sel in market.selections.all %}
+          {% if sel.is_active %}
+            <form method="POST" action="{% url 'betting:colocar_apuesta' %}" style="display: block; width: 100%;">
+              {% csrf_token %}
+              <input type="hidden" name="selection_id" value="{{ sel.id }}">
+              <input type="hidden" name="expected_odds" value="{{ sel.odds }}">
+              <input type="hidden" name="idempotency_key" value="{{ event.id }}-{{ sel.id }}-{{ user.id }}">
+              
+              <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 0.8rem; color: var(--text-soft);">{{ sel.name }}</span>
+                  <span style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds }}</span>
+                </div>
+                
+                {% if event.status == 'SCHEDULED' %}
+                  <div style="display: flex; gap: 0.25rem;">
+                    <input type="number" name="stake" step="1" min="1" value="10" required
+                           style="width: 60px; background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 0.2rem; border-radius: 4px; font-size: 0.8rem; text-align: center;">
+                    <button type="submit" class="filter-btn active" style="flex: 1; padding: 0.2rem; font-size: 0.75rem; border-radius: 4px; font-weight: 600;">
+                      Apostar
+                    </button>
+                  </div>
+                {% else %}
+                  <span style="font-size: 0.75rem; color: var(--muted); text-align: center; display: block; padding-top: 0.25rem;">
+                    Bloqueado (In-Play/Cerrado)
+                  </span>
+                {% endif %}
+              </div>
+            </form>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+{% empty %}
+  <div class="empty">
+    <div style="font-size:2.5rem">📋</div>
+    <p>No hay mercados disponibles para este evento.</p>
+  </div>
+{% endfor %}
+
+{% endblock %}
