@@ -36,7 +36,7 @@ def deposit_simulated(user, amount, created_by, idempotency_key=None):
     )
 
     with db_transaction.atomic():
-        locked_user = _lock_user(user)
+        locked_user = _lock_users_in_order(user)[user.pk]
         existing_transaction = _get_existing_idempotent_transaction(
             user=locked_user,
             idempotency_key=idempotency_key,
@@ -84,7 +84,7 @@ def withdraw_simulated(user, amount, created_by, idempotency_key=None):
     )
 
     with db_transaction.atomic():
-        locked_user = _lock_user(user)
+        locked_user = _lock_users_in_order(user)[user.pk]
         existing_transaction = _get_existing_idempotent_transaction(
             user=locked_user,
             idempotency_key=idempotency_key,
@@ -93,9 +93,12 @@ def withdraw_simulated(user, amount, created_by, idempotency_key=None):
         if existing_transaction is not None:
             return existing_transaction
 
-        balance = get_wallet_balance(locked_user)
-        if balance < amount:
-            raise ValueError("Insufficient wallet balance.")
+        _ensure_sufficient_balance(
+            owner=locked_user,
+            account=LedgerAccount.USER_WALLET,
+            amount=amount,
+            message="Insufficient wallet balance.",
+        )
 
         transaction = Transaction.objects.create(
             kind=TransactionKind.WITHDRAWAL,
@@ -149,7 +152,7 @@ def internal_transfer(
     )
 
     with db_transaction.atomic():
-        locked_owner = _lock_user(owner)
+        locked_owner = _lock_users_in_order(owner)[owner.pk]
         existing_transaction = _get_existing_idempotent_transaction(
             user=locked_owner,
             idempotency_key=idempotency_key,
@@ -159,9 +162,12 @@ def internal_transfer(
             return existing_transaction
 
         if source_account in USER_OWNED_ACCOUNTS:
-            source_balance = _get_account_balance(locked_owner, source_account)
-            if source_balance < amount:
-                raise ValueError("Insufficient source account balance.")
+            _ensure_sufficient_balance(
+                owner=locked_owner,
+                account=source_account,
+                amount=amount,
+                message="Insufficient source account balance.",
+            )
 
         transaction = Transaction.objects.create(
             kind=TransactionKind.INTERNAL_TRANSFER,
@@ -194,8 +200,15 @@ def internal_transfer(
         return transaction
 
 
-def _lock_user(user):
-    return get_user_model().objects.select_for_update().get(pk=user.pk)
+def _lock_users_in_order(*users):
+    user_ids = sorted({user.pk for user in users}, key=str)
+    locked_users = (
+        get_user_model()
+        .objects.select_for_update()
+        .filter(pk__in=user_ids)
+        .order_by("pk")
+    )
+    return {locked_user.pk: locked_user for locked_user in locked_users}
 
 
 def _create_entry(*, transaction, account, account_owner, direction, amount):
@@ -225,6 +238,12 @@ def _get_account_balance(owner, account):
         ),
     )
     return (totals["credits"] - totals["debits"]).quantize(MONEY_QUANT)
+
+
+def _ensure_sufficient_balance(*, owner, account, amount, message):
+    balance = _get_account_balance(owner, account)
+    if balance < amount:
+        raise ValueError(message)
 
 
 def _validate_transaction_is_balanced(entries):
