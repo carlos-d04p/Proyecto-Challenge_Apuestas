@@ -5,6 +5,7 @@ from django.db import transaction as db_transaction
 from django.db.models import DecimalField, Q, Sum
 from django.db.models.functions import Coalesce
 
+from apps.compliance.services import append_audit_event
 from apps.wallet.models import (
     LedgerAccount,
     LedgerDirection,
@@ -25,6 +26,9 @@ USER_OWNED_ACCOUNTS = {
     LedgerAccount.PENDING_BETS,
     LedgerAccount.BONUS,
 }
+WALLET_DEPOSIT_CREATED = "WALLET_DEPOSIT_CREATED"
+WALLET_WITHDRAWAL_CREATED = "WALLET_WITHDRAWAL_CREATED"
+WALLET_INTERNAL_TRANSFER_CREATED = "WALLET_INTERNAL_TRANSFER_CREATED"
 
 
 def deposit_simulated(user, amount, created_by, idempotency_key=None):
@@ -71,6 +75,12 @@ def deposit_simulated(user, amount, created_by, idempotency_key=None):
             idempotency_key=idempotency_key,
             payload=payload,
             transaction=transaction,
+        )
+        _emit_wallet_audit_event(
+            event_type=WALLET_DEPOSIT_CREATED,
+            transaction=transaction,
+            user=locked_user,
+            amount=amount,
         )
         return transaction
 
@@ -126,6 +136,12 @@ def withdraw_simulated(user, amount, created_by, idempotency_key=None):
             idempotency_key=idempotency_key,
             payload=payload,
             transaction=transaction,
+        )
+        _emit_wallet_audit_event(
+            event_type=WALLET_WITHDRAWAL_CREATED,
+            transaction=transaction,
+            user=locked_user,
+            amount=amount,
         )
         return transaction
 
@@ -196,6 +212,12 @@ def internal_transfer(
             idempotency_key=idempotency_key,
             payload=payload,
             transaction=transaction,
+        )
+        _emit_wallet_audit_event(
+            event_type=WALLET_INTERNAL_TRANSFER_CREATED,
+            transaction=transaction,
+            user=locked_owner,
+            amount=amount,
         )
         return transaction
 
@@ -316,9 +338,25 @@ def _record_idempotency(*, user, idempotency_key, payload, transaction):
     )
 
 
+def _emit_wallet_audit_event(*, event_type, transaction, user, amount):
+    append_audit_event(
+        event_type=event_type,
+        payload={
+            "transaction_id": str(transaction.id),
+            "user_id": str(user.pk),
+            "amount": str(amount),
+            "kind": transaction.kind,
+            "timestamp": transaction.created_at.isoformat(),
+        },
+    )
+
+
 __all__ = [
     "deposit_simulated",
     "get_wallet_balance",
     "internal_transfer",
+    "WALLET_DEPOSIT_CREATED",
+    "WALLET_WITHDRAWAL_CREATED",
+    "WALLET_INTERNAL_TRANSFER_CREATED",
     "withdraw_simulated",
 ]
