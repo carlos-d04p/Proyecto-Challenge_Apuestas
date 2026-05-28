@@ -73,7 +73,7 @@ Aprendí que el prefetch hay que aplicarlo al queryset final que se va a iterar.
   `TestCase` de Django por defecto. Vale la pena aprenderlos bien.
 
 
-# Lecciones aprendidas — Sprint 1 (Betting)
+# Lecciones aprendidas — Sprint 2 (Betting)
 **Autor:** Carlos Cancino | **App:** `betting`
 
 ## Intento fallido 1: Validación de estado in-memory en liquidación de apuestas
@@ -81,31 +81,17 @@ Aprendí que el prefetch hay que aplicarlo al queryset final que se va a iterar.
 * **Qué pasó:** El test de doble liquidación falló porque los cambios en la base de datos no se reflejaban automáticamente en el objeto de memoria del test, permitiendo re-liquidar un ticket.
 * **Cómo lo resolví:** Moví la validación `if bet_lock.status != Bet.Status.PLACED:` adentro del bloque `transaction.atomic()` inmediatamente después del `select_for_update()`. Esto blinda el flujo transaccional contra doble gasto e inconsistencias concurrentes.
 
-
-## Intento fallido: Desincronización de estado de fixtures en pytest
+## Intento fallido 2: Desincronización de estado de fixtures en pytest
 * **Qué intenté:** Ejecutar múltiples aserciones consecutivas sobre un mismo objeto de prueba (`placed_bet`) mutando su estado directamente en memoria.
 * **Qué pasó:** Provocó fallos de recolección y errores sintácticos (`fixture not found` / `IndentationError`) debido al anidamiento incorrecto de funciones utilitarias dentro de clases colectoras independientes.
 * **Cómo lo resolví:** Extraje el fixture a nivel global del módulo y forcé recargas limpias desde el motor de persistencia de Django mediante transacciones atómicas.
 
-# Lecciones aprendidas — Sprint Final (WebSockets & OPS)
-**Autor:** Arnold Quiroz | **App:** `realtime` / `backoffice`
+## Intento fallido 3: Pérdida de precisión en el cálculo de Cash-out
+* **Qué intenté:** Usar tipos de datos `float` estándar de Python para calcular el valor de retorno del cierre anticipado (Cash-out) multiplicando las cuotas por el factor de retención.
+* **Qué pasó:** Los tests de aserción de saldos comenzaron a fallar aleatoriamente por diferencias de fracciones de centavo (ej. 10.55 vs 10.54999). Estos errores de coma flotante generaban descuadres milimétricos en el balance de la `wallet`.
+* **Cómo lo resolví:** Refactoricé toda la matemática financiera en `services.py` para usar exclusivamente la clase `Decimal` (`from decimal import Decimal`). Además, apliqué el método `.quantize()` para redondear a 4 decimales antes de enviar la orden de pago a la billetera, garantizando exactitud absoluta.
 
-## Intento fallido 1: WebSockets bloqueando el servidor
-* **Qué intenté:** Configurar Channels usando el enrutador sincrónico por defecto y haciendo llamadas directas a la base de datos dentro del consumer de WebSockets.
-* **Qué pasó:** El servidor Daphne se bloqueaba al procesar peticiones HTTP normales porque el Event Loop de asincronía de Python quedaba atascado en operaciones I/O de base de datos.
-* **Cómo lo resolví:** Refactoricé el `LiveOddsConsumer` para heredar de `AsyncWebsocketConsumer` y usé el decorador `@database_sync_to_async` en cada llamada al ORM de Django.
-
-## Intento fallido 2: Broadcast redundante en Redis
-* **Qué intenté:** Emitir un mensaje WebSocket a cada usuario individual iterando sobre todas las conexiones cuando una cuota cambiaba.
-* **Qué pasó:** El servidor Redis colapsaba por exceso de mensajes (OOM) y el rendimiento era logarítmico.
-* **Cómo lo resolví:** Utilicé grupos de Channels (`async_to_sync(channel_layer.group_send)`). Ahora emito un solo mensaje al grupo `live_events` y Channels se encarga eficientemente del fan-out.
-
-## Intento fallido 3: Crash de Celery en Merge
-* **Qué intenté:** Ejecutar el servidor después de integrar (merge) la rama de mi compañero (Compliance), asumiendo que mi entorno local era suficiente.
-* **Qué pasó:** El servidor `manage.py runserver` arrojó `ModuleNotFoundError: No module named 'celery'` rompiendo el entorno de desarrollo y retornando `ERR_CONNECTION_RESET` en el frontend.
-* **Cómo lo resolví:** Entendí que los cambios de rama incluyen cambios en dependencias. Instalé `celery` vía pip y actualicé mi `requirements.txt`.
-
-## Intento fallido 4: Type Hints incompatibles en Python 3.9
-* **Qué intenté:** Ejecutar el proyecto integrado con código que utilizaba la sintaxis `str | None`.
-* **Qué pasó:** Arrojó un `TypeError: unsupported operand type(s) for |: 'type' and 'NoneType'` porque mi Mac utiliza Python 3.9 y esa sintaxis fue introducida en Python 3.10.
-* **Cómo lo resolví:** Modifiqué `core/idempotency.py` para usar `from typing import Optional` y la sintaxis clásica `Optional[str]`, garantizando retrocompatibilidad del proyecto.
+## Intento fallido 4: Validación prematura de eventos en apuestas combinadas (ACCA)
+* **Qué intenté:** Validar la regla de negocio de "máximo 5 eventos por apuesta combinada" accediendo a la relación Many-to-Many (`bet.events.count()`) dentro del método `clean()` o `save()` del modelo `Bet`.
+* **Qué pasó:** Django lanzó un `ValueError` indicando que un objeto necesita tener un ID válido (estar guardado en la base de datos) antes de poder asignarle o leer sus relaciones Many-to-Many.
+* **Cómo lo resolví:** Saqué esta validación del modelo y la llevé a la capa de `services.py`. Ahora, intercepto la lista de eventos entrante, valido su longitud (`if len(event_ids) > 5: raise ValidationError(...)`) y solo después de pasar el filtro, creo el ticket de la apuesta y asocio los eventos dentro del `transaction.atomic()`.
