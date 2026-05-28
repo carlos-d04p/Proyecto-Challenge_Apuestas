@@ -73,7 +73,7 @@ Aprendí que el prefetch hay que aplicarlo al queryset final que se va a iterar.
   `TestCase` de Django por defecto. Vale la pena aprenderlos bien.
 
 
-# Lecciones aprendidas — Sprint 1 (Betting)
+# Lecciones aprendidas — Sprint 2 (Betting)
 **Autor:** Carlos Cancino | **App:** `betting`
 
 ## Intento fallido 1: Validación de estado in-memory en liquidación de apuestas
@@ -81,8 +81,17 @@ Aprendí que el prefetch hay que aplicarlo al queryset final que se va a iterar.
 * **Qué pasó:** El test de doble liquidación falló porque los cambios en la base de datos no se reflejaban automáticamente en el objeto de memoria del test, permitiendo re-liquidar un ticket.
 * **Cómo lo resolví:** Moví la validación `if bet_lock.status != Bet.Status.PLACED:` adentro del bloque `transaction.atomic()` inmediatamente después del `select_for_update()`. Esto blinda el flujo transaccional contra doble gasto e inconsistencias concurrentes.
 
-
-## Intento fallido: Desincronización de estado de fixtures en pytest
+## Intento fallido 2: Desincronización de estado de fixtures en pytest
 * **Qué intenté:** Ejecutar múltiples aserciones consecutivas sobre un mismo objeto de prueba (`placed_bet`) mutando su estado directamente en memoria.
 * **Qué pasó:** Provocó fallos de recolección y errores sintácticos (`fixture not found` / `IndentationError`) debido al anidamiento incorrecto de funciones utilitarias dentro de clases colectoras independientes.
 * **Cómo lo resolví:** Extraje el fixture a nivel global del módulo y forcé recargas limpias desde el motor de persistencia de Django mediante transacciones atómicas.
+
+## Intento fallido 3: Pérdida de precisión en el cálculo de Cash-out
+* **Qué intenté:** Usar tipos de datos `float` estándar de Python para calcular el valor de retorno del cierre anticipado (Cash-out) multiplicando las cuotas por el factor de retención.
+* **Qué pasó:** Los tests de aserción de saldos comenzaron a fallar aleatoriamente por diferencias de fracciones de centavo (ej. 10.55 vs 10.54999). Estos errores de coma flotante generaban descuadres milimétricos en el balance de la `wallet`.
+* **Cómo lo resolví:** Refactoricé toda la matemática financiera en `services.py` para usar exclusivamente la clase `Decimal` (`from decimal import Decimal`). Además, apliqué el método `.quantize()` para redondear a 4 decimales antes de enviar la orden de pago a la billetera, garantizando exactitud absoluta.
+
+## Intento fallido 4: Validación prematura de eventos en apuestas combinadas (ACCA)
+* **Qué intenté:** Validar la regla de negocio de "máximo 5 eventos por apuesta combinada" accediendo a la relación Many-to-Many (`bet.events.count()`) dentro del método `clean()` o `save()` del modelo `Bet`.
+* **Qué pasó:** Django lanzó un `ValueError` indicando que un objeto necesita tener un ID válido (estar guardado en la base de datos) antes de poder asignarle o leer sus relaciones Many-to-Many.
+* **Cómo lo resolví:** Saqué esta validación del modelo y la llevé a la capa de `services.py`. Ahora, intercepto la lista de eventos entrante, valido su longitud (`if len(event_ids) > 5: raise ValidationError(...)`) y solo después de pasar el filtro, creo el ticket de la apuesta y asocio los eventos dentro del `transaction.atomic()`.
