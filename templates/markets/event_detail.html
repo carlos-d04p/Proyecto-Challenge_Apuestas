@@ -196,8 +196,7 @@
     {% if event.status in 'SCHEDULED,LIVE' and user.is_email_verified %}
     <button type="button" class="selection-btn"
       data-market-id="{{ market.id }}" 
-      data-selection-id="{{ sel.id }}"
-      onclick="addToBetSlip('{{ sel.id }}', '{{ sel.name|escapejs }}', '{{ sel.odds }}', '{{ event.id }}', '{{ event.name|escapejs }}')">
+      onclick="addToBetSlip('{{ sel.id }}', '{{ sel.name|escapejs }}', '{{ sel.odds }}', '{{ event.id }}', '{{ event.name|escapejs }}', '{{ market.name|escapejs }}')">
       <span style="font-size: 0.8rem; color: var(--text-soft);">{{ sel.name }}</span>
       <span class="odds-value" style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds|floatformat:'2u' }}</span>
     </button>
