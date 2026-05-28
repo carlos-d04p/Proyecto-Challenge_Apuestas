@@ -122,7 +122,7 @@
       <input type="hidden" name="action" value="limites">
 
       <div class="form-group">
-        <label for="daily_deposit_limit">Límite diario (S/.)</label>
+        <label for="daily_deposit_limit">Límite diario (fichas)</label>
         <input
           type="number" id="daily_deposit_limit" name="daily_deposit_limit"
           value="{{ perfil.daily_deposit_limit|default:'' }}"
@@ -130,7 +130,7 @@
         >
       </div>
       <div class="form-group">
-        <label for="weekly_deposit_limit">Límite semanal (S/.)</label>
+        <label for="weekly_deposit_limit">Límite semanal (fichas)</label>
         <input
           type="number" id="weekly_deposit_limit" name="weekly_deposit_limit"
           value="{{ perfil.weekly_deposit_limit|default:'' }}"
@@ -138,7 +138,7 @@
         >
       </div>
       <div class="form-group">
-        <label for="monthly_deposit_limit">Límite mensual (S/.)</label>
+        <label for="monthly_deposit_limit">Límite mensual (fichas)</label>
         <input
           type="number" id="monthly_deposit_limit" name="monthly_deposit_limit"
           value="{{ perfil.monthly_deposit_limit|default:'' }}"

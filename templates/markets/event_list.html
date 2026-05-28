@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load l10n %}
+{% load l10n tz %}
 {% block title %}Eventos deportivos — FairBet Lab{% endblock %}
 
 {% block content %}
@@ -61,7 +61,7 @@
 
         <div class="event-name">{{ event.name }}</div>
         <div class="event-time">
-          🕐 {{ event.starts_at|date:"d/m/Y · H:i" }}
+          🕐 {{ event.starts_at|localtime|date:"d/m/Y · H:i" }}
         </div>
 
         {% if event.status == 'LIVE' or event.status == 'FINISHED' or event.status == 'SUSPENDED' %}

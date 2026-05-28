@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load l10n %}
+{% load l10n tz %}
 {% block title %}{{ event.name }} — FairBet Lab{% endblock %}
 
 {% block content %}
@@ -100,7 +100,7 @@
 
   <h1>{{ event.name }}</h1>
   <p class="meta">
-    🕐 {{ event.starts_at|date:"l j \d\e F \d\e Y · H:i" }}
+    🕐 {{ event.starts_at|localtime|date:"l j \d\e F \d\e Y · H:i" }}
   </p>
 
   {% if event.status == 'LIVE' or event.status == 'FINISHED' or event.status == 'SUSPENDED' %}
@@ -170,7 +170,7 @@
   </div>
 
   <div class="selections-grid">
-    {% for sel in market.selections.all %}
+    {% for sel in market.sorted_selections %}
     {% if sel.is_active %}
     {% localize off %}
     {% if event.status == 'SCHEDULED' %}
