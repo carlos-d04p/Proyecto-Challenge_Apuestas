@@ -27,3 +27,8 @@ En el walkthrough puedo explicar:
 - Por qué el prefetch_related va en el queryset local dentro de @action
 
 Lo que no podría detallar sin revisar: los detalles internos del CSS o la configuración exacta del DefaultRouter.
+
+### Actualización Semana 2 (28/05/2026)
+Para la mejora visual del panel de eventos, la billetera y el Backoffice, usé fuertemente la IA para reescribir los estilos CSS y reestructurar el HTML. 
+- **La IA escribió:** los SVGs inyectados, la estructura de clases del admin (`.kpi-row`, `.admin-panel`), las reglas de animación en hover y el script que formatea los logs JSON de auditoría.
+- **Mi aporte:** Me encargué de auditar la web entera detectando qué pantallas fallaban o se veían básicas, probar localmente, identificar dónde la IA cometía errores (ej. meter estilos en una plantilla no usada) y darle feedback constante mediante capturas para pulir detalles de las tablas y layouts. Validé que toda mejora estética respete la integridad de la aplicación.
