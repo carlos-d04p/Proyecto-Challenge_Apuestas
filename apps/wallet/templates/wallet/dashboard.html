@@ -79,16 +79,16 @@
                         </div>
                         <div class="wallet-form-row">
                             <label for="deposit-card-number">Numero de tarjeta simulada</label>
-                            <input id="deposit-card-number" name="card_number" type="text" inputmode="numeric" autocomplete="off" placeholder="4242 4242 4242 4242" maxlength="19">
+                            <input id="deposit-card-number" name="card_number" type="text" inputmode="numeric" autocomplete="off" placeholder="4242424242424242" maxlength="19" pattern="[0-9]*">
                         </div>
                         <div class="wallet-form-grid">
                             <div class="wallet-form-row">
                                 <label for="deposit-expiration">Fecha de expiracion</label>
-                                <input id="deposit-expiration" name="expiration" type="text" inputmode="numeric" autocomplete="off" placeholder="MM/AA" maxlength="5">
+                                <input id="deposit-expiration" name="expiration" type="text" inputmode="numeric" autocomplete="off" placeholder="MM/AA o MM/AAAA" maxlength="7">
                             </div>
                             <div class="wallet-form-row">
                                 <label for="deposit-cvv">CVV simulado</label>
-                                <input id="deposit-cvv" name="cvv" type="password" inputmode="numeric" autocomplete="off" placeholder="123" maxlength="4">
+                                <input id="deposit-cvv" name="cvv" type="password" inputmode="numeric" autocomplete="off" placeholder="123" maxlength="4" pattern="[0-9]*">
                             </div>
                         </div>
                         <button class="wallet-button wallet-button-primary" type="submit">Confirmar recarga simulada</button>

@@ -42,6 +42,9 @@
 
     function validateAmount(value) {
         const normalized = value.trim().replace(",", ".");
+        if (!normalized) {
+            throw new Error("Ingresa un monto en fichas.");
+        }
         if (!/^\d+(\.\d{1,4})?$/.test(normalized)) {
             throw new Error("Ingresa un monto valido con hasta 4 decimales.");
         }
@@ -51,24 +54,78 @@
         return normalized;
     }
 
+    function isValidLuhn(number) {
+        let sum = 0;
+        let shouldDouble = false;
+
+        for (let index = number.length - 1; index >= 0; index -= 1) {
+            let digit = Number(number.charAt(index));
+            if (shouldDouble) {
+                digit *= 2;
+                if (digit > 9) {
+                    digit -= 9;
+                }
+            }
+            sum += digit;
+            shouldDouble = !shouldDouble;
+        }
+
+        return sum % 10 === 0;
+    }
+
+    function parseExpiration(value) {
+        const match = value.match(/^(0[1-9]|1[0-2])\/(\d{2}|\d{4})$/);
+        if (!match) {
+            throw new Error("Ingresa una fecha de expiracion simulada en formato MM/AA o MM/AAAA.");
+        }
+
+        const month = Number(match[1]);
+        const rawYear = match[2];
+        const year = rawYear.length === 2 ? 2000 + Number(rawYear) : Number(rawYear);
+
+        return { month, year };
+    }
+
+    function validateExpiration(value) {
+        const { month, year } = parseExpiration(value.trim());
+        const today = new Date();
+        const currentMonth = today.getMonth() + 1;
+        const currentYear = today.getFullYear();
+
+        if (year < currentYear || (year === currentYear && month < currentMonth)) {
+            throw new Error("La fecha de expiracion simulada no debe estar vencida.");
+        }
+    }
+
     function validateDepositSimulation(form) {
         const holder = form.querySelector("input[name='card_holder']").value.trim();
-        const cardNumber = form.querySelector("input[name='card_number']").value.replace(/\D/g, "");
+        const cardNumber = form.querySelector("input[name='card_number']").value.trim();
         const expiration = form.querySelector("input[name='expiration']").value.trim();
         const cvv = form.querySelector("input[name='cvv']").value.trim();
 
-        if (holder.length < 2) {
-            throw new Error("Ingresa el nombre del titular simulado.");
+        if (holder.length < 3) {
+            throw new Error("Ingresa el nombre del titular simulado con minimo 3 caracteres.");
         }
-        if (!/^\d{12,19}$/.test(cardNumber)) {
-            throw new Error("Ingresa un numero de tarjeta simulada valido.");
+        if (!/^\d+$/.test(cardNumber)) {
+            throw new Error("El numero de tarjeta simulada debe contener solo numeros.");
         }
-        if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiration)) {
-            throw new Error("Ingresa una fecha de expiracion simulada en formato MM/AA.");
+        if (!/^\d{13,19}$/.test(cardNumber)) {
+            throw new Error("El numero de tarjeta simulada debe tener entre 13 y 19 digitos.");
+        }
+        if (!isValidLuhn(cardNumber)) {
+            throw new Error("El numero de tarjeta simulada no supera la validacion Luhn.");
+        }
+        validateExpiration(expiration);
+        if (!/^\d+$/.test(cvv)) {
+            throw new Error("El CVV simulado debe contener solo numeros.");
         }
         if (!/^\d{3,4}$/.test(cvv)) {
             throw new Error("Ingresa un CVV simulado de 3 o 4 digitos.");
         }
+    }
+
+    function keepOnlyDigits(input) {
+        input.value = input.value.replace(/\D/g, "");
     }
 
     async function parseResponse(response) {
@@ -152,6 +209,10 @@
             }
         });
     }
+
+    app.querySelectorAll("input[name='card_number'], input[name='cvv']").forEach((input) => {
+        input.addEventListener("input", () => keepOnlyDigits(input));
+    });
 
     refreshButton.addEventListener("click", async () => {
         try {
