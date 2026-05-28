@@ -36,8 +36,8 @@ def deposit_simulated(user, amount, created_by, idempotency_key=None):
     amount = normalize_money(amount)
     
     # --- REGLA DE NEGOCIO: Límites de Depósito simulado ---
-    if amount < Decimal("50.0000") or amount > Decimal("10000.0000"):
-        raise ValidationError("El depósito debe estar entre 50.0000 y 10,000.0000 fichas.")
+    if amount < Decimal("30.0000") or amount > Decimal("30000.0000"):
+        raise ValidationError("El depósito debe estar entre 30.0000 y 30,000.0000 fichas.")
 
     payload = _build_payload(
         operation="deposit_simulated",

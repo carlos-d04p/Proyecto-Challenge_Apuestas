@@ -31,6 +31,13 @@ def _validate_stake(stake, expected_odds):
 
 
 def place_simple_bet(user, selection_id, stake, expected_odds, idempotency_key=None):
+    # GUARD: correo no verificado
+    if not getattr(user, 'is_email_verified', False):
+        raise PermissionError(
+            "Debes verificar tu correo electrónico antes de realizar apuestas. "
+            "Revisa tu bandeja de entrada."
+        )
+
     if idempotency_key:
         existing_bet = Bet.objects.filter(idempotency_key=idempotency_key).first()
         if existing_bet:

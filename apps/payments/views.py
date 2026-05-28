@@ -9,7 +9,7 @@ Reglas aplicadas (manifiesto Módulo 2 — Payments):
 - RB-PAY-01: amount como Decimal(18,4) en serializers (no float).
 - RB-PAY-02: atomicidad y select_for_update() viven en wallet.services.
 - RB-PAY-03: header Idempotency-Key obligatorio.
-- RB-PAY-04: límites 50.0000–10,000.0000 (wallet.services.deposit_simulated).
+- RB-PAY-04: límites 30.0000–30,000.0000 (wallet.services.deposit_simulated).
 - RB-PAY-05: depósito instantáneo COMPLETED (wallet).
 - RB-PAY-06: verificación de fondos (wallet) — sin sobregiro.
 - RB-PAY-07: mínimo 100.0000 para retiros (wallet).
@@ -161,7 +161,7 @@ class PaymentsDashboardView(LoginRequiredMixin, TemplateView):
         ctx["is_kyc_verified"] = bool(
             getattr(self.request.user, "is_email_verified", False)
         )
-        ctx["min_deposit"] = "50.0000"
-        ctx["max_deposit"] = "10000.0000"
+        ctx["min_deposit"] = "30.0000"
+        ctx["max_deposit"] = "30000.0000"
         ctx["min_withdrawal"] = "100.0000"
         return ctx
