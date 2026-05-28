@@ -238,14 +238,13 @@
     }
 
     function parseExpiration(value) {
-        const match = value.match(/^(0[1-9]|1[0-2])\/(\d{2}|\d{4})$/);
+        const match = value.match(/^(0[1-9]|1[0-2])\/(\d{2})$/);
         if (!match) {
-            throw new Error("Ingresa una fecha de expiracion simulada en formato MM/AA o MM/AAAA.");
+            throw new Error("Ingresa una fecha de expiracion simulada en formato MM/AA.");
         }
 
         const month = Number(match[1]);
-        const rawYear = match[2];
-        const year = rawYear.length === 2 ? 2000 + Number(rawYear) : Number(rawYear);
+        const year = 2000 + Number(match[2]);
 
         return { month, year };
     }
@@ -264,19 +263,20 @@
     function validateDepositSimulation(form) {
         const holder = form.querySelector("input[name='card_holder']").value.trim();
         const cardNumber = form.querySelector("input[name='card_number']").value.trim();
+        const cardDigits = cardNumber.replace(/\s/g, "");
         const expiration = form.querySelector("input[name='expiration']").value.trim();
         const cvv = form.querySelector("input[name='cvv']").value.trim();
 
         if (holder.length < 3) {
             throw new Error("Ingresa el nombre del titular simulado con minimo 3 caracteres.");
         }
-        if (!/^\d+$/.test(cardNumber)) {
-            throw new Error("El numero de tarjeta simulada debe contener solo numeros.");
+        if (!/^[\d\s]+$/.test(cardNumber)) {
+            throw new Error("El numero de tarjeta simulada solo puede contener digitos y espacios.");
         }
-        if (!/^\d{13,19}$/.test(cardNumber)) {
+        if (!/^\d{13,19}$/.test(cardDigits)) {
             throw new Error("El numero de tarjeta simulada debe tener entre 13 y 19 digitos.");
         }
-        if (!isValidLuhn(cardNumber)) {
+        if (!isValidLuhn(cardDigits)) {
             throw new Error("El numero de tarjeta simulada no supera la validacion Luhn.");
         }
         validateExpiration(expiration);
@@ -306,6 +306,20 @@
 
     function keepOnlyDigits(input) {
         input.value = input.value.replace(/\D/g, "");
+    }
+
+    function formatCardNumber(input) {
+        const digits = input.value.replace(/\D/g, "").slice(0, 19);
+        input.value = digits.replace(/(.{4})/g, "$1 ").trim();
+    }
+
+    function formatExpiration(input) {
+        const digits = input.value.replace(/\D/g, "").slice(0, 4);
+        if (digits.length <= 2) {
+            input.value = digits;
+            return;
+        }
+        input.value = `${digits.slice(0, 2)}/${digits.slice(2)}`;
     }
 
     async function parseResponse(response) {
@@ -648,7 +662,15 @@
         });
     }
 
-    app.querySelectorAll("input[name='card_number'], input[name='cvv']").forEach((input) => {
+    app.querySelectorAll("input[name='card_number']").forEach((input) => {
+        input.addEventListener("input", () => formatCardNumber(input));
+    });
+
+    app.querySelectorAll("input[name='expiration']").forEach((input) => {
+        input.addEventListener("input", () => formatExpiration(input));
+    });
+
+    app.querySelectorAll("input[name='cvv']").forEach((input) => {
         input.addEventListener("input", () => keepOnlyDigits(input));
     });
 

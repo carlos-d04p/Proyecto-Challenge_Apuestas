@@ -561,7 +561,7 @@ h2 {
 }
 
 .wallet-form-detailed {
-    margin-top: 14px;
+    margin-top: 16px;
 }
 
 .wallet-form-grid {
@@ -572,7 +572,7 @@ h2 {
 
 .wallet-form-row {
     display: grid;
-    gap: 8px;
+    gap: 7px;
 }
 
 .wallet-form label {
@@ -592,6 +592,21 @@ h2 {
     font-size: 1.1rem;
     padding: 0 14px;
     outline: none;
+}
+
+.wallet-form input[name="card_holder"],
+.wallet-form input[name="card_number"] {
+    letter-spacing: 0;
+}
+
+.wallet-form input[name="card_number"] {
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: 1rem;
+}
+
+.wallet-form input[name="expiration"],
+.wallet-form input[name="cvv"] {
+    text-align: center;
 }
 
 .wallet-form input:focus,
