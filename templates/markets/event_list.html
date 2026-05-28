@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Eventos deportivos — FairBet Lab{% endblock %}
+
+{% block content %}
+
+<h1 class="page-title">Eventos disponibles</h1>
+
+<!-- Filtros por estado -->
+<div class="filters">
+  <a href="?" class="filter-btn {% if not status_filter %}active{% endif %}">Todos</a>
+  <a href="?status=LIVE"      class="filter-btn {% if status_filter == 'LIVE' %}active{% endif %}">🔴 En vivo</a>
+  <a href="?status=SCHEDULED" class="filter-btn {% if status_filter == 'SCHEDULED' %}active{% endif %}">Programados</a>
+  <a href="?status=FINISHED"  class="filter-btn {% if status_filter == 'FINISHED' %}active{% endif %}">Finalizados</a>
+</div>
+
+{% if events %}
+  <div class="event-grid">
+    {% for event in events %}
+      <a href="{% url 'markets:event_detail' event.id %}" class="event-card">
+
+        <div class="card-header">
+          <span class="sport-tag">{{ event.sport }}</span>
+          <span class="badge {{ event.status|lower }}">
+            {% if event.status == 'LIVE' %}EN VIVO
+            {% elif event.status == 'SCHEDULED' %}Programado
+            {% elif event.status == 'FINISHED' %}Finalizado
+            {% elif event.status == 'SUSPENDED' %}Suspendido
+            {% else %}Cancelado{% endif %}
+          </span>
+        </div>
+
+        <h3>{{ event.name }}</h3>
+        <p class="time">{{ event.starts_at|date:"d M Y · H:i" }}</p>
+
+        <!-- Cuotas del mercado 1X2 si existe -->
+        {% with market_1x2=event.markets.all %}
+          {% for market in market_1x2 %}
+            {% if market.kind == '1X2' and market.is_active %}
+              <div class="odds-row">
+                {% for sel in market.selections.all %}
+                  {% if sel.is_active %}
+                    <div class="odds-btn">
+                      <span class="sel-name">{{ sel.name }}</span>
+                      <span class="sel-odds">{{ sel.odds }}</span>
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% endwith %}
+
+      </a>
+    {% endfor %}
+  </div>
+
+{% else %}
+  <div class="empty">
+    <div style="font-size:3rem">📭</div>
+    <p>No hay eventos disponibles en este momento.</p>
+  </div>
+{% endif %}
+
+{% endblock %}
