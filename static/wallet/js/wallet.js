@@ -17,6 +17,9 @@
     const withdrawPanel = app.querySelector("[data-withdraw-panel]");
     const promoForm = app.querySelector("[data-promo-form]");
     const promoState = app.querySelector("[data-promo-state]");
+    const welcomeBonusStatus = app.querySelector("[data-welcome-bonus-status]");
+    const welcomeBonusAmount = app.querySelector("[data-welcome-bonus-amount]");
+    const welcomeBonusHelp = app.querySelector("[data-welcome-bonus-help]");
 
     function getCookie(name) {
         const value = `; ${document.cookie}`;
@@ -41,6 +44,47 @@
         if (type) {
             promoState.classList.add(`is-${type}`);
         }
+    }
+
+    function setWelcomeBonusState(status, amount) {
+        if (!welcomeBonusStatus || !welcomeBonusAmount || !welcomeBonusHelp) {
+            return;
+        }
+
+        const states = {
+            available: {
+                label: "Bono disponible",
+                className: "is-available",
+                help: "Bono de bienvenida disponible en la cuenta BONUS. No se mueve al saldo disponible desde el frontend.",
+            },
+            applied: {
+                label: "Bono aplicado",
+                className: "is-applied",
+                help: "Bono aplicado. El saldo se actualiza solo con confirmacion del backend.",
+            },
+            used: {
+                label: "Bono ya utilizado",
+                className: "is-used",
+                help: "El bono de bienvenida ya fue utilizado para esta cuenta.",
+            },
+            unavailable: {
+                label: "Bono no disponible",
+                className: "is-unavailable",
+                help: "No hay bono de bienvenida disponible para esta cuenta.",
+            },
+            empty: {
+                label: "Sin bonos activos",
+                className: "is-unavailable",
+                help: "No hay bonos activos para aplicar en este momento.",
+            },
+        };
+        const state = states[status] || states.empty;
+
+        welcomeBonusStatus.textContent = state.label;
+        welcomeBonusStatus.classList.remove("is-available", "is-applied", "is-used", "is-unavailable");
+        welcomeBonusStatus.classList.add(state.className);
+        welcomeBonusAmount.textContent = amount || "0.0000";
+        welcomeBonusHelp.textContent = state.help;
     }
 
     function addActivity(text) {
@@ -182,6 +226,10 @@
             if (data.accounts && pendingNode && bonusNode) {
                 pendingNode.textContent = data.accounts.PENDING_BETS || "0.0000";
                 bonusNode.textContent = data.accounts.BONUS || "0.0000";
+                setWelcomeBonusState(
+                    moneyToUnits(data.accounts.BONUS || "0.0000") > 0n ? "available" : "empty",
+                    data.accounts.BONUS || "0.0000",
+                );
             }
             return data.balance;
         } finally {
@@ -209,6 +257,7 @@
         const endpoint = promoForm.dataset.promoEndpoint;
         if (!endpoint) {
             setPromoState("Bono no disponible. La validacion de codigos aun no esta habilitada.", "warning");
+            setWelcomeBonusState("unavailable", welcomeBonusAmount ? welcomeBonusAmount.textContent : "0.0000");
             return;
         }
 
@@ -228,19 +277,23 @@
 
         if (status === "applied") {
             setPromoState("Codigo aplicado. El bono se reflejara cuando el backend confirme la operacion.", "success");
+            setWelcomeBonusState("applied", data.amount || "0.0000");
             await refreshBalance();
             return;
         }
         if (status === "already_used") {
             setPromoState("Bono ya usado para esta cuenta.", "warning");
+            setWelcomeBonusState("used", data.amount || "0.0000");
             return;
         }
         if (status === "not_available") {
             setPromoState("Bono no disponible para esta cuenta.", "warning");
+            setWelcomeBonusState("unavailable", "0.0000");
             return;
         }
 
         setPromoState("Codigo invalido.", "error");
+        setWelcomeBonusState("unavailable", welcomeBonusAmount ? welcomeBonusAmount.textContent : "0.0000");
     }
 
     forms.forEach((form) => {

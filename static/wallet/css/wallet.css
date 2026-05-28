@@ -244,12 +244,80 @@ h2 {
     background: rgba(5, 14, 26, 0.36);
 }
 
+.wallet-bonus-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.wallet-bonus-state {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 9px;
+    border: 1px solid rgba(157, 182, 203, 0.24);
+    border-radius: 8px;
+    background: rgba(157, 182, 203, 0.08);
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.wallet-bonus-state.is-available,
+.wallet-bonus-state.is-applied {
+    border-color: rgba(34, 197, 94, 0.36);
+    background: rgba(34, 197, 94, 0.1);
+    color: #bbf7d0;
+}
+
+.wallet-bonus-state.is-used {
+    border-color: rgba(250, 204, 21, 0.36);
+    background: rgba(250, 204, 21, 0.1);
+    color: #fde68a;
+}
+
+.wallet-bonus-state.is-unavailable {
+    border-color: rgba(157, 182, 203, 0.24);
+    background: rgba(157, 182, 203, 0.08);
+    color: var(--muted);
+}
+
 .wallet-welcome-bonus strong {
     display: block;
     margin-top: 14px;
     color: #ffffff;
     font-size: 1.6rem;
     letter-spacing: 0;
+}
+
+.wallet-bonus-amount {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: 14px;
+    padding: 12px;
+    border: 1px solid rgba(80, 148, 219, 0.22);
+    border-radius: 8px;
+    background: rgba(11, 28, 51, 0.72);
+}
+
+.wallet-bonus-amount span {
+    color: var(--muted);
+    font-size: 0.88rem;
+}
+
+.wallet-bonus-amount b {
+    color: #ffffff;
+    font-size: 1.35rem;
+}
+
+.wallet-bonus-note {
+    margin: 12px 0 0;
+    color: #fff5bf;
+    line-height: 1.45;
 }
 
 .wallet-promo-statuses {
