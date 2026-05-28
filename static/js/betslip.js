@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="betslip-total-odds">${totalOdds.toFixed(2)}</span>
                     </div>
                 </div>
-                <form id="betslip-form" action="/betting/apostar/" method="POST">
+                <form id="betslip-form" action="/apuestas/apostar/" method="POST">
                     <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
                     <input type="hidden" name="bet_type" value="${betTypeValue}">
                     <input type="hidden" name="expected_odds" value="${totalOdds.toFixed(4)}">
@@ -225,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let totalSimplesPayout = betSlip.reduce((sum, item) => sum + ((item.stake || 10) * item.odds), 0);
             
             formHtml = `
-                <form id="betslip-form" action="/betting/apostar/" method="POST">
+                <form id="betslip-form" action="/apuestas/apostar/" method="POST">
                     <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
                     <input type="hidden" name="bet_type" value="${betTypeValue}">
                     
