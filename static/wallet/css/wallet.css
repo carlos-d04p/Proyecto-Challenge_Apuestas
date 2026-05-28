@@ -900,3 +900,258 @@ h2 {
         padding: 16px;
     }
 }
+
+/* Responsive polish */
+.wallet-shell {
+    width: min(1180px, calc(100% - 32px));
+    padding: 28px 0 44px;
+}
+
+.wallet-header {
+    padding-top: 18px;
+}
+
+.wallet-summary,
+.wallet-promo,
+.wallet-internal-transfer,
+.wallet-actions,
+.wallet-message-panel,
+.wallet-history {
+    margin-top: 18px;
+}
+
+.wallet-summary {
+    grid-template-columns: minmax(0, 1.45fr) minmax(220px, 0.8fr) minmax(220px, 0.8fr);
+}
+
+.wallet-summary-card,
+.wallet-card,
+.wallet-promo,
+.wallet-internal-transfer,
+.wallet-message-panel,
+.wallet-history {
+    border-color: rgba(98, 161, 232, 0.34);
+}
+
+.wallet-summary-card,
+.wallet-card {
+    min-height: 180px;
+}
+
+.wallet-action-card {
+    min-height: 290px;
+}
+
+.wallet-balance {
+    max-width: 100%;
+    font-size: 3.85rem;
+}
+
+.wallet-button,
+.wallet-icon-button,
+.wallet-filter-chip {
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, filter 0.18s ease;
+}
+
+.wallet-button {
+    min-height: 52px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.wallet-button-primary {
+    background: #1f7aef;
+}
+
+.wallet-button-secondary {
+    background: #0f6f8a;
+}
+
+.wallet-button-primary:hover {
+    background: #2f8cff;
+}
+
+.wallet-button-secondary:hover {
+    background: #1385a5;
+}
+
+.wallet-form,
+.wallet-form-detailed,
+.wallet-promo-form,
+.wallet-transfer-form {
+    gap: 14px;
+}
+
+.wallet-form input,
+.wallet-form select,
+.wallet-promo-controls input,
+.wallet-transfer-form input,
+.wallet-transfer-form select {
+    min-height: 52px;
+}
+
+.wallet-promo-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(160px, 190px);
+}
+
+.wallet-transfer-form {
+    grid-template-columns: minmax(260px, 1.25fr) minmax(180px, 0.75fr) minmax(180px, 0.55fr);
+}
+
+.wallet-history-table th,
+.wallet-history-table td {
+    padding: 13px 12px;
+}
+
+@media (min-width: 1200px) {
+    .wallet-actions-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .wallet-card,
+    .wallet-summary-card,
+    .wallet-promo,
+    .wallet-internal-transfer,
+    .wallet-history {
+        padding: 22px;
+    }
+}
+
+@media (max-width: 1100px) {
+    .wallet-shell {
+        width: min(100% - 28px, 960px);
+    }
+
+    .wallet-header {
+        grid-template-columns: 1fr;
+        align-items: start;
+        gap: 18px;
+    }
+
+    .wallet-disclaimer {
+        width: 100%;
+    }
+
+    .wallet-summary {
+        grid-template-columns: minmax(0, 1fr) minmax(220px, 0.75fr);
+    }
+
+    .wallet-summary-primary {
+        grid-column: 1 / -1;
+    }
+
+    .wallet-promo {
+        grid-template-columns: 1fr;
+    }
+
+    .wallet-transfer-routes {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 760px) {
+    .wallet-shell {
+        width: min(100% - 24px, 720px);
+        padding: 20px 0 34px;
+    }
+
+    h1 {
+        font-size: 2.35rem;
+    }
+
+    h2 {
+        font-size: 1.12rem;
+    }
+
+    .wallet-summary,
+    .wallet-actions-grid,
+    .wallet-transfer-form,
+    .wallet-promo-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .wallet-summary-card,
+    .wallet-card,
+    .wallet-promo,
+    .wallet-internal-transfer,
+    .wallet-message-panel,
+    .wallet-history {
+        padding: 16px;
+    }
+
+    .wallet-summary-card,
+    .wallet-card,
+    .wallet-action-card {
+        min-height: auto;
+    }
+
+    .wallet-summary-primary,
+    .wallet-card-header,
+    .wallet-section-title,
+    .wallet-history-header,
+    .wallet-transfer-heading {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .wallet-icon-button,
+    .wallet-button,
+    .wallet-open-button {
+        width: 100%;
+    }
+
+    .wallet-open-button,
+    .wallet-form {
+        margin-top: 22px;
+    }
+
+    .wallet-balance {
+        font-size: 2.7rem;
+    }
+
+    .wallet-filter-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .wallet-filter-chip {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .wallet-shell {
+        width: min(100% - 18px, 460px);
+    }
+
+    .wallet-header {
+        padding-top: 8px;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    .wallet-lead,
+    .wallet-muted,
+    .wallet-disclaimer,
+    .wallet-card-copy,
+    .wallet-transfer-route p {
+        font-size: 0.9rem;
+    }
+
+    .wallet-balance {
+        font-size: 2.25rem;
+    }
+
+    .wallet-account-value {
+        font-size: 1.65rem;
+    }
+
+    .wallet-filter-group {
+        grid-template-columns: 1fr;
+    }
+
+    .wallet-history-table {
+        min-width: 680px;
+    }
+}
