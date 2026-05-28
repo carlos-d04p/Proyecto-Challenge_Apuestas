@@ -86,3 +86,26 @@ Aprendí que el prefetch hay que aplicarlo al queryset final que se va a iterar.
 * **Qué intenté:** Ejecutar múltiples aserciones consecutivas sobre un mismo objeto de prueba (`placed_bet`) mutando su estado directamente en memoria.
 * **Qué pasó:** Provocó fallos de recolección y errores sintácticos (`fixture not found` / `IndentationError`) debido al anidamiento incorrecto de funciones utilitarias dentro de clases colectoras independientes.
 * **Cómo lo resolví:** Extraje el fixture a nivel global del módulo y forcé recargas limpias desde el motor de persistencia de Django mediante transacciones atómicas.
+
+# Lecciones aprendidas — Sprint Final (WebSockets & OPS)
+**Autor:** Arnold Quiroz | **App:** `realtime` / `backoffice`
+
+## Intento fallido 1: WebSockets bloqueando el servidor
+* **Qué intenté:** Configurar Channels usando el enrutador sincrónico por defecto y haciendo llamadas directas a la base de datos dentro del consumer de WebSockets.
+* **Qué pasó:** El servidor Daphne se bloqueaba al procesar peticiones HTTP normales porque el Event Loop de asincronía de Python quedaba atascado en operaciones I/O de base de datos.
+* **Cómo lo resolví:** Refactoricé el `LiveOddsConsumer` para heredar de `AsyncWebsocketConsumer` y usé el decorador `@database_sync_to_async` en cada llamada al ORM de Django.
+
+## Intento fallido 2: Broadcast redundante en Redis
+* **Qué intenté:** Emitir un mensaje WebSocket a cada usuario individual iterando sobre todas las conexiones cuando una cuota cambiaba.
+* **Qué pasó:** El servidor Redis colapsaba por exceso de mensajes (OOM) y el rendimiento era logarítmico.
+* **Cómo lo resolví:** Utilicé grupos de Channels (`async_to_sync(channel_layer.group_send)`). Ahora emito un solo mensaje al grupo `live_events` y Channels se encarga eficientemente del fan-out.
+
+## Intento fallido 3: Crash de Celery en Merge
+* **Qué intenté:** Ejecutar el servidor después de integrar (merge) la rama de mi compañero (Compliance), asumiendo que mi entorno local era suficiente.
+* **Qué pasó:** El servidor `manage.py runserver` arrojó `ModuleNotFoundError: No module named 'celery'` rompiendo el entorno de desarrollo y retornando `ERR_CONNECTION_RESET` en el frontend.
+* **Cómo lo resolví:** Entendí que los cambios de rama incluyen cambios en dependencias. Instalé `celery` vía pip y actualicé mi `requirements.txt`.
+
+## Intento fallido 4: Type Hints incompatibles en Python 3.9
+* **Qué intenté:** Ejecutar el proyecto integrado con código que utilizaba la sintaxis `str | None`.
+* **Qué pasó:** Arrojó un `TypeError: unsupported operand type(s) for |: 'type' and 'NoneType'` porque mi Mac utiliza Python 3.9 y esa sintaxis fue introducida en Python 3.10.
+* **Cómo lo resolví:** Modifiqué `core/idempotency.py` para usar `from typing import Optional` y la sintaxis clásica `Optional[str]`, garantizando retrocompatibilidad del proyecto.
