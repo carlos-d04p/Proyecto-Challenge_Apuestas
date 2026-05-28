@@ -40,3 +40,61 @@ def canonicalize_payload(payload):
         separators=(",", ":"),
         sort_keys=True,
     )
+
+
+def verify_audit_chain():
+    """
+    Verifica la integridad de toda la cadena de auditoría (hash chain).
+    Retorna un diccionario con el resultado del análisis.
+    """
+    logs = AuditLog.objects.all().order_by("sequence")
+    if not logs.exists():
+        return {
+            "valid": True,
+            "message": "La cadena de auditoría está vacía y es válida.",
+            "error_sequence": None,
+        }
+
+    expected_sequence = 1
+    previous_hash = GENESIS_HASH
+
+    for entry in logs:
+        # 1. Verificar secuencia consecutiva
+        if entry.sequence != expected_sequence:
+            return {
+                "valid": False,
+                "message": f"Quiebre en la secuencia. Esperado: {expected_sequence}, Encontrado: {entry.sequence}.",
+                "error_sequence": entry.sequence,
+            }
+
+        # 2. Verificar correspondencia del hash previo
+        if entry.previous_hash != previous_hash:
+            return {
+                "valid": False,
+                "message": f"Discrepancia en previous_hash en secuencia {entry.sequence}. Esperado: {previous_hash}, Encontrado: {entry.previous_hash}.",
+                "error_sequence": entry.sequence,
+            }
+
+        # 3. Recalcular y verificar el hash actual
+        calculated_canonical = canonicalize_payload(entry.payload)
+        recalculated_hash = hashlib.sha256(
+            f"{previous_hash}{calculated_canonical}".encode("utf-8")
+        ).hexdigest()
+
+        if entry.hash != recalculated_hash:
+            return {
+                "valid": False,
+                "message": f"Hash corrupto en secuencia {entry.sequence}. Calculado: {recalculated_hash}, Almacenado: {entry.hash}.",
+                "error_sequence": entry.sequence,
+            }
+
+        # Avanzar punteros
+        previous_hash = entry.hash
+        expected_sequence += 1
+
+    return {
+        "valid": True,
+        "message": f"Cadena verificada con éxito. Total registros: {logs.count()}.",
+        "error_sequence": None,
+    }
+

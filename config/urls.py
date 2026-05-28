@@ -6,11 +6,9 @@ The `urlpatterns` list routes URLs to views. For more information please see:
 """
 
 from django.contrib import admin
-from django.urls import include, path
-from django.views.generic import RedirectView
-
+from django.urls import path, include
+from apps.betting import views as betting_views
 from apps.wallet.views import WalletPageView
-
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -29,3 +27,5 @@ urlpatterns = [
     # Apuestas
     path('apuestas/', include('apps.betting.urls', namespace='betting')),
 ]
+
+
