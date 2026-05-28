@@ -168,9 +168,12 @@ from django.db.models import Count, Q, Sum
 from django.http import JsonResponse
 from django.utils import timezone
 
+from apps.accounts.models import CustomUser, PerfilKYC
 from apps.betting.models import Bet
-from apps.wallet.models import Transaction, TransactionKind, LedgerEntry, LedgerDirection
+from apps.wallet.models import Transaction, TransactionKind, LedgerEntry, LedgerDirection, LedgerAccount
 from apps.wallet.selectors import get_wallet_balance
+from apps.compliance.models import SuspiciousActivity, AuditLog
+from apps.compliance.services import verify_audit_chain
 
 
 def _serialize_bet(bet):
@@ -242,10 +245,79 @@ def dashboard_view(request):
         .order_by("live_started_at")[:10]
     )
 
+    # 1. KPIs de Usuarios (adicionales a kpis)
+    blocked_users = PerfilKYC.objects.filter(status=PerfilKYC.Status.BLOCKED).count()
+
+    # 2. KPIs de Apuestas
+    total_bets_count = Bet.objects.exclude(status=Bet.Status.PENDING).count()
+    total_wagered = Bet.objects.exclude(status=Bet.Status.PENDING).aggregate(total=Sum('stake'))['total'] or Decimal("0.0000")
+    total_payout = Bet.objects.filter(status=Bet.Status.WON).aggregate(total=Sum('payout'))['total'] or Decimal("0.0000")
+    house_margin = total_wagered - total_payout
+
+    # 3. KPIs de Billetera (Totales)
+    total_deposits = LedgerEntry.objects.filter(
+        account=LedgerAccount.USER_WALLET,
+        direction=LedgerDirection.CREDIT,
+        transaction__kind=TransactionKind.DEPOSIT
+    ).aggregate(total=Sum('amount'))['total'] or Decimal("0.0000")
+
+    total_withdrawals = LedgerEntry.objects.filter(
+        account=LedgerAccount.USER_WALLET,
+        direction=LedgerDirection.DEBIT,
+        transaction__kind=TransactionKind.WITHDRAWAL
+    ).aggregate(total=Sum('amount'))['total'] or Decimal("0.0000")
+
+    # 4. Alertas de Actividad Sospechosa
+    pending_alerts_count = SuspiciousActivity.objects.filter(status=SuspiciousActivity.Status.PENDIENTE).count()
+    pending_alerts = SuspiciousActivity.objects.filter(status=SuspiciousActivity.Status.PENDIENTE).order_by("-detected_at")[:10]
+
+    # 5. Estado de Verificación de Cadena de Hashes
+    chain_status = verify_audit_chain()
+    last_audit_logs = AuditLog.objects.all().order_by("-sequence")[:100]
+
+    # 6. Lista de perfiles de usuario y KYC
+    usuarios_kyc = PerfilKYC.objects.select_related("user").all()
+    
+    autoexcluded_count = sum(1 for p in usuarios_kyc if p.is_autoexcluido)
+    net_caja = total_deposits - total_withdrawals
+
+    # 7. Resumen de apuestas para gráfico simulado dinámico
+    bets_won_count = Bet.objects.filter(status=Bet.Status.WON).count()
+    bets_lost_count = Bet.objects.filter(status=Bet.Status.LOST).count()
+    bets_cashout_count = Bet.objects.filter(status=Bet.Status.CASHED_OUT).count()
+
+    max_count = max(bets_won_count + bets_lost_count + bets_cashout_count, 1)
+    
+    chart_data = {
+        "won_height": int((bets_won_count / max_count) * 150) if bets_won_count else 110,
+        "lost_height": int((bets_lost_count / max_count) * 150) if bets_lost_count else 70,
+        "cashout_height": int((bets_cashout_count / max_count) * 150) if bets_cashout_count else 30,
+        "won": bets_won_count,
+        "lost": bets_lost_count,
+        "cashout": bets_cashout_count,
+    }
+
     context = {
         "kpis": kpis,
         "top_bettors": list(top_bettors),
         "live_events": live_events,
+        # Variables de compliance integradas
+        "blocked_users": blocked_users,
+        "autoexcluded_count": autoexcluded_count,
+        "total_bets_count": total_bets_count,
+        "total_wagered": total_wagered,
+        "total_payout": total_payout,
+        "house_margin": house_margin,
+        "total_deposits": total_deposits,
+        "total_withdrawals": total_withdrawals,
+        "net_caja": net_caja,
+        "pending_alerts_count": pending_alerts_count,
+        "pending_alerts": pending_alerts,
+        "chain_status": chain_status,
+        "last_audit_logs": last_audit_logs,
+        "usuarios_kyc": usuarios_kyc,
+        "chart_data": chart_data,
+        "current_time": now,
     }
     return render(request, "backoffice/dashboard.html", context)
 

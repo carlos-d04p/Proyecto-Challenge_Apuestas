@@ -326,6 +326,20 @@
           <span class="ico">●</span> Eventos en vivo
         </a>
 
+        <div class="group">Cumplimiento</div>
+        <a href="#" class="nav-link" onclick="switchAdminTab('auditoria'); return false;">
+          <span class="ico">🛡️</span> Auditoría
+        </a>
+        <a href="#" class="nav-link" onclick="switchAdminTab('alertas'); return false;">
+          <span class="ico">⚠️</span> Alertas
+        </a>
+        <a href="#" class="nav-link" onclick="switchAdminTab('usuarios'); return false;">
+          <span class="ico">👥</span> Usuarios KYC
+        </a>
+        <a href="#" class="nav-link" onclick="switchAdminTab('reportes'); return false;">
+          <span class="ico">📄</span> Reportes MINCETUR
+        </a>
+
         <div class="group">Acceso</div>
         <a href="{% url 'markets:event_list' %}">
           <span class="ico">↩</span> Vista cliente

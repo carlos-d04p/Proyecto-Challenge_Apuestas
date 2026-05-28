@@ -12,7 +12,6 @@ urlpatterns = [
     path("evento/nuevo/", views.event_create_view, name="event_create"),
     path("evento/<uuid:event_id>/control/", views.event_control_view, name="event_control"),
     path("evento/<uuid:event_id>/settle/", views.event_settle_view, name="event_settle"),
-    path("compliance/", views.compliance_view, name="compliance"),
     path("alerta/resolver/<int:alerta_id>/", views.resolver_alerta_view, name="resolver_alerta"),
     path("reporte-mincetur/", views.reporte_mincetur_view, name="reporte_mincetur"),
 ]

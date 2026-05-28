@@ -9,6 +9,7 @@ from django.contrib import admin
 from django.urls import path, include
 from apps.betting import views as betting_views
 from apps.wallet.views import WalletPageView
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),

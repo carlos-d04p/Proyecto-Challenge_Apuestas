@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load l10n %}
+{% load l10n tz %}
 {% block title %}Eventos deportivos — FairBet Lab{% endblock %}
 
 {% block content %}
@@ -61,7 +61,7 @@
 
         <div class="event-name">{{ event.name }}</div>
         <div class="event-time">
-          🕐 {{ event.starts_at|date:"d/m/Y · H:i" }}
+          🕐 {{ event.starts_at|localtime|date:"d/m/Y · H:i" }}
         </div>
 
         {% if event.status == 'LIVE' or event.status == 'FINISHED' or event.status == 'SUSPENDED' %}
@@ -78,7 +78,7 @@
           {% if market.kind == '1X2' and market.is_active %}
             <div class="odds-label">Resultado Final</div>
             <div class="odds-row" data-market-id="{{ market.id }}">
-              {% for sel in market.selections.all %}
+              {% for sel in market.sorted_selections %}
                 {% if sel.is_active %}
                   <div class="odds-btn" data-selection-id="{{ sel.id }}" onclick="event.preventDefault(); event.stopPropagation(); addToBetSlip('{{ sel.id }}', '{{ sel.name|escapejs }}', '{{ sel.odds }}', '{{ event.id }}', '{{ event.name|escapejs }}', 'Resultado del partido')">
                     <span class="sel-name">{{ sel.name }}</span>
@@ -166,7 +166,7 @@
 
   socket.onmessage = function (e) {
     const data = JSON.parse(e.data);
-    const action = data.type;
+    const action = data.type || data.action;
     const eventId = data.event_id;
     const card = eventId
       ? document.querySelector(`.event-card[data-event-id="${eventId}"]`)
@@ -212,21 +212,32 @@
       }
     }
 
-    else if (action === 'EVENT_LIVE' || action === 'EVENT_FINISHED'
+    else if (action === 'EVENT_CREATED' || action === 'EVENT_LIVE' || action === 'EVENT_FINISHED'
           || action === 'EVENT_SUSPENDED' || action === 'EVENT_CANCELLED') {
-      if (!card) return;
-      const badge = card.querySelector('[data-badge]');
-      if (!badge) return;
-      const map = {
-        EVENT_LIVE:      { cls: 'live',      txt: 'En Vivo' },
-        EVENT_FINISHED:  { cls: 'finished',  txt: 'Finalizado' },
-        EVENT_SUSPENDED: { cls: 'suspended', txt: 'Suspendido' },
-        EVENT_CANCELLED: { cls: 'cancelled', txt: 'Cancelado' },
-      };
-      const info = map[action];
-      badge.className = 'badge ' + info.cls;
-      badge.textContent = info.txt;
       if (data.message) showToast(data.message);
+
+      if (!card) {
+        if (action === 'EVENT_CREATED' || action === 'EVENT_LIVE') {
+          setTimeout(() => window.location.reload(), 2000);
+        }
+        return;
+      }
+
+      if (action !== 'EVENT_CREATED') {
+        const badge = card.querySelector('[data-badge]');
+        if (!badge) return;
+        const map = {
+          EVENT_LIVE:      { cls: 'live',      txt: 'En Vivo' },
+          EVENT_FINISHED:  { cls: 'finished',  txt: 'Finalizado' },
+          EVENT_SUSPENDED: { cls: 'suspended', txt: 'Suspendido' },
+          EVENT_CANCELLED: { cls: 'cancelled', txt: 'Cancelado' },
+        };
+        const info = map[action];
+        if (info) {
+          badge.className = 'badge ' + info.cls;
+          badge.textContent = info.txt;
+        }
+      }
     }
   };
 
