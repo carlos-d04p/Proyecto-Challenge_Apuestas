@@ -33,6 +33,13 @@ class Event(models.Model):
         default=Status.SCHEDULED,
     )
     suspended_until = models.DateTimeField(null=True, blank=True)
+
+    # Marcador en vivo (in-play state).
+    home_score = models.PositiveSmallIntegerField(default=0)
+    away_score = models.PositiveSmallIntegerField(default=0)
+    # Momento real en que el partido pasó a LIVE (puede diferir de starts_at).
+    live_started_at = models.DateTimeField(null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -67,6 +74,18 @@ class Market(models.Model):
 
     def __str__(self):
         return f"{self.name} [{self.kind}] — {'Activo' if self.is_active else 'Inactivo'}"
+
+    @property
+    def sorted_selections(self):
+        """Devuelve las selecciones ordenadas lógicamente (Local, Empate, Visitante)."""
+        selections = list(self.selections.all())
+        def sort_key(sel):
+            name = sel.name.lower()
+            if "local" in name: return 1
+            if "empate" in name or "draw" in name or name.strip() == "x": return 2
+            if "visit" in name or "away" in name: return 3
+            return 4
+        return sorted(selections, key=sort_key)
 
 
 class Selection(models.Model):

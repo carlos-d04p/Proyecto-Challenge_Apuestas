@@ -8,17 +8,25 @@ The `urlpatterns` list routes URLs to views. For more information please see:
 from django.contrib import admin
 from django.urls import path, include
 from apps.betting import views as betting_views
+from apps.wallet.views import WalletPageView
+from django.views.generic import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('backoffice/', include('apps.backoffice.urls')),
+    path('backoffice/', include('apps.backoffice.urls', namespace='backoffice')),
+    path('wallet/', WalletPageView.as_view(), name='wallet-dashboard'),
     path('api/wallet/', include('apps.wallet.urls')),
-    path('api/accounts/', include(('apps.accounts.urls', 'accounts'), namespace='accounts')),
-    path('accounts/', include(('apps.accounts.urls_web', 'accounts_web'), namespace='accounts_web')),
-    path('api/markets/', include(('apps.markets.urls', 'markets'), namespace='markets_api')),
-    path('markets/', include(('apps.markets.urls', 'markets'), namespace='markets')),
-    path('betting/', include(('apps.betting.urls', 'betting'), namespace='betting')),
-    path('', betting_views.dashboard, name='dashboard'),
+    # Modulo Payments (fachada de depositos/retiros simulados)
+    path('payments/', include('apps.payments.urls', namespace='payments')),
+    path('', RedirectView.as_view(url='/eventos/', permanent=False), name='home'),
+    # Catalogo de eventos (HTML + API)
+    path('eventos/', include('apps.markets.urls', namespace='markets')),
+    path('api/markets/', include('apps.markets.urls', namespace='markets_api')),
+    # Cuentas y autenticacion
+    path('api/accounts/', include('apps.accounts.urls', namespace='accounts')),
+    path('accounts/', include('apps.accounts.urls_web', namespace='accounts_web')),
+    # Apuestas
+    path('apuestas/', include('apps.betting.urls', namespace='betting')),
 ]
 
 
