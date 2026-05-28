@@ -49,17 +49,49 @@ def colocar_apuesta(request):
             )
             messages.success(request, "¡Apuesta combinada colocada con éxito!")
         else:
-            # Si envían varias como SINGLE, por simplicidad solo procesamos la primera en este flujo
-            # (El front-end JS asegura que solo se envíe 1 si bet_type es SINGLE)
-            selection_id = selection_ids[0]
-            place_simple_bet(
-                user=request.user,
-                selection_id=selection_id,
-                stake=stake,
-                expected_odds=expected_odds,
-                idempotency_key=idempotency_key,
-            )
-            messages.success(request, "¡Apuesta simple colocada con éxito!")
+            # Procesar múltiples apuestas simples independientes
+            stakes = request.POST.getlist("stake")
+            expected_odds_list = request.POST.getlist("expected_odds")
+            
+            # Si solo envían 1 stake (como antes), lo usamos para todos (por retrocompatibilidad si fuese necesario)
+            if len(stakes) == 1 and len(selection_ids) > 1:
+                stakes = stakes * len(selection_ids)
+                expected_odds_list = expected_odds_list * len(selection_ids)
+            elif not stakes:
+                # Fallback al viejo método de obtener un string
+                stakes = [stake_str] * len(selection_ids)
+                expected_odds_list = [expected_odds_str] * len(selection_ids)
+            
+            if len(stakes) != len(selection_ids) or len(expected_odds_list) != len(selection_ids):
+                raise ValidationError("Datos de apuesta simple incompletos o malformados.")
+            
+            success_count = 0
+            for i in range(len(selection_ids)):
+                sel_id = selection_ids[i]
+                stake_val = Decimal(stakes[i].strip().replace(",", "."))
+                odds_val = Decimal(expected_odds_list[i].strip().replace(",", "."))
+                
+                try:
+                    place_simple_bet(
+                        user=request.user,
+                        selection_id=sel_id,
+                        stake=stake_val,
+                        expected_odds=odds_val,
+                        idempotency_key=f"{idempotency_key}_{i}",
+                    )
+                    success_count += 1
+                except ValidationError as e:
+                    messages.warning(request, f"No se pudo colocar una selección: {getattr(e, 'message', str(e))}")
+                except ValueError as e:
+                    from apps.wallet.selectors import get_wallet_balance
+                    if str(e) == "Saldo insuficiente.":
+                        balance = get_wallet_balance(request.user)
+                        messages.warning(request, f"Saldo insuficiente para una selección. Balance: {balance:.2f} fichas.")
+                    else:
+                        messages.warning(request, f"Error en una selección: {str(e)}")
+            
+            if success_count > 0:
+                messages.success(request, f"¡{success_count} apuesta(s) simple(s) colocada(s) con éxito!")
 
     except ValidationError as e:
         messages.error(request, f"Error: {getattr(e, 'message', str(e))}")
