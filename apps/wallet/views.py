@@ -59,11 +59,23 @@ class WalletBalanceView(APIView):
 
     def get(self, request):
         balances = get_wallet_account_balances(request.user)
+        available = balances["available"]
+        
+        from apps.wallet.models import UserBonus, UserBonusStatus
+        has_locked_bonus = UserBonus.objects.filter(
+            user=request.user,
+            status=UserBonusStatus.ACTIVE,
+            is_withdrawable=False,
+        ).exists()
+        
+        withdrawable = Decimal("0.0000") if has_locked_bonus else available
+
         return Response(
             {
-                "balance": format_money(balances["available"]),
+                "balance": format_money(available),
+                "withdrawable_balance": format_money(withdrawable),
                 "accounts": {
-                    "USER_WALLET": format_money(balances["available"]),
+                    "USER_WALLET": format_money(available),
                     "PENDING_BETS": format_money(balances["pending_bets"]),
                     "BONUS": format_money(balances["bonus"]),
                 },

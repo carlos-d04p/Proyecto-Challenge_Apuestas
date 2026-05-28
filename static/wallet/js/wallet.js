@@ -5,6 +5,7 @@
     }
 
     const balanceNode = app.querySelector("[data-wallet-balance]");
+    const withdrawableNode = app.querySelector("[data-wallet-withdrawable]");
     const pendingNode = app.querySelector("[data-wallet-pending]");
     const bonusNode = app.querySelector("[data-wallet-bonus]");
     const messageNode = app.querySelector("[data-wallet-message]");
@@ -361,6 +362,9 @@
             const data = await parseResponse(response);
             const visibleBalance = formatWalletAmount(data.balance);
             balanceNode.textContent = visibleBalance;
+            if (withdrawableNode) {
+                withdrawableNode.textContent = formatWalletAmount(data.withdrawable_balance || "0.00");
+            }
             if (data.accounts && pendingNode && bonusNode) {
                 pendingNode.textContent = formatWalletAmount(data.accounts.PENDING_BETS || "0.00");
                 bonusNode.textContent = formatWalletAmount(data.accounts.BONUS || "0.00");
