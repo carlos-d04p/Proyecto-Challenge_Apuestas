@@ -379,6 +379,7 @@
   }
 
   /* Tablas administrativas personalizadas */
+  /* Tablas administrativas personalizadas */
   .admin-table {
     width: 100%;
     border-collapse: separate;
@@ -390,7 +391,7 @@
     text-align: left;
     padding: 1rem;
     color: var(--text-soft);
-    border-bottom: 2px solid var(--border-color);
+    border-bottom: 2px solid var(--border);
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -411,6 +412,56 @@
   .admin-table tbody tr:hover {
     background-color: rgba(255, 255, 255, 0.03);
   }
+  
+  /* Missing CSS for Admin Sections */
+  .middle-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+  @media (max-width: 1024px) { .middle-row { grid-template-columns: 1fr; } }
+  
+  .admin-panel {
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-shadow: var(--shadow-1);
+  }
+  .panel-header {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.75rem; margin-bottom: 1.25rem;
+  }
+  .panel-title { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; margin: 0; }
+  .panel-body { flex: 1; }
+  
+  .audit-block-visual {
+    background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;
+  }
+  .audit-meta-item { font-size: 0.85rem; color: var(--text-soft); margin-bottom: 0.5rem; }
+  .audit-meta-item strong { color: #fff; }
+  .audit-hash { font-family: var(--font-mono); font-size: 0.8rem; color: var(--info); word-break: break-all; background: rgba(0,0,0,0.3); padding: 0.4rem; border-radius: 4px; margin-top: 0.5rem; }
+
+  .alert-list-item { background: rgba(239, 68, 68, 0.04); border: 1px solid rgba(239, 68, 68, 0.15); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
+  .alert-list-item.warning { background: rgba(245, 158, 11, 0.04); border-color: rgba(245, 158, 11, 0.15); }
+  .alert-badge { font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px; text-transform: uppercase; }
+  .badge-high { background-color: rgba(239, 68, 68, 0.2); color: var(--danger); }
+  .badge-medium { background-color: rgba(245, 158, 11, 0.2); color: var(--warn); }
+  
+  .bottom-row { display: grid; grid-template-columns: 2fr 1.2fr; gap: 1.5rem; }
+  @media (max-width: 1024px) { .bottom-row { grid-template-columns: 1fr; } }
+  
+  .btn-admin {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    color: var(--text); padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer;
+    font-weight: 600; font-size: 0.85rem; transition: all 0.2s ease;
+  }
+  .btn-admin:hover { background-color: rgba(255, 255, 255, 0.1); border-color: var(--text-soft); }
+  .btn-admin-primary { background-color: var(--accent); border-color: var(--accent); color: #0b0f19; }
+  .btn-admin-primary:hover { background-color: var(--accent-soft); border-color: var(--accent-soft); }
+  .btn-full { width: 100%; display: block; box-sizing: border-box; text-align: center; }
 
   /* Simulación del Gráfico de Apuestas */
   .chart-container-sim {
@@ -757,7 +808,7 @@
             <tr>
               <td><strong>#{{ log.sequence }}</strong></td>
               <td><span class="alert-badge badge-medium">{{ log.event_type }}</span></td>
-              <td><pre class="payload-box" style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); padding: 0.75rem; border-radius: 8px; color: #60a5fa; font-family: monospace; font-size: 0.75rem; max-width: 380px; overflow-x: auto; margin: 0;">{{ log.payload_canonical }}</pre></td>
+              <td><pre class="payload-box" style="background: rgba(0,0,0,0.3); border: 1px solid var(--border); padding: 0.75rem; border-radius: 8px; color: var(--info); font-family: var(--font-mono); font-size: 0.75rem; max-width: 380px; overflow-x: auto; margin: 0;">{{ log.payload_canonical }}</pre></td>
               <td><span style="font-family: monospace; font-size: 0.72rem;">{{ log.previous_hash|slice:":12" }}...</span></td>
               <td><span style="font-family: monospace; font-size: 0.72rem; color: var(--accent-warning);">{{ log.hash|slice:":12" }}...</span></td>
               <td style="white-space: nowrap;">{{ log.created_at|date:"d/m/Y H:i:s" }}</td>
@@ -860,7 +911,7 @@
                 <span style="font-weight: 600; color: #fff;">{{ p.daily_deposit_limit|default:"∞" }}</span> <span style="color: var(--text-soft); font-size: 0.75rem;">Fichas diarias</span>
               </td>
               <td>
-                <a href="/admin/accounts/perfilkyc/{{ p.id }}/change/" target="_blank" class="btn-admin" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; padding: 0.4rem 0.8rem; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s; font-size: 0.75rem; font-weight: 600;">
+                <a href="/admin/accounts/perfilkyc/{{ p.id }}/change/" target="_blank" class="btn-admin" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #fff; padding: 0.4rem 0.8rem; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s; font-size: 0.75rem; font-weight: 600;">
                   <i data-lucide="settings" style="width: 14px; height: 14px;"></i> Gestionar
                 </a>
               </td>
