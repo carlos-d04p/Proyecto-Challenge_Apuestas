@@ -111,7 +111,7 @@ class RegistroSerializer(serializers.Serializer):
         if request:
             base_url = request.build_absolute_uri('/')[:-1]
         else:
-            base_url = "http://127.0.0.1:8000"
+            base_url = "http://127.0.0.1:8003"
 
         # 🚀 Encolar la tarea asíncrona de envío de email
         enviar_email_verificacion_async.delay(user.id, token, base_url)

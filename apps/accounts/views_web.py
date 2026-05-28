@@ -34,7 +34,7 @@ def registro_view(request):
         datos = request.POST.dict()
         datos.pop("csrfmiddlewaretoken", None)
 
-        serializer = RegistroSerializer(data=datos)
+        serializer = RegistroSerializer(data=datos, context={"request": request})
         if serializer.is_valid():
             user = serializer.save()
             login(request, user, backend="django.contrib.auth.backends.ModelBackend")

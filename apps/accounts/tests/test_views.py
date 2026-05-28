@@ -92,7 +92,7 @@ class TestRegistroView:
         assert PerfilKYC.objects.filter(user__username="nuevo_user").exists()
         perfil = PerfilKYC.objects.get(user__username="nuevo_user")
         assert perfil.status == PerfilKYC.Status.PENDING
-        mock_delay.assert_called_once_with(perfil.user.id, "token123", "http://127.0.0.1:8000")
+        mock_delay.assert_called_once_with(perfil.user.id, "token123", "http://127.0.0.1:8003")
 
     def test_registro_menor_de_edad(self, db, api_client):
         """Registro con usuario menor de 18 años devuelve 400."""
