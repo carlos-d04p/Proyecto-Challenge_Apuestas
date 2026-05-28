@@ -100,15 +100,37 @@
                 <div class="wallet-card-header">
                     <div>
                         <span class="wallet-label">Retiro simulado</span>
-                        <p class="wallet-card-copy">Reduce fichas del saldo disponible de forma controlada.</p>
+                        <p class="wallet-card-copy">Reduce solo fichas del saldo disponible. No aplica a bonos ni fichas pendientes.</p>
                     </div>
                     <span class="wallet-status-dot wallet-status-dot-cyan"></span>
                 </div>
-                <form class="wallet-form" data-wallet-form="withdraw" novalidate>
-                    <label for="withdraw-amount">Monto en fichas</label>
-                    <input id="withdraw-amount" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="5.0000">
-                    <button class="wallet-button wallet-button-secondary" type="submit">Retirar fichas</button>
-                </form>
+                <button class="wallet-button wallet-button-secondary wallet-open-button" type="button" data-open-withdraw>
+                    Retirar fichas
+                </button>
+
+                <div class="wallet-simulated-panel" data-withdraw-panel hidden>
+                    <p class="wallet-simulated-notice">Este retiro es simulado. Las fichas no tienen valor monetario real.</p>
+                    <form class="wallet-form wallet-form-detailed" data-wallet-form="withdraw" novalidate>
+                        <div class="wallet-form-row">
+                            <label for="withdraw-amount">Monto a retirar</label>
+                            <input id="withdraw-amount" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="5.0000">
+                        </div>
+                        <div class="wallet-form-row">
+                            <label for="withdraw-method">Metodo simulado</label>
+                            <select id="withdraw-method" name="withdraw_method">
+                                <option value="">Selecciona un metodo</option>
+                                <option value="educational_wallet">Billetera educativa</option>
+                                <option value="internal_record">Registro interno simulado</option>
+                                <option value="practice_account">Cuenta de practica</option>
+                            </select>
+                        </div>
+                        <label class="wallet-check" for="withdraw-confirmation">
+                            <input id="withdraw-confirmation" name="withdraw_confirmation" type="checkbox">
+                            <span>Confirmo que el retiro es simulado y solo usa saldo disponible.</span>
+                        </label>
+                        <button class="wallet-button wallet-button-secondary" type="submit">Confirmar retiro simulado</button>
+                    </form>
+                </div>
             </article>
         </div>
     </section>

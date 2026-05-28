@@ -13,6 +13,8 @@
     const forms = app.querySelectorAll("[data-wallet-form]");
     const openDepositButton = app.querySelector("[data-open-deposit]");
     const depositPanel = app.querySelector("[data-deposit-panel]");
+    const openWithdrawButton = app.querySelector("[data-open-withdraw]");
+    const withdrawPanel = app.querySelector("[data-withdraw-panel]");
 
     function getCookie(name) {
         const value = `; ${document.cookie}`;
@@ -48,10 +50,15 @@
         if (!/^\d+(\.\d{1,4})?$/.test(normalized)) {
             throw new Error("Ingresa un monto valido con hasta 4 decimales.");
         }
-        if (Number(normalized) <= 0) {
+        if (moneyToUnits(normalized) <= 0n) {
             throw new Error("El monto debe ser mayor a cero.");
         }
         return normalized;
+    }
+
+    function moneyToUnits(value) {
+        const [whole, fraction = ""] = value.split(".");
+        return BigInt(whole) * 10000n + BigInt(fraction.padEnd(4, "0"));
     }
 
     function isValidLuhn(number) {
@@ -124,6 +131,22 @@
         }
     }
 
+    function validateWithdrawSimulation(form, amount) {
+        const method = form.querySelector("select[name='withdraw_method']").value;
+        const confirmation = form.querySelector("input[name='withdraw_confirmation']").checked;
+        const available = balanceNode.textContent.trim() || "0.0000";
+
+        if (!method) {
+            throw new Error("Selecciona un metodo simulado de retiro.");
+        }
+        if (!confirmation) {
+            throw new Error("Confirma que el retiro es simulado y usa solo saldo disponible.");
+        }
+        if (moneyToUnits(amount) > moneyToUnits(available)) {
+            throw new Error("Saldo disponible insuficiente. No puedes retirar fichas pendientes ni bonos.");
+        }
+    }
+
     function keepOnlyDigits(input) {
         input.value = input.value.replace(/\D/g, "");
     }
@@ -184,6 +207,9 @@
                 if (kind === "deposit") {
                     validateDepositSimulation(form);
                 }
+                if (kind === "withdraw") {
+                    validateWithdrawSimulation(form, amount);
+                }
                 button.disabled = true;
                 await submitOperation(kind, amount);
                 const balance = await refreshBalance();
@@ -204,6 +230,17 @@
             depositPanel.hidden = false;
             openDepositButton.hidden = true;
             const amountInput = depositPanel.querySelector("input[name='amount']");
+            if (amountInput) {
+                amountInput.focus();
+            }
+        });
+    }
+
+    if (openWithdrawButton && withdrawPanel) {
+        openWithdrawButton.addEventListener("click", () => {
+            withdrawPanel.hidden = false;
+            openWithdrawButton.hidden = true;
+            const amountInput = withdrawPanel.querySelector("input[name='amount']");
             if (amountInput) {
                 amountInput.focus();
             }
