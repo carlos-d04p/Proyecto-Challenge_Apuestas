@@ -129,3 +129,19 @@ def place_acca_bet(user, selection_ids, stake, expected_odds, idempotency_key=No
         bet.status = Bet.Status.PLACED
         bet.save(update_fields=["status"])
         return bet
+
+def cash_out_bet(bet, current_odds, house_factor=Decimal("0.9000")):
+    if bet.status != Bet.Status.PLACED:
+        raise ValidationError("Solo se puede realizar cash-out en apuestas activas.")
+    
+    with transaction.atomic():
+        bet_lock = Bet.objects.select_for_update().get(id=bet.id)
+        
+        if bet_lock.status != Bet.Status.PLACED:
+            raise ValidationError("Solo se puede realizar cash-out en apuestas activas.")
+            
+        payout = (bet_lock.stake * (bet_lock.total_odds / current_odds) * house_factor).quantize(Decimal("0.0001"))
+        bet_lock.payout = payout
+        bet_lock.status = Bet.Status.CASHED_OUT
+        bet_lock.save(update_fields=["status", "payout", "updated_at"])
+        return bet_lock
