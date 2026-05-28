@@ -57,10 +57,10 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='ledgerentry',
-            constraint=models.CheckConstraint(condition=models.Q(('amount__gt', Decimal('0.0000'))), name='ledger_amount_gt_zero'),
+            constraint=models.CheckConstraint(check=models.Q(('amount__gt', Decimal('0.0000'))), name='ledger_amount_gt_zero'),
         ),
         migrations.AddConstraint(
             model_name='ledgerentry',
-            constraint=models.CheckConstraint(condition=models.Q(models.Q(('account', 'HOUSE'), ('account_owner__isnull', True)), models.Q(('account__in', ['USER_WALLET', 'PENDING_BETS', 'BONUS']), ('account_owner__isnull', False)), _connector='OR'), name='ledger_account_owner_required'),
+            constraint=models.CheckConstraint(check=models.Q(models.Q(('account', 'HOUSE'), ('account_owner__isnull', True)), models.Q(('account__in', ['USER_WALLET', 'PENDING_BETS', 'BONUS']), ('account_owner__isnull', False)), _connector='OR'), name='ledger_account_owner_required'),
         ),
     ]
