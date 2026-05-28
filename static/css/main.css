@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -473,3 +473,175 @@ footer strong { color: var(--text-soft); }
 }
 .autoexclusion-section h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--yellow); }
 .limites-form { margin-bottom: 1rem; }
+
+/* ── BET SLIP ────────────────────────────────────────────────────── */
+#bet-slip-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 340px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  z-index: 1000;
+  display: none;
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+}
+
+.betslip-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.betslip-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.betslip-body {
+  padding: 1rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.betslip-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  position: relative;
+}
+
+.betslip-item-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.betslip-event-name {
+  font-size: 0.75rem;
+  color: var(--text-soft);
+}
+
+.betslip-remove-btn {
+  background: none;
+  border: none;
+  color: var(--text-soft);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.betslip-remove-btn:hover {
+  color: var(--live);
+}
+
+.betslip-item-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.betslip-sel-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.betslip-sel-odds {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.betslip-summary {
+  border-top: 1px dashed var(--border);
+  padding-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.betslip-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.betslip-total-odds {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.betslip-stake-input label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  margin-bottom: 0.3rem;
+}
+
+.betslip-stake-input input {
+  width: 100%;
+  padding: 0.5rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: #fff;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.betslip-payout {
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+#betslip-potential-payout {
+  font-weight: 800;
+  color: var(--green);
+}
+
+.betslip-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.betslip-actions button {
+  flex: 1;
+  padding: 0.6rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-clear {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+}
+
+.btn-clear:hover {
+  border-color: var(--text);
+  color: var(--text);
+}
+
+.betslip-alert {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid #ef4444;
+  color: #fca5a5;
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}

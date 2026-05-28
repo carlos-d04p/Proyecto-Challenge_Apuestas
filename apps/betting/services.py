@@ -46,10 +46,11 @@ def place_simple_bet(user, selection_id, stake, expected_odds, idempotency_key=N
         if not market.is_active or not selection.is_active:
             raise ValidationError("El mercado o selección se encuentran inactivos.")
 
-        if selection.odds != expected_odds:
+        expected_odds_norm = expected_odds.quantize(Decimal("0.0001"))
+        if selection.odds != expected_odds_norm:
             raise ValidationError(
                 f"La cuota ha cambiado. Actual: {selection.odds}, "
-                f"Esperada: {expected_odds}. Por favor reconfirme."
+                f"Esperada: {expected_odds_norm}. Por favor reconfirme."
             )
 
         bet = Bet.objects.create(
@@ -112,9 +113,10 @@ def place_acca_bet(user, selection_ids, stake, expected_odds, idempotency_key=No
 
         total_odds = total_odds.quantize(Decimal("0.0001"))
 
-        if total_odds != expected_odds:
+        expected_odds_norm = expected_odds.quantize(Decimal("0.0001"))
+        if total_odds != expected_odds_norm:
             raise ValidationError(
-                f"Las cuotas cambiaron. Actual: {total_odds}, Esperada: {expected_odds}."
+                f"Las cuotas cambiaron. Actual: {total_odds}, Esperada: {expected_odds_norm}."
             )
 
         bet = Bet.objects.create(

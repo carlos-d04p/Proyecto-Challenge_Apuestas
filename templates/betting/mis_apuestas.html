@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load l10n %}
 
 {% block title %}Mis Apuestas — FairBet Lab{% endblock %}
 
@@ -20,7 +21,6 @@
         color: var(--text);
     }
 
-    /* Clases personalizadas para mapear la máquina de estados de Bet */
     .badge.pending { background: #2d2000; color: var(--yellow); border: 1px solid #854d0e; }
     .badge.placed { background: #1e3a5f; color: #60a5fa; border: 1px solid #2563eb; }
     .badge.won { background: #1e2a1e; color: var(--green); border: 1px solid var(--green); }
@@ -28,7 +28,6 @@
     .badge.void { background: #1f1f1f; color: #6b7280; border: 1px solid #374151; }
     .badge.cashed_out { background: #2e1f47; color: #a78bfa; border: 1px solid #6d28d9; }
 
-    /* Modificadores de color para el texto del Payout */
     .payout-won { color: var(--green); font-weight: 700; }
     .payout-lost { color: var(--live); font-weight: 700; }
     .payout-pending { color: var(--text); font-weight: 700; }
@@ -49,6 +48,7 @@
 </div>
 {% endif %}
 
+{% localize off %}
 {% if apuestas %}
 <div class="event-grid">
     {% for bet in apuestas %}
@@ -110,15 +110,15 @@
     <p>Aún no has colocado boletos de apuesta en este sprint.</p>
 </div>
 {% endif %}
+{% endlocalize %}
 
 <div style="margin-top: 3rem; background: var(--surface); border: 1px solid var(--border); padding: 1.5rem; border-radius: 12px; text-align: center;">
     <h3 style="color: var(--yellow); font-size: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
         ⚠️ CONTROL DE JUEGO RESPONSABLE (LEY N° 31557)
     </h3>
     <p style="font-size: 0.85rem; color: var(--text-soft); max-width: 700px; margin: 0 auto; line-height: 1.5;">
-        Recuerda que esta es una plataforma estrictamente educativa basada en moneda virtual sin valor monetario
-        real[cite: 6, 7]. Jugar en exceso puede causar ludopatía. Configura tus límites de depósito diario y
-        autoexclusión desde tu panel de usuario para mantener una experiencia segura[cite: 40, 41].
+        Plataforma educativa con moneda virtual. No constituye una casa de apuestas (Ley N° 31557).
+        Si tienes problemas con el juego, busca ayuda: 0800-00-000.
     </p>
 </div>
 {% endblock %}

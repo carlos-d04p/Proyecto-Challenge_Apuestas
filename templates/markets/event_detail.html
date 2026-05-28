@@ -1,9 +1,77 @@
 {% extends "base.html" %}
+{% load l10n %}
 {% block title %}{{ event.name }} — FairBet Lab{% endblock %}
 
 {% block content %}
 
 <a href="{% url 'markets:event_list' %}" class="back-link">← Volver a eventos</a>
+
+<style>
+  .alert-box {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+  }
+
+  .alert-success {
+    background: #1e2a1e;
+    border: 1px solid var(--green);
+    color: var(--green);
+  }
+
+  .alert-error,
+  .alert-danger,
+  .alert-warning {
+    background: #3f0d0d;
+    border: 1px solid var(--live);
+    color: var(--text);
+  }
+
+  .alert-info {
+    background: #1e3a5f;
+    border: 1px solid #2563eb;
+    color: #60a5fa;
+  }
+
+  .selection-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .selection-btn:hover {
+    border-color: var(--primary);
+    background: rgba(59, 130, 246, 0.1);
+  }
+
+  .selection-btn.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .selection-btn.locked:hover {
+    border-color: var(--border);
+    background: var(--surface);
+  }
+</style>
+
+{% if messages %}
+<div style="margin-bottom: 1.5rem;">
+  {% for message in messages %}
+  <div class="alert-box alert-{{ message.tags }}">
+    {{ message }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
 
 <!-- Cabecera del evento -->
 <div class="event-hero">
@@ -33,65 +101,52 @@
 
 <!-- Mercados disponibles -->
 {% for market in markets %}
-  {% if market.is_active %}
-    <div class="market-section">
-      <div class="market-header">
-        <span class="market-name">
-          {% if market.kind == '1X2' %}Resultado Final (1X2)
-          {% elif market.kind == 'OU' %}Más / Menos goles
-          {% elif market.kind == 'BTTS' %}Ambos equipos anotan
-          {% elif market.kind == 'HCAP' %}Hándicap asiático
-          {% else %}{{ market.name }}{% endif %}
-        </span>
-        <span class="market-icon">
-          {% if market.kind == '1X2' %}🏆
-          {% elif market.kind == 'OU' %}⚡
-          {% elif market.kind == 'BTTS' %}🎯
-          {% elif market.kind == 'HCAP' %}⚖️
-          {% endif %}
-        </span>
-      </div>
-
-      <div class="selections-grid">
-        {% for sel in market.selections.all %}
-          {% if sel.is_active %}
-            <form method="POST" action="{% url 'betting:colocar_apuesta' %}" style="display: block; width: 100%;">
-              {% csrf_token %}
-              <input type="hidden" name="selection_id" value="{{ sel.id }}">
-              <input type="hidden" name="expected_odds" value="{{ sel.odds|stringformat:'f' }}">
-              <input type="hidden" name="idempotency_key" value="{{ event.id }}-{{ sel.id }}-{{ user.id }}">
-              
-              <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <span style="font-size: 0.8rem; color: var(--text-soft);">{{ sel.name }}</span>
-                  <span style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds|floatformat:'2u' }}</span>
-                </div>
-                
-                {% if event.status == 'SCHEDULED' %}
-                  <div style="display: flex; gap: 0.25rem;">
-                    <input type="number" name="stake" step="1" min="10" value="10" required
-                           style="width: 60px; background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 0.2rem; border-radius: 4px; font-size: 0.8rem; text-align: center;">
-                    <button type="submit" class="filter-btn active" style="flex: 1; padding: 0.2rem; font-size: 0.75rem; border-radius: 4px; font-weight: 600;">
-                      Apostar
-                    </button>
-                  </div>
-                {% else %}
-                  <span style="font-size: 0.75rem; color: var(--muted); text-align: center; display: block; padding-top: 0.25rem;">
-                    Bloqueado (In-Play/Cerrado)
-                  </span>
-                {% endif %}
-              </div>
-            </form>
-          {% endif %}
-        {% endfor %}
-      </div>
-    </div>
-  {% endif %}
-{% empty %}
-  <div class="empty">
-    <div class="empty-icon">📋</div>
-    <p>No hay mercados disponibles para este evento.</p>
+{% if market.is_active %}
+<div class="market-section">
+  <div class="market-header">
+    <span class="market-name">
+      {% if market.kind == '1X2' %}Resultado Final (1X2)
+      {% elif market.kind == 'OU' %}Más / Menos goles
+      {% elif market.kind == 'BTTS' %}Ambos equipos anotan
+      {% elif market.kind == 'HCAP' %}Hándicap asiático
+      {% else %}{{ market.name }}{% endif %}
+    </span>
+    <span class="market-icon">
+      {% if market.kind == '1X2' %}🏆
+      {% elif market.kind == 'OU' %}⚡
+      {% elif market.kind == 'BTTS' %}🎯
+      {% elif market.kind == 'HCAP' %}⚖️
+      {% endif %}
+    </span>
   </div>
+
+  <div class="selections-grid">
+    {% for sel in market.selections.all %}
+    {% if sel.is_active %}
+    {% localize off %}
+    {% if event.status == 'SCHEDULED' %}
+    <button type="button" class="selection-btn"
+      onclick="addToBetSlip('{{ sel.id }}', '{{ sel.name|escapejs }}', '{{ sel.odds }}', '{{ event.id }}', '{{ event.name|escapejs }}')">
+      <span style="font-size: 0.8rem; color: var(--text-soft);">{{ sel.name }}</span>
+      <span style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds|floatformat:'2u' }}</span>
+    </button>
+    {% else %}
+    <div class="selection-btn locked" title="Bloqueado (In-Play/Cerrado)">
+      <span style="font-size: 0.8rem; color: var(--text-soft);">{{ sel.name }}</span>
+      <span style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds|floatformat:'2u' }}</span>
+    </div>
+    {% endif %}
+    {% endlocalize %}
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% empty %}
+<div class="empty">
+  <div class="empty-icon">📋</div>
+  <p>No hay mercados disponibles para este evento.</p>
+</div>
 {% endfor %}
 
 {% endblock %}
