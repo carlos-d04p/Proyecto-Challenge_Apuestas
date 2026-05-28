@@ -3,6 +3,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import TemplateView
 
 from apps.wallet.selectors import get_wallet_balance
@@ -11,6 +13,7 @@ from apps.wallet.services import deposit_simulated, withdraw_simulated
 from core.idempotency import IdempotencyConflict
 
 
+@method_decorator(ensure_csrf_cookie, name="dispatch")
 class WalletPageView(LoginRequiredMixin, TemplateView):
     template_name = "wallet/dashboard.html"
 
