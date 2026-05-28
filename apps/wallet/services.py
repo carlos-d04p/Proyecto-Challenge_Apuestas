@@ -34,10 +34,36 @@ WALLET_INTERNAL_TRANSFER_CREATED = "WALLET_INTERNAL_TRANSFER_CREATED"
 
 def deposit_simulated(user, amount, created_by, idempotency_key=None):
     amount = normalize_money(amount)
-    
+
+    # --- GUARD: Verificación de correo electrónico obligatoria ---
+    if not getattr(user, 'is_email_verified', False):
+        raise PermissionError(
+            "Debes verificar tu correo electrónico antes de realizar depósitos. "
+            "Revisa tu bandeja de entrada."
+        )
+
+    # --- GUARD: Estado KYC debe ser VERIFIED ---
+    try:
+        perfil = user.perfil_kyc
+        if perfil.status == "BLOCKED":
+            raise PermissionError("Tu cuenta está bloqueada. Contacta al soporte.")
+        if perfil.status == "SELF_EXCLUDED":
+            raise PermissionError("Tu cuenta está en autoexclusión. No puedes realizar depósitos.")
+        if perfil.status != "VERIFIED":
+            raise PermissionError(
+                "Tu perfil KYC aún no ha sido aprobado. "
+                "Un administrador debe verificar tu identidad antes de que puedas depositar."
+            )
+    except user.__class__.perfil_kyc.RelatedObjectDoesNotExist:
+        raise PermissionError(
+            "No tienes un perfil KYC registrado. "
+            "Completa tu verificación de identidad en tu perfil."
+        )
+
     # --- REGLA DE NEGOCIO: Límites de Depósito simulado ---
     if amount < Decimal("30.0000") or amount > Decimal("30000.0000"):
         raise ValidationError("El depósito debe estar entre 30.0000 y 30,000.0000 fichas.")
+
 
     payload = _build_payload(
         operation="deposit_simulated",

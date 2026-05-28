@@ -41,11 +41,24 @@
     <h2>📥 Depositar</h2>
     <form class="pay-form" id="form-deposit">
       <label for="dep-amount">Monto (entre {{ min_deposit }} y {{ max_deposit }})</label>
-      <input type="number" id="dep-amount" name="amount" step="0.0001" min="{{ min_deposit }}" max="{{ max_deposit }}" required />
-      <button type="submit" class="pay-btn primary">Depositar instantáneo</button>
+      <input type="number" id="dep-amount" name="amount" step="0.0001" min="{{ min_deposit }}" max="{{ max_deposit }}" required {% if not can_deposit %}disabled{% endif %} />
+      <button type="submit" class="pay-btn primary" {% if not can_deposit %}disabled{% endif %}>
+        {% if can_deposit %}Depositar instantáneo{% else %}🔒 Verificación requerida{% endif %}
+      </button>
+      {% if not email_verified %}
+        <div class="pay-kyc-warn">
+          <strong>Correo no verificado.</strong> Debes confirmar tu correo electrónico antes de poder depositar.
+          <a href="{% url 'accounts_web:perfil' %}" style="color:#fca5a5;">Ir a mi perfil →</a>
+        </div>
+      {% elif not can_deposit %}
+        <div class="pay-kyc-warn">
+          <strong>KYC pendiente ({{ kyc_status }}).</strong> Tu identidad aún no ha sido aprobada por un administrador. Una vez aprobado, podrás depositar.
+        </div>
+      {% endif %}
       <div class="pay-msg" id="dep-msg"></div>
     </form>
   </div>
+
 
   <!-- Retiro -->
   <div class="pay-card">

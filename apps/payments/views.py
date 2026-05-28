@@ -157,10 +157,21 @@ class PaymentsDashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["balance"] = _money(get_wallet_balance(self.request.user))
-        ctx["is_kyc_verified"] = bool(
-            getattr(self.request.user, "is_email_verified", False)
-        )
+        user = self.request.user
+        ctx["balance"] = _money(get_wallet_balance(user))
+        # Verificacion de correo
+        email_ok = bool(getattr(user, "is_email_verified", False))
+        # Estado KYC aprobado
+        try:
+            kyc_ok = email_ok and user.perfil_kyc.status == "VERIFIED"
+            kyc_status = user.perfil_kyc.get_status_display()
+        except Exception:
+            kyc_ok = False
+            kyc_status = "Sin perfil KYC"
+        ctx["email_verified"] = email_ok
+        ctx["is_kyc_verified"] = kyc_ok   # retiros
+        ctx["can_deposit"] = kyc_ok       # depósitos
+        ctx["kyc_status"] = kyc_status
         ctx["min_deposit"] = "30.0000"
         ctx["max_deposit"] = "30000.0000"
         ctx["min_withdrawal"] = "100.0000"
