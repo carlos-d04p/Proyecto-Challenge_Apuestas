@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}Pagos — FairBet Lab{% endblock %}
+
+{% block content %}
+<style>
+  .pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; max-width: 960px; margin: 1.5rem auto; }
+  .pay-card { background: #1f2937; color: #e5e7eb; border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 12px rgba(0,0,0,.2); }
+  .pay-card h2 { margin-top: 0; font-size: 1.1rem; }
+  .pay-balance { font-size: 2.2rem; font-weight: bold; color: #34d399; }
+  .pay-form label { display: block; margin: .6rem 0 .3rem; font-size: .9rem; color: #cbd5e1; }
+  .pay-form input { width: 100%; padding: .55rem .7rem; border-radius: 6px; border: 1px solid #374151; background: #111827; color: #e5e7eb; box-sizing: border-box; }
+  .pay-btn { margin-top: .9rem; width: 100%; padding: .65rem 1rem; border-radius: 8px; border: 0; font-weight: 600; cursor: pointer; }
+  .pay-btn.primary { background: #10b981; color: #052e1c; }
+  .pay-btn.danger { background: #f59e0b; color: #422006; }
+  .pay-btn:disabled { background: #4b5563; color: #9ca3af; cursor: not-allowed; }
+  .pay-kyc-warn { background: #7f1d1d; color: #fecaca; padding: .6rem .8rem; border-radius: 8px; font-size: .85rem; margin-top: .6rem; }
+  .pay-msg { margin-top: .8rem; padding: .55rem .7rem; border-radius: 6px; font-size: .85rem; min-height: 1.1rem; }
+  .pay-msg.ok { background: #064e3b; color: #d1fae5; }
+  .pay-msg.err { background: #7f1d1d; color: #fecaca; }
+  .pay-hist { max-width: 960px; margin: 0 auto 2rem; }
+  .pay-hist table { width: 100%; border-collapse: collapse; color: #e5e7eb; }
+  .pay-hist th, .pay-hist td { padding: .55rem .7rem; text-align: left; border-bottom: 1px solid #374151; font-size: .9rem; }
+  .pay-hist th { background: #111827; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .75rem; font-weight: 600; }
+  .badge.dep { background: #064e3b; color: #6ee7b7; }
+  .badge.wd  { background: #78350f; color: #fcd34d; }
+</style>
+
+<h1 style="text-align:center; margin-top:1.5rem;">💸 Pagos — Depósitos y Retiros</h1>
+
+<div class="pay-grid">
+  <!-- Saldo -->
+  <div class="pay-card" style="grid-column: 1 / span 2; text-align:center;">
+    <h2>Saldo disponible</h2>
+    <div class="pay-balance" id="pay-balance">{{ balance }}</div>
+    <small style="color:#9ca3af;">Fichas virtuales (Decimal 18,4)</small>
+  </div>
+
+  <!-- Depósito -->
+  <div class="pay-card">
+    <h2>📥 Depositar</h2>
+    <form class="pay-form" id="form-deposit">
+      <label for="dep-amount">Monto (entre {{ min_deposit }} y {{ max_deposit }})</label>
+      <input type="number" id="dep-amount" name="amount" step="0.0001" min="{{ min_deposit }}" max="{{ max_deposit }}" required />
+      <button type="submit" class="pay-btn primary">Depositar instantáneo</button>
+      <div class="pay-msg" id="dep-msg"></div>
+    </form>
+  </div>
+
+  <!-- Retiro -->
+  <div class="pay-card">
+    <h2>📤 Retirar</h2>
+    <form class="pay-form" id="form-withdraw">
+      <label for="wd-amount">Monto (mínimo {{ min_withdrawal }})</label>
+      <input type="number" id="wd-amount" name="amount" step="0.0001" min="{{ min_withdrawal }}" required {% if not is_kyc_verified %}disabled{% endif %} />
+      <button type="submit" class="pay-btn danger" {% if not is_kyc_verified %}disabled{% endif %}>
+        {% if is_kyc_verified %}Solicitar retiro{% else %}🔒 Verifica tu cuenta para retirar{% endif %}
+      </button>
+      {% if not is_kyc_verified %}
+        <div class="pay-kyc-warn">
+          <strong>KYC pendiente.</strong> Debes verificar tu correo electrónico
+          (Regulación ALD) antes de poder solicitar retiros.
+        </div>
+      {% endif %}
+      <div class="pay-msg" id="wd-msg"></div>
+    </form>
+  </div>
+</div>
+
+<div class="pay-hist pay-card">
+  <h2>📜 Historial (auditoría append-only)</h2>
+  <table>
+    <thead><tr><th>Fecha</th><th>Tipo</th><th>Monto</th><th>ID</th></tr></thead>
+    <tbody id="pay-hist-body">
+      <tr><td colspan="4" style="text-align:center; color:#9ca3af;">Cargando…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+(function () {
+  const CSRF = document.cookie.match(/csrftoken=([^;]+)/);
+  const csrfToken = CSRF ? CSRF[1] : "";
+  const balanceEl = document.getElementById("pay-balance");
+  const histBody = document.getElementById("pay-hist-body");
+
+  function newKey() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "k-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+  }
+
+  async function postJSON(url, body) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken,
+        "Idempotency-Key": newKey(),  // RB-PAY-03
+      },
+      body: JSON.stringify(body),
+      credentials: "same-origin",
+    });
+    const data = await res.json().catch(() => ({}));
+    return { status: res.status, data };
+  }
+
+  function showMsg(el, ok, text) {
+    el.className = "pay-msg " + (ok ? "ok" : "err");
+    el.textContent = text;
+  }
+
+  async function refreshHistory() {
+    try {
+      const res = await fetch("/payments/api/transactions/", { credentials: "same-origin" });
+      const data = await res.json();
+      const rows = (data.results || []).map(t => `
+        <tr>
+          <td>${new Date(t.created_at).toLocaleString()}</td>
+          <td><span class="badge ${t.kind === 'DEPOSIT' ? 'dep' : 'wd'}">${t.kind}</span></td>
+          <td>${t.amount}</td>
+          <td><code style="font-size:.7rem;">${t.id}</code></td>
+        </tr>`).join("");
+      histBody.innerHTML = rows || `<tr><td colspan="4" style="text-align:center; color:#9ca3af;">Sin movimientos aún.</td></tr>`;
+    } catch (e) {
+      histBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#fecaca;">Error cargando historial.</td></tr>`;
+    }
+  }
+
+  function bind(formId, msgId, url, okStatus) {
+    const form = document.getElementById(formId);
+    const msg = document.getElementById(msgId);
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const amount = form.querySelector('input[name="amount"]').value;
+      showMsg(msg, true, "Procesando…");
+      const { status, data } = await postJSON(url, { amount });
+      if (status === okStatus) {
+        balanceEl.textContent = data.balance;
+        showMsg(msg, true, data.detail || "OK");
+        form.reset();
+        refreshHistory();
+      } else {
+        showMsg(msg, false, data.detail || ("Error " + status));
+      }
+    });
+  }
+
+  bind("form-deposit",  "dep-msg", "/payments/api/deposit/",  201);
+  bind("form-withdraw", "wd-msg",  "/payments/api/withdraw/", 200);
+  refreshHistory();
+})();
+</script>
+{% endblock %}

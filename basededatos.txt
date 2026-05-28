@@ -1,0 +1,133 @@
+// FairBet Lab — Esquema de base de datos
+// Simulador educativo de apuestas deportivas — Ley 31557
+
+Project FairBetLab {
+  database_type: 'PostgreSQL'
+  Note: 'Partida doble · Decimal(18,4) · Hash chain SHA-256'
+}
+
+Table usuario {
+  id uuid [pk]
+  username varchar [unique, not null]
+  email varchar
+  password_hash varchar
+  is_staff boolean
+  is_active boolean
+  date_joined timestamp
+}
+
+Table perfil_kyc {
+  id bigint [pk, increment]
+  user_id uuid [ref: - usuario.id, unique]
+  dni varchar(8) [unique, not null]
+  birth_date date
+  status varchar [note: 'PENDING/VERIFIED/BLOCKED/SELF_EXCLUDED']
+  verified_at timestamp
+  self_excluded_until timestamp
+  daily_deposit_limit decimal(18,4)
+  weekly_deposit_limit decimal(18,4)
+  monthly_deposit_limit decimal(18,4)
+  limits_last_raised_at timestamp
+}
+
+Table registro_idempotencia {
+  id bigint [pk, increment]
+  user_id uuid [ref: > usuario.id]
+  key varchar(128)
+  request_hash char(64)
+  response_status smallint
+  response_body json
+  created_at timestamp
+  indexes {
+    (user_id, key) [unique]
+  }
+}
+
+Table evento {
+  id uuid [pk]
+  name varchar
+  sport varchar
+  starts_at timestamp
+  status varchar [note: 'SCHEDULED/LIVE/FINISHED/SUSPENDED/CANCELLED']
+  suspended_until timestamp
+}
+
+Table mercado {
+  id uuid [pk]
+  event_id uuid [ref: > evento.id]
+  kind varchar [note: '1X2 / OU / BTTS / HCAP']
+  name varchar
+  is_active boolean
+}
+
+Table seleccion {
+  id uuid [pk]
+  market_id uuid [ref: > mercado.id]
+  name varchar
+  odds decimal(10,4)
+  is_active boolean
+  updated_at timestamp
+}
+
+Table apuesta {
+  id uuid [pk]
+  user_id uuid [ref: > usuario.id]
+  stake decimal(18,4)
+  combined_odds decimal(10,4)
+  state varchar [note: 'PLACED/WON/LOST/VOID/CASHED_OUT (FSM)']
+  placement_tx_id uuid [ref: > transaccion.id]
+  settlement_tx_id uuid [ref: > transaccion.id]
+  cashout_amount decimal(18,4)
+  created_at timestamp
+  settled_at timestamp
+}
+
+Table linea_apuesta {
+  id bigint [pk, increment]
+  bet_id uuid [ref: > apuesta.id]
+  selection_id uuid [ref: > seleccion.id]
+  odds_at_placement decimal(10,4)
+  indexes {
+    (bet_id, selection_id) [unique]
+  }
+}
+
+Table transaccion {
+  id uuid [pk]
+  kind varchar [note: 'DEPOSIT/WITHDRAWAL/BET_PLACEMENT/BET_PAYOUT/BET_LOSS/BET_REFUND/CASHOUT']
+  description text
+  created_by_id uuid [ref: > usuario.id]
+  created_at timestamp
+}
+
+Table asiento_ledger {
+  id bigint [pk, increment]
+  transaction_id uuid [ref: > transaccion.id]
+  account varchar [note: 'USER_WALLET/HOUSE/PENDING_BETS/BONUS']
+  account_owner uuid [note: 'NULL para HOUSE']
+  direction varchar [note: 'DEBIT / CREDIT']
+  amount decimal(18,4) [note: 'CHECK > 0']
+  created_at timestamp
+}
+
+Table audit_log {
+  id bigint [pk, increment]
+  sequence bigint [unique]
+  event_type varchar
+  payload json
+  payload_canonical text
+  previous_hash char(64)
+  hash char(64) [unique]
+  created_at timestamp
+  Note: 'Append-only · hash_n = SHA256(hash_{n-1} || payload_canonical_n)'
+}
+
+Table actividad_sospechosa {
+  id bigint [pk, increment]
+  user_id uuid [ref: > usuario.id]
+  reason varchar [note: 'SHARED_IP / DEP_WD / PATTERN']
+  evidence json
+  detected_at timestamp
+  reviewed_at timestamp
+  reviewer_note text
+}

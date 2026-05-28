@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load l10n %}
 
 {% block title %}Mis Apuestas — FairBet Lab{% endblock %}
 
@@ -20,7 +21,6 @@
         color: var(--text);
     }
 
-    /* Clases personalizadas para mapear la máquina de estados de Bet */
     .badge.pending { background: #2d2000; color: var(--yellow); border: 1px solid #854d0e; }
     .badge.placed { background: #1e3a5f; color: #60a5fa; border: 1px solid #2563eb; }
     .badge.won { background: #1e2a1e; color: var(--green); border: 1px solid var(--green); }
@@ -28,7 +28,6 @@
     .badge.void { background: #1f1f1f; color: #6b7280; border: 1px solid #374151; }
     .badge.cashed_out { background: #2e1f47; color: #a78bfa; border: 1px solid #6d28d9; }
 
-    /* Modificadores de color para el texto del Payout */
     .payout-won { color: var(--green); font-weight: 700; }
     .payout-lost { color: var(--live); font-weight: 700; }
     .payout-pending { color: var(--text); font-weight: 700; }
@@ -49,6 +48,7 @@
 </div>
 {% endif %}
 
+{% localize off %}
 {% if apuestas %}
 <div class="event-grid">
     {% for bet in apuestas %}
@@ -61,30 +61,44 @@
         </div>
 
         <div style="margin: 0.5rem 0 1rem 0;">
-            {% for line in bet.selections.all %}
-            <div style="font-size: 0.9rem; font-weight: 500; margin-bottom: 0.25rem;">
-                ⚽ {{ line.selection.market.event.name }}
-            </div>
-            <div style="font-size: 0.8rem; color: var(--text-soft); display: flex; justify-content: space-between;">
-                <span>{{ line.selection.market.name }} — <strong>{{ line.selection.name }}</strong></span>
-                <span style="color: var(--primary); font-weight: 600;">@{{ line.odds_at_placement }}</span>
-            </div>
+            {% regroup bet.selections.all|dictsort:"selection.market.event.name" by selection.market.event.name as grouped_selections %}
+            {% for group in grouped_selections %}
+                <div class="betslip-event-group" style="margin-bottom: 0.75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+                    <div class="betslip-group-header" style="background: rgba(255,255,255,0.05); padding: 0.5rem 0.75rem; font-weight: 600; font-size: 0.85rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.4rem;">
+                        ⚽ {{ group.grouper }}
+                    </div>
+                    <div class="betslip-group-body" style="padding: 0.25rem 0;">
+                        {% for line in group.list %}
+                        <div class="betslip-item" style="padding: 0.4rem 0.75rem; display: flex; justify-content: space-between; align-items: center; border-radius: 0; margin: 0; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <div style="display: flex; flex-direction: column; gap: 0.15rem;">
+                                <span class="betslip-sel-name" style="font-size: 0.85rem; font-weight: 600; color: var(--text);">{{ line.selection.name }}</span>
+                                <span class="betslip-sel-market" style="font-size: 0.7rem; color: var(--text-soft);">
+                                    {% if line.selection.market.kind == '1X2' %}Resultado del partido{% elif line.selection.market.kind == 'OU' %}Goles totales Más/Menos{% elif line.selection.market.kind == 'BTTS' %}Ambos equipos anotan{% elif line.selection.market.kind == 'HCAP' %}Hándicap asiático{% else %}{{ line.selection.market.name }}{% endif %}
+                                </span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <span class="betslip-sel-odds" style="font-weight: 700; color: var(--primary);">{{ line.odds_at_placement|floatformat:'2u' }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
             {% endfor %}
         </div>
 
         <div style="border-top: 1px solid var(--border); padding-top: 0.75rem; font-size: 0.85rem; color: var(--text-soft);">
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
                 <span>Monto Apostado (Stake):</span>
-                <span style="color: var(--text); font-weight: 600;">{{ bet.stake }} Fichas</span>
+                <span style="color: var(--text); font-weight: 600;">{{ bet.stake|floatformat:'2u' }} Fichas</span>
             </div>
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
                 <span>Cuota Total Ticket:</span>
-                <span style="color: var(--text); font-weight: 600;">{{ bet.total_odds }}</span>
+                <span style="color: var(--text); font-weight: 600;">{{ bet.total_odds|floatformat:'2u' }}</span>
             </div>
             <div style="display: flex; justify-content: space-between; font-size: 0.95rem; padding-top: 0.25rem;">
                 <span>Retorno Calculado:</span>
                 <span class="{% if bet.status == 'WON' %}payout-won{% elif bet.status == 'LOST' %}payout-lost{% else %}payout-pending{% endif %}">
-                    {% if bet.payout is not None %}{{ bet.payout }} Fichas{% else %}Pendiente{% endif %}
+                    {% if bet.payout is not None %}{{ bet.payout|floatformat:'2u' }} Fichas{% else %}Pendiente{% endif %}
                 </span>
             </div>
         </div>
@@ -110,15 +124,15 @@
     <p>Aún no has colocado boletos de apuesta en este sprint.</p>
 </div>
 {% endif %}
+{% endlocalize %}
 
 <div style="margin-top: 3rem; background: var(--surface); border: 1px solid var(--border); padding: 1.5rem; border-radius: 12px; text-align: center;">
     <h3 style="color: var(--yellow); font-size: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
         ⚠️ CONTROL DE JUEGO RESPONSABLE (LEY N° 31557)
     </h3>
     <p style="font-size: 0.85rem; color: var(--text-soft); max-width: 700px; margin: 0 auto; line-height: 1.5;">
-        Recuerda que esta es una plataforma estrictamente educativa basada en moneda virtual sin valor monetario
-        real[cite: 6, 7]. Jugar en exceso puede causar ludopatía. Configura tus límites de depósito diario y
-        autoexclusión desde tu panel de usuario para mantener una experiencia segura[cite: 40, 41].
+        Plataforma educativa con moneda virtual. No constituye una casa de apuestas (Ley N° 31557).
+        Si tienes problemas con el juego, busca ayuda: 0800-00-000.
     </p>
 </div>
 {% endblock %}

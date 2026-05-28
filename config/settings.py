@@ -37,19 +37,17 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'django_filters',
-    'channels',
+    
+    # Aplicaciones del Proyecto Casino (FairBet Lab)
     'apps.accounts',
-    'apps.wallet',
-    'apps.payments',
-    'apps.markets',
-    'apps.betting',
-    'apps.realtime',
-    'apps.compliance',
     'apps.backoffice',
+    'apps.betting',
+    'apps.compliance',
+    'apps.markets',
+    'apps.payments',
+    'apps.realtime',
+    'apps.wallet',
 ]
-
-AUTH_USER_MODEL = 'accounts.CustomUser'
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -63,6 +61,8 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
+AUTH_USER_MODEL = 'accounts.CustomUser'
+
 
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': [
@@ -73,6 +73,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
 }
@@ -162,6 +163,25 @@ CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = True
+
+# Beat schedule — reloj del partido (auto SCHEDULED->LIVE->FINISHED)
+CELERY_BEAT_SCHEDULE = {
+    'auto-transition-events': {
+        'task': 'apps.markets.tasks.auto_transition_events',
+        'schedule': 15.0,  # cada 15 segundos
+    },
+    'simulate-match-progress': {
+        'task': 'apps.markets.tasks.simulate_match_progress',
+        'schedule': float(os.environ.get('MATCH_TICK_SECONDS', '5')),
+    },
+}
+
+# Cuántos minutos después de iniciar un evento se considera "terminado".
+EVENT_AUTO_FINISH_AFTER_MINUTES = int(
+    os.environ.get('EVENT_AUTO_FINISH_AFTER_MINUTES', '110')
+)
 
 # Caches configuration (Redis)
 CACHES = {

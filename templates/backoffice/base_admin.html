@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Backoffice Administrativo — FairBet Lab{% endblock %}</title>
+  
+  <!-- Fonts y Lucide Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --bg-dark: #0f131c;
+      --bg-card: #151a26;
+      --border-color: #202738;
+      --accent-primary: #10b981; /* Verde esmeralda de FairBet admin */
+      --accent-blue: #3b82f6;
+      --accent-danger: #ef4444;
+      --accent-warning: #f59e0b;
+      --text-main: #f3f4f6;
+      --text-soft: #9ca3af;
+      --text-muted: #6b7280;
+      
+      --font-ui: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-ui);
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Navbar de Administración */
+    .admin-navbar {
+      background-color: #111622;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      color: #fff;
+    }
+
+    .brand-icon {
+      color: var(--accent-primary);
+      width: 28px;
+      height: 28px;
+    }
+
+    .brand-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+    }
+
+    .brand-title span {
+      color: var(--accent-primary);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .nav-link {
+      color: var(--text-soft);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: color 0.2s ease;
+      cursor: pointer;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      color: #fff;
+      border-bottom: 2px solid var(--accent-primary);
+      padding-bottom: 2px;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--text-soft);
+      font-size: 0.9rem;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: rgba(16, 185, 129, 0.2);
+      border: 1.5px solid var(--accent-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-primary);
+      font-weight: 700;
+    }
+
+    /* Contenido */
+    main.admin-main {
+      flex: 1;
+      width: 100%;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* Utilidades de botones */
+    .btn-admin {
+      background-color: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-admin:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-color: var(--text-soft);
+    }
+
+    .btn-admin-primary {
+      background-color: var(--accent-primary);
+      border-color: var(--accent-primary);
+      color: #0b0f19;
+    }
+
+    .btn-admin-primary:hover {
+      background-color: #059669;
+      border-color: #059669;
+      color: #fff;
+    }
+
+    .btn-admin-secondary {
+      background-color: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: white;
+    }
+
+    .btn-admin-secondary:hover {
+      background-color: #2563eb;
+    }
+
+    .btn-admin-danger {
+      background-color: var(--accent-danger);
+      border-color: var(--accent-danger);
+      color: white;
+    }
+
+    .btn-admin-danger:hover {
+      background-color: #dc2626;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar Administrativo -->
+  <header class="admin-navbar">
+    <a href="{% url 'backoffice:dashboard' %}" class="brand">
+      <i data-lucide="shield-check" class="brand-icon"></i>
+      <div class="brand-title">FairBet<span>Lab</span></div>
+    </a>
+    
+    <nav class="nav-links">
+      <a class="nav-link active" onclick="switchAdminTab('resumen')">Auditoría</a>
+      <a class="nav-link" onclick="switchAdminTab('alertas')">Alertas</a>
+      <a class="nav-link" onclick="switchAdminTab('usuarios')">Usuarios</a>
+      <a class="nav-link" onclick="switchAdminTab('reportes')">Reportes MINCETUR</a>
+      <a class="nav-link" href="/admin/" target="_blank">Administración</a>
+    </nav>
+    
+    <!-- User Profile Dropdown -->
+    <div class="user-profile" style="position: relative; cursor: pointer;" onclick="toggleUserMenu()">
+      <span>• Admin Jesús</span>
+      <div class="avatar">AJ</div>
+      <div id="user-menu" style="display: none; position: absolute; right: 0; top: 100%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; min-width: 180px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 200;">
+        <a href="{% url 'accounts_web:perfil' %}" style="display: block; padding: 0.75rem 1rem; color: var(--text-main); text-decoration: none;" onmouseover="this.style.background='rgba(255,255,255,0.05)';" onmouseout="this.style.background='none';">Mi Perfil</a>
+        <a href="{% url 'accounts_web:logout' %}" style="display: block; padding: 0.75rem 1rem; color: var(--text-main); text-decoration: none;" onmouseover="this.style.background='rgba(255,255,255,0.05)';" onmouseout="this.style.background='none';">Cerrar Sesión</a>
+      </div>
+    </div>
+    <script>
+      function toggleUserMenu(){
+        const menu=document.getElementById('user-menu');
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      }
+      // Cerrar menú al hacer clic fuera
+      document.addEventListener('click', function(event){
+        const profile=document.querySelector('.user-profile');
+        if(!profile.contains(event.target)){
+          document.getElementById('user-menu').style.display='none';
+        }
+      });
+    </script>
+  </header>
+
+  <!-- Contenedor Principal sin layouts forzados -->
+  <main class="admin-main">
+    {% block admin_content %}{% endblock %}
+  </main>
+
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>

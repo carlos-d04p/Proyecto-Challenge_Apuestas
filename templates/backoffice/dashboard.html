@@ -1,0 +1,960 @@
+{% extends "base_admin.html" %}
+{% block title %}Dashboard · Ops{% endblock %}
+{% block topbar_title %}Dashboard de operaciones{% endblock %}
+
+{% block crumbs %}
+  <div class="crumbs">
+    <span>Dashboard</span>
+    <span class="live-tick">Last sync <span id="last-tick">—</span></span>
+  </div>
+{% endblock %}
+
+{% block content %}
+<style>
+  /* ── KPI grid ──────────────────────────────────────────────────────── */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: .85rem;
+    margin-bottom: 1.5rem;
+  }
+  .kpi {
+    position: relative;
+    background: linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-elevated) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.1rem 1.15rem;
+    overflow: hidden;
+    transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  }
+  .kpi:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-2);
+  }
+  .kpi-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: .65rem;
+  }
+  .kpi-label {
+    font-size: .68rem;
+    font-weight: 600;
+    color: var(--text-mute);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  .kpi-icon {
+    width: 28px; height: 28px;
+    display: grid; place-items: center;
+    border-radius: 7px;
+    font-size: .95rem;
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+  }
+  .kpi-value {
+    font-family: var(--font-mono);
+    font-size: 1.65rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -.02em;
+    color: var(--text);
+  }
+  .kpi-trend {
+    margin-top: .55rem;
+    font-size: .7rem;
+    color: var(--text-mute);
+    display: flex; align-items: center; gap: .35rem;
+  }
+  .kpi-trend .dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; opacity: .6; }
+
+  /* tonos por tipo */
+  .kpi.live    .kpi-icon { color: var(--danger);   background: rgba(239,68,68,.08);  border-color: rgba(239,68,68,.18); }
+  .kpi.bets    .kpi-icon { color: var(--info);     background: rgba(59,130,246,.08); border-color: rgba(59,130,246,.18); }
+  .kpi.dep     .kpi-icon { color: var(--accent);   background: rgba(16,185,129,.08); border-color: rgba(16,185,129,.18); }
+  .kpi.with    .kpi-icon { color: var(--warn);     background: rgba(245,158,11,.08); border-color: rgba(245,158,11,.18); }
+  .kpi.users   .kpi-icon { color: var(--violet);   background: rgba(168,85,247,.08); border-color: rgba(168,85,247,.18); }
+  .kpi.active  .kpi-icon { color: var(--pink);     background: rgba(236,72,153,.08); border-color: rgba(236,72,153,.18); }
+
+  /* ── Layout 2 columnas ────────────────────────────────────────────── */
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; margin-bottom: 1.1rem; }
+
+  /* ── Tables ──────────────────────────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+  thead th {
+    color: var(--text-mute);
+    font-weight: 600; font-size: .65rem;
+    letter-spacing: .12em; text-transform: uppercase;
+    text-align: left;
+    padding: .5rem .65rem;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody td {
+    padding: .65rem .65rem;
+    border-bottom: 1px solid var(--border-soft);
+    color: var(--text);
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr { transition: background .15s; }
+  tbody tr:hover { background: var(--bg-hover); }
+
+  /* monospace para columnas numéricas */
+  td.num, td.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+  /* ── Pills (estados) ─────────────────────────────────────────────── */
+  .pill {
+    display: inline-flex; align-items: center; gap: .35rem;
+    padding: 2px 8px;
+    font-size: .68rem;
+    font-weight: 600;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    font-family: var(--font-display);
+    letter-spacing: .02em;
+  }
+  .pill::before { content: ""; width: 5px; height: 5px; border-radius: 999px; background: currentColor; }
+  .pill.DEPOSIT,  .pill.PLACED, .pill.WON
+    { color: var(--accent-soft); background: rgba(16,185,129,.08); border-color: rgba(16,185,129,.2); }
+  .pill.WITHDRAWAL
+    { color: var(--warn);     background: rgba(245,158,11,.08); border-color: rgba(245,158,11,.2); }
+  .pill.PENDING
+    { color: var(--info);     background: rgba(59,130,246,.08); border-color: rgba(59,130,246,.2); }
+  .pill.SETTLED, .pill.CASHOUT, .pill.BET_PAYOUT
+    { color: var(--violet);   background: rgba(168,85,247,.08); border-color: rgba(168,85,247,.2); }
+  .pill.LOST, .pill.FAILED
+    { color: var(--danger);   background: rgba(239,68,68,.08);  border-color: rgba(239,68,68,.2);  }
+
+  /* ── Flash al llegar fila nueva por feed ─────────────────────────── */
+  tbody tr.flash td {
+    animation: opsflash 1.6s ease-out;
+  }
+  @keyframes opsflash {
+    0%   { background: rgba(16,185,129,.16); }
+    100% { background: transparent; }
+  }
+
+  /* ── User link ───────────────────────────────────────────────────── */
+  a.user-link {
+    color: var(--text); text-decoration: none;
+    border-bottom: 1px dashed var(--border-strong);
+    transition: color .15s, border-color .15s;
+  }
+  a.user-link:hover { color: var(--accent-soft); border-bottom-color: var(--accent); }
+
+  /* ── Live event rows ─────────────────────────────────────────────── */
+  .live-list { display: flex; flex-direction: column; }
+  .live-row {
+    display: grid; grid-template-columns: auto 1fr auto; gap: .8rem; align-items: center;
+    padding: .7rem .15rem;
+    border-bottom: 1px solid var(--border-soft);
+    transition: background .15s;
+    border-radius: 6px;
+  }
+  .live-row:hover { background: var(--bg-hover); padding-left: .65rem; }
+  .live-row:last-child { border-bottom: 0; }
+  .live-row .indicator { width: 8px; height: 8px; border-radius: 999px; background: var(--danger); position: relative; }
+  .live-row .indicator::after {
+    content:""; position:absolute; inset: -4px;
+    border-radius: 999px; border: 2px solid var(--danger);
+    animation: ping 1.8s cubic-bezier(0,0,.2,1) infinite;
+  }
+  @keyframes ping {
+    0%   { transform: scale(.8); opacity: .8; }
+    80%, 100% { transform: scale(1.6); opacity: 0; }
+  }
+  .live-row a {
+    color: var(--text); text-decoration: none;
+    font-weight: 500;
+  }
+  .live-row a:hover { color: var(--accent-soft); }
+  .live-row .sport-tag { font-size: .68rem; color: var(--text-mute); margin-right: .4rem; text-transform: uppercase; letter-spacing: .08em; }
+  .live-row .score {
+    font-family: var(--font-mono);
+    color: var(--warn); font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    background: rgba(245,158,11,.08);
+    border: 1px solid rgba(245,158,11,.18);
+    padding: 3px 9px;
+    border-radius: 5px;
+    font-size: .82rem;
+  }
+
+  /* ── Empty state ─────────────────────────────────────────────────── */
+  .empty {
+    text-align: center;
+    padding: 2rem .5rem;
+    color: var(--text-mute);
+    font-size: .82rem;
+  }
+  .empty::before {
+    content: "○";
+    display: block;
+    font-size: 1.4rem;
+    margin-bottom: .5rem;
+    color: var(--text-faint);
+  }
+
+  /* Grid de Tarjetas Superiores */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  @media (max-width: 1024px) {
+    .kpi-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .kpi-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .kpi-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+  }
+
+  .kpi-title {
+    font-size: 0.85rem;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  .kpi-value {
+    font-size: 1.85rem;
+    font-weight: 800;
+    margin-top: 0.5rem;
+  }
+
+  .kpi-sub {
+    font-size: 0.8rem;
+    color: var(--text-soft);
+    margin-top: 0.2rem;
+  }
+
+  .kpi-icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Tres Columnas del Centro */
+  .middle-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  @media (max-width: 1024px) {
+    .middle-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .admin-panel {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .panel-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .panel-body {
+    flex: 1;
+  }
+
+  /* Listas e Items de Auditoría Criptográfica */
+  .audit-block-visual {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .audit-meta-item {
+    font-size: 0.85rem;
+    color: var(--text-soft);
+    margin-bottom: 0.5rem;
+  }
+
+  .audit-meta-item strong {
+    color: #fff;
+  }
+
+  .audit-hash {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--accent-primary);
+    word-break: break-all;
+    background: rgba(0,0,0,0.3);
+    padding: 0.4rem;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+  }
+
+  /* Lista de Alertas */
+  .alert-list-item {
+    background: rgba(239, 68, 68, 0.04);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .alert-list-item.warning {
+    background: rgba(245, 158, 11, 0.04);
+    border-color: rgba(245, 158, 11, 0.15);
+  }
+
+  .alert-list-item.resolved {
+    background: rgba(16, 185, 129, 0.04);
+    border-color: rgba(16, 185, 129, 0.15);
+  }
+
+  .alert-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+
+  .badge-high {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: var(--accent-danger);
+  }
+
+  .badge-medium {
+    background-color: rgba(245, 158, 11, 0.2);
+    color: var(--accent-warning);
+  }
+
+  /* Filas de la parte inferior */
+  .bottom-row {
+    display: grid;
+    grid-template-columns: 2fr 1.2fr;
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 1024px) {
+    .bottom-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Tablas administrativas personalizadas */
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  .admin-table th {
+    text-align: left;
+    padding: 0.75rem;
+    color: var(--text-soft);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+  }
+
+  .admin-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  }
+
+  .admin-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.01);
+  }
+
+  /* Simulación del Gráfico de Apuestas */
+  .chart-container-sim {
+    height: 200px;
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-bottom: 2px solid var(--border-color);
+    position: relative;
+  }
+
+  .chart-bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+  }
+
+  .chart-bar {
+    width: 16px;
+    border-radius: 4px 4px 0 0;
+    transition: height 0.3s ease;
+  }
+
+  .bar-won { background-color: var(--accent-primary); }
+  .bar-lost { background-color: var(--accent-danger); }
+  .bar-cashout { background-color: var(--accent-blue); }
+
+  .chart-label {
+    font-size: 0.7rem;
+    color: var(--text-soft);
+    margin-top: 0.5rem;
+  }
+
+</style>
+
+<h1 class="page-title">Centro de Operaciones</h1>
+<div id="section-resumen" class="admin-section">
+
+<!-- KPIs -->
+<div class="kpis">
+  <div class="kpi live">
+    <div class="kpi-head">
+      <span class="kpi-label">En vivo</span>
+      <span class="kpi-icon">●</span>
+    </div>
+    <div class="kpi-value">{{ kpis.events_live }}</div>
+    <div class="kpi-trend"><span class="dot" style="color:var(--danger)"></span> Partidos activos ahora</div>
+  </div>
+
+  <div class="kpi bets">
+    <div class="kpi-head">
+      <span class="kpi-label">Apuestas 24h</span>
+      <span class="kpi-icon">⊟</span>
+    </div>
+    <div class="kpi-value">{{ kpis.bets_24h }}</div>
+    <div class="kpi-trend"><span class="dot" style="color:var(--info)"></span> Volumen últimas 24h</div>
+  </div>
+
+  <div class="kpi dep">
+    <div class="kpi-head">
+      <span class="kpi-label">Depósitos 24h</span>
+      <span class="kpi-icon">↓</span>
+    </div>
+    <div class="kpi-value">{{ kpis.deposits_24h }}</div>
+    <div class="kpi-trend"><span class="dot" style="color:var(--accent)"></span> Acreditaciones</div>
+  </div>
+
+  <div class="kpi with">
+    <div class="kpi-head">
+      <span class="kpi-label">Retiros 24h</span>
+      <span class="kpi-icon">↑</span>
+    </div>
+    <div class="kpi-value">{{ kpis.withdrawals_24h }}</div>
+    <div class="kpi-trend"><span class="dot" style="color:var(--warn)"></span> Salidas de fondos</div>
+  </div>
+
+  <div class="kpi users">
+    <div class="kpi-head">
+      <span class="kpi-label">Clientes</span>
+      <span class="kpi-icon">◉</span>
+    </div>
+    <div class="kpi-value">{{ kpis.users_total }}</div>
+    <div class="kpi-trend"><span class="dot" style="color:var(--violet)"></span> Total de cuentas</div>
+  </div>
+
+  <div class="kpi active">
+    <div class="kpi-head">
+      <span class="kpi-label">Activos 24h</span>
+      <span class="kpi-icon">◈</span>
+    </div>
+    <div class="kpi-value">{{ kpis.users_active_24h }}</div>
+    <div class="kpi-trend"><span class="dot" style="color:var(--pink)"></span> Con apuesta o pago</div>
+  </div>
+</div>
+
+<div class="row2">
+  <div class="panel">
+    <div class="panel-h">
+      <h2>Apuestas recientes</h2>
+      <span class="h-meta">stream</span>
+    </div>
+    <table>
+      <thead><tr><th>Hora</th><th>Cliente</th><th>Stake</th><th>Cuota</th><th>Tipo</th><th>Estado</th></tr></thead>
+      <tbody id="bets-tbody"><tr><td colspan="6" class="empty">Cargando flujo de apuestas</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h">
+      <h2>Movimientos de billetera</h2>
+      <span class="h-meta">stream</span>
+    </div>
+    <table>
+      <thead><tr><th>Hora</th><th>Cliente</th><th>Tipo</th><th>Monto</th></tr></thead>
+      <tbody id="txs-tbody"><tr><td colspan="4" class="empty">Cargando flujo de pagos</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="row2">
+  <div class="panel">
+    <div class="panel-h">
+      <h2>Eventos en vivo</h2>
+      <span class="h-meta">{{ live_events|length }} activo{{ live_events|length|pluralize:"s" }}</span>
+    </div>
+    <div class="live-list">
+      {% for ev in live_events %}
+        <div class="live-row">
+          <span class="indicator"></span>
+          <a href="{% url 'backoffice:event_control' ev.id %}">
+            <span class="sport-tag">{{ ev.sport }}</span>{{ ev.name }}
+          </a>
+          <span class="score">{{ ev.home_score }} – {{ ev.away_score }}</span>
+        </div>
+      {% empty %}
+        <div class="empty">Sin eventos en vivo</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h">
+      <h2>Top apostadores · 24h</h2>
+      <span class="h-meta">por volumen</span>
+    </div>
+    <table>
+      <thead><tr><th>Cliente</th><th>Apuestas</th><th>Stake total</th></tr></thead>
+      <tbody>
+        {% for b in top_bettors %}
+          <tr>
+            <td><a class="user-link" href="{% url 'backoffice:user_detail' b.user_id %}">{{ b.user__username }}</a></td>
+            <td class="num">{{ b.n_bets }}</td>
+            <td class="num">{{ b.total_stake|floatformat:'4u' }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="3" class="empty">Sin actividad reciente</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- Fila Intermedia de Paneles -->
+  <div class="middle-row">
+    <!-- Auditoría Blockchain -->
+    <div class="admin-panel">
+      <div class="panel-header">
+        <h3 class="panel-title"><i data-lucide="link"></i> Auditoría Blockchain</h3>
+        <span style="font-size: 0.8rem; color: var(--text-soft);">Hash Chain SHA-256</span>
+      </div>
+      <div class="panel-body">
+        {% if last_audit_logs %}
+          {% with last_log=last_audit_logs.0 %}
+            <div class="audit-block-visual">
+              <div class="audit-meta-item">Bloque <strong>#{{ last_log.sequence }}</strong></div>
+              <div class="audit-meta-item">Evento: <strong>{{ last_log.event_type }}</strong></div>
+              <div class="audit-meta-item">Fecha: <strong>{{ last_log.created_at|date:"d/m/Y H:i" }}</strong></div>
+              <div class="audit-hash">
+                Hash: {{ last_log.hash|slice:":12" }}...{{ last_log.hash|slice:"-8:" }}
+              </div>
+            </div>
+          {% endwith %}
+        {% else %}
+          <div class="audit-block-visual">
+            <div class="audit-meta-item">Bloque <strong>#10234</strong></div>
+            <div class="audit-meta-item">Bloque: <strong>603F99D...80C71</strong></div>
+            <div class="audit-meta-item">Fecha: <strong>24/04/2026 14:32</strong></div>
+          </div>
+        {% endif %}
+        <div style="display: flex; gap: 0.5rem; margin-top: auto;">
+          <button class="btn-admin btn-full" onclick="switchAdminTab('auditoria')">Ver Logs Cómputo</button>
+          <a href="{% url 'backoffice:reporte_mincetur' %}" class="btn-admin btn-admin-primary btn-full" style="text-decoration: none; text-align: center; line-height: 2;">Exportar CSV</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alertas de Actividad Sospechosa -->
+    <div class="admin-panel">
+      <div class="panel-header">
+        <h3 class="panel-title"><i data-lucide="shield-alert"></i> Alertas de Actividad</h3>
+      </div>
+      <div class="panel-body">
+        {% for alerta in pending_alerts|slice:":3" %}
+          <div class="alert-list-item {% if alerta.reason == 'PATTERN' %}danger{% else %}warning{% endif %}">
+            <div>
+              <div style="font-size: 0.85rem; font-weight: 700;">{{ alerta.get_reason_display }}</div>
+              <div style="font-size: 0.75rem; color: var(--text-soft);">Usuario: {{ alerta.user.username|default:"Sistema" }}</div>
+            </div>
+            <span class="alert-badge {% if alerta.reason == 'PATTERN' %}badge-high{% else %}badge-medium{% endif %}">
+              {% if alerta.reason == 'PATTERN' %}Riesgo Alto{% else %}Fraude Pot.{% endif %}
+            </span>
+          </div>
+        {% empty %}
+          <div style="text-align: center; color: var(--text-muted); padding: 2rem 0; font-size: 0.85rem;">
+            No hay alertas críticas pendientes de revisión.
+          </div>
+        {% endfor %}
+        <button class="btn-admin btn-full" style="margin-top: 1rem;" onclick="switchAdminTab('alertas')">Investigar Alertas</button>
+      </div>
+    </div>
+
+    <!-- Juego Responsable -->
+    <div class="admin-panel">
+      <div class="panel-header">
+        <h3 class="panel-title"><i data-lucide="eye"></i> Juego Responsable</h3>
+      </div>
+      <div class="panel-body">
+        <div style="display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.9rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="color: var(--text-soft); display: flex; align-items: center; gap: 0.4rem;">
+              <i data-lucide="user-x" style="color: var(--accent-danger); width: 18px; height: 18px;"></i>
+              Usuarios Autoexcluidos
+            </span>
+            <strong>{{ autoexcluded_count }}</strong>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="color: var(--text-soft); display: flex; align-items: center; gap: 0.4rem;">
+              <i data-lucide="sliders" style="color: var(--accent-warning); width: 18px; height: 18px;"></i>
+              Límites Activos
+            </span>
+            <strong style="color: var(--accent-primary);">2,000 Fichas diario promedio</strong>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="color: var(--text-soft); display: flex; align-items: center; gap: 0.4rem;">
+              <i data-lucide="clock" style="color: var(--accent-blue); width: 18px; height: 18px;"></i>
+              Tiempo Sesión Máx
+            </span>
+            <strong>2 horas</strong>
+          </div>
+        </div>
+        <button class="btn-admin btn-full" style="margin-top: 2.25rem;" onclick="switchAdminTab('usuarios')">Ver Detalles</button>
+      </div>
+    </div>
+  </div>
+
+  
+<!-- Fila Inferior: Gráficos de Apuestas y KYC -->
+  <div class="bottom-row">
+    <!-- Resumen de Apuestas -->
+    <div class="admin-panel">
+      <div class="panel-header">
+        <h3 class="panel-title"><i data-lucide="bar-chart-3"></i> Resumen de Apuestas</h3>
+        <div style="display: flex; gap: 0.75rem; font-size: 0.75rem; color: var(--text-soft);">
+          <span style="display: flex; align-items: center; gap: 0.25rem;"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-primary);"></span> Ganadas ({{ chart_data.won }})</span>
+          <span style="display: flex; align-items: center; gap: 0.25rem;"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-danger);"></span> Perdidas ({{ chart_data.lost }})</span>
+          <span style="display: flex; align-items: center; gap: 0.25rem;"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-blue);"></span> Cash-Outs ({{ chart_data.cashout }})</span>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="chart-container-sim" style="height: 180px; align-items: flex-end;">
+          <!-- Simulación de Barras con altura proporcional real -->
+          <div class="chart-bar-group">
+            <div class="chart-bar bar-won" style="height: {{ chart_data.won_height }}px; min-height: 5px; width: 32px;"></div>
+            <span class="chart-label">Ganadas</span>
+          </div>
+          <div class="chart-bar-group">
+            <div class="chart-bar bar-lost" style="height: {{ chart_data.lost_height }}px; min-height: 5px; width: 32px;"></div>
+            <span class="chart-label">Perdidas</span>
+          </div>
+          <div class="chart-bar-group">
+            <div class="chart-bar bar-cashout" style="height: {{ chart_data.cashout_height }}px; min-height: 5px; width: 32px;"></div>
+            <span class="chart-label">Cash-Outs</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Usuarios KYC Verificados -->
+    <div class="admin-panel">
+      <div class="panel-header">
+        <h3 class="panel-title"><i data-lucide="check-square"></i> Usuarios KYC</h3>
+      </div>
+      <div class="panel-body" style="display: flex; flex-direction: column;">
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
+          {% for p in usuarios_kyc|slice:":3" %}
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem;">
+              <span style="display: flex; align-items: center; gap: 0.5rem;">
+                <i data-lucide="user" style="color: var(--text-soft); width: 16px; height: 16px;"></i>
+                {{ p.user.username }}
+              </span>
+              <span style="color: {% if p.status == 'VERIFIED' %}var(--accent-primary){% else %}var(--accent-warning){% endif %}; font-weight: 600;">
+                {{ p.get_status_display }}
+              </span>
+            </div>
+          {% empty %}
+            <div style="text-align: center; color: var(--text-muted); padding: 1rem 0;">No hay usuarios registrados.</div>
+          {% endfor %}
+        </div>
+        <button class="btn-admin btn-full" style="margin-top: auto;" onclick="switchAdminTab('usuarios')">Ver Más</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+
+<!-- ============================================== -->
+<div id="section-auditoria" class="admin-section" style="display: none;">
+  <div class="admin-panel">
+    <div class="panel-header">
+      <h3 class="panel-title"><i data-lucide="file-key"></i> Logs de Auditoría Criptográfica Completa</h3>
+      <span style="color: var(--accent-primary); font-weight: 700;">Integridad OK: SHA-256 Chain</span>
+    </div>
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Seq</th>
+            <th>Evento</th>
+            <th>Payload JSON</th>
+            <th>Hash Previo</th>
+            <th>Hash Bloque</th>
+            <th>Fecha (UTC)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in last_audit_logs %}
+            <tr>
+              <td><strong>#{{ log.sequence }}</strong></td>
+              <td><span class="alert-badge badge-medium">{{ log.event_type }}</span></td>
+              <td><div class="payload-box" style="font-family: monospace; font-size: 0.75rem; max-width: 300px; overflow-x: auto;">{{ log.payload_canonical }}</div></td>
+              <td><span style="font-family: monospace; font-size: 0.72rem;">{{ log.previous_hash|slice:":12" }}...</span></td>
+              <td><span style="font-family: monospace; font-size: 0.72rem; color: var(--accent-warning);">{{ log.hash|slice:":12" }}...</span></td>
+              <td style="white-space: nowrap;">{{ log.created_at|date:"d/m/Y H:i:s" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- PESTAÑA: ALERTAS DE FRAUDE -->
+<!-- ============================================== -->
+<div id="section-alertas" class="admin-section" style="display: none;">
+  <div class="admin-panel">
+    <div class="panel-header">
+      <h3 class="panel-title"><i data-lucide="shield-alert"></i> Centro de Alertas de Actividad Sospechosa</h3>
+    </div>
+    {% if pending_alerts %}
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem;">
+        {% for alerta in pending_alerts %}
+          <div class="admin-panel" style="background-color: rgba(0,0,0,0.15); border: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+              <h4 style="font-weight: 700; color: #fff;">{{ alerta.get_reason_display }}</h4>
+              <span class="alert-badge badge-high">{{ alerta.status }}</span>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-soft); margin-bottom: 1rem;">
+              <strong>Usuario:</strong> {{ alerta.user.username }} | <strong>Fecha:</strong> {{ alerta.detected_at|date:"d/m/Y H:i" }}
+            </p>
+            <div style="background: rgba(0,0,0,0.3); padding: 0.5rem; font-family: monospace; font-size: 0.75rem; border-radius: 4px; overflow-x: auto; margin-bottom: 1rem;">
+              {{ alerta.evidence }}
+            </div>
+            <form method="POST" action="{% url 'backoffice:resolver_alerta' alerta.id %}" style="display: flex; gap: 0.5rem;">
+              {% csrf_token %}
+              <input type="text" name="reviewer_note" placeholder="Nota del revisor..." required class="interactive-input" style="flex: 1;">
+              <button type="submit" name="status" value="REVISADO" class="btn-admin btn-admin-primary">Resolver</button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color: var(--text-soft); text-align: center; padding: 3rem;">No hay alertas pendientes en este momento.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- PESTAÑA: CONTROL DE USUARIOS -->
+<!-- ============================================== -->
+<div id="section-usuarios" class="admin-section" style="display: none;">
+  <div class="admin-panel">
+    <div class="panel-header">
+      <h3 class="panel-title"><i data-lucide="users"></i> Control Regulatorio de KYC y Juego Responsable</h3>
+    </div>
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Email</th>
+            <th>DNI</th>
+            <th>Estado KYC</th>
+            <th>Límites de Depósito</th>
+            <th>Configuración / Staff</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in usuarios_kyc %}
+            <tr>
+              <td><strong>{{ p.user.username }}</strong></td>
+              <td>{{ p.user.email|default:"-" }}</td>
+              <td>{{ p.dni }}</td>
+              <td>
+                <span class="alert-badge {% if p.status == 'VERIFIED' %}badge-high{% else %}badge-medium{% endif %}" style="background-color: rgba(16, 185, 129, 0.15); color: var(--accent-primary);">
+                  {{ p.get_status_display }}
+                </span>
+              </td>
+              <td>
+                Diario: {{ p.daily_deposit_limit|default:"Sin límite" }} Fichas
+              </td>
+              <td>
+                <a href="/admin/accounts/perfilkyc/{{ p.id }}/change/" target="_blank" class="btn-admin btn-admin-secondary" style="text-decoration: none; display: inline-block;">Modificar</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- PESTAÑA: REPORTES MINCETUR -->
+<!-- ============================================== -->
+<div id="section-reportes" class="admin-section" style="display: none;">
+  <div class="admin-panel">
+    <div class="panel-header">
+      <h3 class="panel-title"><i data-lucide="file-spreadsheet"></i> Reporte Oficial MINCETUR</h3>
+    </div>
+    <div style="background: rgba(0,0,0,0.15); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+      <h4 style="margin-bottom: 0.5rem;">Generación de Exportación Completa</h4>
+      <p style="color: var(--text-soft); font-size: 0.88rem; margin-bottom: 1.5rem;">
+        Este reporte genera un archivo compatible con el estándar regulado de MINCETUR que detalla la fecha, el ID de transacción de apuesta o depósito, usuario, DNI y montos.
+      </p>
+      <a href="{% url 'backoffice:reporte_mincetur' %}" class="btn-admin btn-admin-primary" style="text-decoration: none;">Descargar Reporte (.CSV)</a>
+    </div>
+
+    <h4>Previsualización de Transacciones Recientes del Mes</h4>
+    <div style="background: rgba(0,0,0,0.3); font-family: monospace; font-size: 0.8rem; padding: 1rem; border-radius: 8px; overflow-x: auto; margin-top: 1rem; border: 1px solid var(--border-color); line-height: 1.6;">
+      Fecha,ID Operación,Categoría,Usuario,DNI,Monto,Estado<br>
+      2026-05-28,tx109,FINANCIERA,Jesus Silva,74839201,150.00,COMPLETADA<br>
+      2026-05-28,ap-9821,APUESTA,Jesus Silva,74839201,10.00,WON
+    </div>
+  </div>
+</div>
+<script>
+function switchAdminTab(tabId) {
+    // Ocultar todas las secciones de pestaña
+    document.querySelectorAll('.admin-section').forEach(sec => {
+      sec.style.display = 'none';
+    });
+    // Quitar active del menu
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.classList.remove('active');
+    });
+
+    // Mostrar sección
+    document.getElementById('section-' + tabId).style.display = 'block';
+    
+    // Activar link clickeado
+    const activeLink = Array.from(document.querySelectorAll('.nav-link')).find(link => {
+      return link.getAttribute('onclick').includes(tabId);
+    });
+    if (activeLink) activeLink.classList.add('active');
+  }
+
+(function () {
+  const betsBody = document.getElementById('bets-tbody');
+  const txsBody  = document.getElementById('txs-tbody');
+  const tickEl   = document.getElementById('last-tick');
+  const seenBets = new Set();
+  const seenTxs  = new Set();
+
+  function fmtTime(iso) {
+    const d = new Date(iso);
+    return d.toLocaleTimeString('es-PE', { hour12: false });
+  }
+  function fmtDate(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit' });
+  }
+
+  async function fetchFeed() {
+    try {
+      const r = await fetch("{% url 'backoffice:dashboard_feed' %}", { credentials: 'same-origin' });
+      const data = await r.json();
+      renderBets(data.bets || []);
+      renderTxs(data.transactions || []);
+      tickEl.textContent = new Date().toLocaleTimeString('es-PE', { hour12: false });
+    } catch (e) { /* silencioso, reintenta al próximo tick */ }
+  }
+
+  function renderBets(items) {
+    if (!items.length) {
+      betsBody.innerHTML = '<tr><td colspan="6" class="empty">Sin apuestas registradas</td></tr>';
+      return;
+    }
+    const html = items.map(b => {
+      const flash = seenBets.has(b.id) ? '' : 'flash';
+      seenBets.add(b.id);
+      return `<tr class="${flash}">
+        <td class="mono">${fmtTime(b.created_at)} <span style="color:var(--text-mute)">${fmtDate(b.created_at)}</span></td>
+        <td><a class="user-link" href="/backoffice/usuario/${b.user_id}/">${b.user}</a></td>
+        <td class="num">${b.stake}</td>
+        <td class="num">${b.odds}</td>
+        <td class="mono" style="color:var(--text-soft)">${b.type}</td>
+        <td><span class="pill ${b.status}">${b.status}</span></td>
+      </tr>`;
+    }).join('');
+    betsBody.innerHTML = html;
+  }
+
+  function renderTxs(items) {
+    if (!items.length) {
+      txsBody.innerHTML = '<tr><td colspan="4" class="empty">Sin movimientos registrados</td></tr>';
+      return;
+    }
+    const html = items.map(t => {
+      const flash = seenTxs.has(t.id) ? '' : 'flash';
+      seenTxs.add(t.id);
+      const amt = parseFloat(t.amount);
+      const amtClass = amt < 0 ? 'num' : 'num';
+      const color = amt < 0 ? 'var(--danger)' : 'var(--accent-soft)';
+      return `<tr class="${flash}">
+        <td class="mono">${fmtTime(t.created_at)} <span style="color:var(--text-mute)">${fmtDate(t.created_at)}</span></td>
+        <td>${t.user}</td>
+        <td><span class="pill ${t.kind}">${t.kind}</span></td>
+        <td class="${amtClass}" style="color:${color}; font-weight:600;">${t.amount}</td>
+      </tr>`;
+    }).join('');
+    txsBody.innerHTML = html;
+  }
+
+  fetchFeed();
+  setInterval(fetchFeed, 10000);
+})();
+</script>
+{% endblock %}
