@@ -240,6 +240,7 @@ def dashboard_view(request):
         .order_by("-total_stake")[:10]
     )
 
+    # 0. Eventos en vivo para el Dashboard unificado
     live_events = (
         Event.objects.filter(status=Event.Status.LIVE)
         .order_by("live_started_at")[:10]
