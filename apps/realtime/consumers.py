@@ -28,21 +28,15 @@ class BettingConsumer(AsyncWebsocketConsumer):
     # --- MÉTODO PARA RECIBIR EVENTOS DEL BACKEND ---
     # Este método será llamado por Django mediante Signals
     async def market_message(self, event):
-        # Extraer datos del evento enviado por el backend
-        action = event.get('action')
-        market_id = event.get('market_id')
-        message = event.get('message', '')
-        odds = event.get('odds', '')
-
-        # Enviar esos datos al frontend (Javascript) vía WebSocket
         payload = {
-            'action': action,
-            'market_id': market_id,
+            'action': event.get('action'),
+            'market_id': event.get('market_id'),
         }
-        
-        if message:
-            payload['message'] = message
-        if odds:
-            payload['odds'] = odds
+        if 'message' in event:
+            payload['message'] = event['message']
+        if 'odds' in event:
+            payload['odds'] = event['odds']
+        if 'selection_id' in event:
+            payload['selection_id'] = event['selection_id']
 
         await self.send(text_data=json.dumps(payload))
