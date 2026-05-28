@@ -1,6 +1,5 @@
-from django.shortcuts import render
-from decimal import Decimal
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
+from decimal import Decimal, InvalidOperation
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
@@ -23,8 +22,8 @@ def colocar_apuesta(request):
     idempotency_key = request.POST.get("idempotency_key")
 
     try:
-        stake = Decimal(stake_str)
-        expected_odds = Decimal(expected_odds_str)
+        stake = Decimal(stake_str.strip().replace(",", "."))
+        expected_odds = Decimal(expected_odds_str.strip().replace(",", "."))
         
         # Invocación de la lógica transaccional aislada
         place_simple_bet(
@@ -37,6 +36,8 @@ def colocar_apuesta(request):
         messages.success(request, "¡Apuesta colocada con éxito!")
     except (ValidationError, ValueError) as e:
         messages.error(request, f"Error al procesar la apuesta: {getattr(e, 'message', str(e))}")
+    except InvalidOperation:
+        messages.error(request, "La cuota o el monto recibido tienen un formato inválido. Por favor, intente nuevamente.")
     except IntegrityError:
         messages.info(request, "Esta apuesta ya fue procesada anteriormente (doble clic detectado).")
     except DataError as e:
@@ -56,12 +57,14 @@ def ejecutar_cashout(request, bet_id):
         if not current_odds_str:
             raise ValidationError("No se especificó la cuota actual de mercado para el cálculo.")
         
-        current_odds = Decimal(current_odds_str)
+        current_odds = Decimal(current_odds_str.strip().replace(",", "."))
         
         # Invocación de la fórmula del requerimiento con factor de la casa (90%)
         cash_out_bet(bet=bet, current_odds=current_odds, house_factor=Decimal("0.9000"))
         messages.success(request, "Cash-out procesado y fondos transferidos a la cuenta.")
     except (ValidationError, ValueError) as e:
         messages.error(request, f"No se pudo ejecutar el Cash-out: {getattr(e, 'message', str(e))}")
+    except InvalidOperation:
+        messages.error(request, "Formato de cuota inválido al procesar el Cash-out.")
 
     return redirect("betting:mis_apuestas")

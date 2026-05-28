@@ -67,7 +67,7 @@
             </div>
             <div style="font-size: 0.8rem; color: var(--text-soft); display: flex; justify-content: space-between;">
                 <span>{{ line.selection.market.name }} — <strong>{{ line.selection.name }}</strong></span>
-                <span style="color: var(--primary); font-weight: 600;">@{{ line.odds_at_placement }}</span>
+                <span style="color: var(--primary); font-weight: 600;">@{{ line.odds_at_placement|floatformat:'4u' }}</span>
             </div>
             {% endfor %}
         </div>
@@ -75,16 +75,16 @@
         <div style="border-top: 1px solid var(--border); padding-top: 0.75rem; font-size: 0.85rem; color: var(--text-soft);">
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
                 <span>Monto Apostado (Stake):</span>
-                <span style="color: var(--text); font-weight: 600;">{{ bet.stake }} Fichas</span>
+                <span style="color: var(--text); font-weight: 600;">{{ bet.stake|floatformat:'2u' }} Fichas</span>
             </div>
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
                 <span>Cuota Total Ticket:</span>
-                <span style="color: var(--text); font-weight: 600;">{{ bet.total_odds }}</span>
+                <span style="color: var(--text); font-weight: 600;">{{ bet.total_odds|floatformat:'2u' }}</span>
             </div>
             <div style="display: flex; justify-content: space-between; font-size: 0.95rem; padding-top: 0.25rem;">
                 <span>Retorno Calculado:</span>
                 <span class="{% if bet.status == 'WON' %}payout-won{% elif bet.status == 'LOST' %}payout-lost{% else %}payout-pending{% endif %}">
-                    {% if bet.payout is not None %}{{ bet.payout }} Fichas{% else %}Pendiente{% endif %}
+                    {% if bet.payout is not None %}{{ bet.payout|floatformat:'2u' }} Fichas{% else %}Pendiente{% endif %}
                 </span>
             </div>
         </div>
