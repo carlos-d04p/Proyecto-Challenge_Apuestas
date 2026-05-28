@@ -71,7 +71,7 @@
                 {% if sel.is_active %}
                   <div class="odds-btn">
                     <span class="sel-name">{{ sel.name }}</span>
-                    <span class="sel-odds">{{ sel.odds }}</span>
+                    <span class="sel-odds">{{ sel.odds|floatformat:2 }}</span>
                   </div>
                 {% endif %}
               {% endfor %}

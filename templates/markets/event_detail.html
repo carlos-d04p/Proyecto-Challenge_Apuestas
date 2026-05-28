@@ -64,7 +64,7 @@
               <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <span style="font-size: 0.8rem; color: var(--text-soft);">{{ sel.name }}</span>
-                  <span style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds }}</span>
+                  <span style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds|floatformat:2 }}</span>
                 </div>
                 
                 {% if event.status == 'SCHEDULED' %}
