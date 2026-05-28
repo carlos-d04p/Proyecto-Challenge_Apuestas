@@ -25,7 +25,7 @@ from django.core.exceptions import ValidationError
 def registro_view(request):
     """Página de registro de nuevo usuario."""
     if request.user.is_authenticated:
-        return redirect("accounts_web:perfil")
+        return redirect("markets:event_list")
 
     errores = {}
     datos = {}
@@ -42,7 +42,7 @@ def registro_view(request):
                 request,
                 "¡Cuenta creada exitosamente! Tu perfil está pendiente de verificación KYC."
             )
-            return redirect("accounts_web:perfil")
+            return redirect("markets:event_list")
         else:
             for campo, errores_campo in serializer.errors.items():
                 errores[campo] = "; ".join(
@@ -55,10 +55,17 @@ def registro_view(request):
     })
 
 
+def _post_login_redirect(user):
+    """A dónde mandar al usuario tras autenticarse."""
+    if user.is_staff:
+        return "/backoffice/"
+    return "markets:event_list"
+
+
 def login_view(request):
     """Página de login."""
     if request.user.is_authenticated:
-        return redirect("accounts_web:perfil")
+        return redirect(_post_login_redirect(request.user))
 
     error = None
 
@@ -81,7 +88,7 @@ def login_view(request):
         if user and user.is_active:
             reset_login_fails(username)
             login(request, user)
-            next_url = request.GET.get("next", "accounts_web:perfil")
+            next_url = request.GET.get("next") or _post_login_redirect(user)
             return redirect(next_url)
         else:
             bloqueado = check_and_increment_login_fails(username)
@@ -102,6 +109,9 @@ def logout_view(request):
 @login_required(login_url="/accounts/login/")
 def perfil_view(request):
     """Panel de perfil: estado KYC, límites, autoexclusión."""
+    # Los usuarios staff no son clientes finales — su lugar es el backoffice.
+    if request.user.is_staff:
+        return redirect("/backoffice/")
     try:
         perfil = request.user.perfil_kyc
     except PerfilKYC.DoesNotExist:

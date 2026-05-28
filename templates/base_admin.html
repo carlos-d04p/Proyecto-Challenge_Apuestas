@@ -1,0 +1,359 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Ops · FairBet Lab{% endblock %}</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════════════════════════════════
+       FairBet Lab · Ops Console
+       Aesthetic: refined enterprise fintech. Linear/Stripe inspired.
+       Deep midnight base with strategic emerald accent. Manrope display,
+       IBM Plex Mono for data. Generous spacing, soft shadows, no chrome.
+       ═══════════════════════════════════════════════════════════════════════ */
+    :root {
+      /* Palette ─ deep midnight with cool undertones */
+      --bg:           #0b0d12;
+      --bg-elevated:  #11151c;
+      --bg-panel:     #151a23;
+      --bg-hover:     #1c222c;
+      --border:       #1f2632;
+      --border-soft:  #181d26;
+      --border-strong:#2b3340;
+
+      --text:         #ffffff;
+      --text-soft:    #cbd5e1;
+      --text-mute:    #94a3b8;
+      --text-faint:   #64748b;
+
+      /* Accent — emerald with a hint of teal */
+      --accent:       #10b981;
+      --accent-soft:  #34d399;
+      --accent-glow:  rgba(16, 185, 129, 0.16);
+
+      /* Semantic colors */
+      --danger:       #ef4444;
+      --warn:         #f59e0b;
+      --info:         #3b82f6;
+      --violet:       #a855f7;
+      --pink:         #ec4899;
+
+      /* Type */
+      --font-display: 'Manrope', system-ui, -apple-system, sans-serif;
+      --font-mono:    'IBM Plex Mono', ui-monospace, "SF Mono", Menlo, monospace;
+
+      --radius:       8px;
+      --radius-lg:    12px;
+      --shadow-1:     0 1px 0 rgba(255,255,255,.03) inset, 0 1px 2px rgba(0,0,0,.4);
+      --shadow-2:     0 8px 24px -8px rgba(0,0,0,.5), 0 2px 4px rgba(0,0,0,.3);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-display);
+      font-feature-settings: "ss01", "ss02", "cv11";
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      min-height: 100vh;
+    }
+
+    /* Ambient gradient backdrop — subtle, not noisy */
+    body::before {
+      content: "";
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(1200px 600px at 85% -10%, rgba(16,185,129,.05), transparent 60%),
+        radial-gradient(900px 600px at -10% 110%, rgba(59,130,246,.04), transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Top status bar ─────────────────────────────────────────────────── */
+    .topbar {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(11, 13, 18, .8);
+      backdrop-filter: blur(12px) saturate(140%);
+      -webkit-backdrop-filter: blur(12px) saturate(140%);
+      border-bottom: 1px solid var(--border);
+      padding: .5rem 1.4rem;
+      display: flex; align-items: center; gap: 1rem;
+      font-size: .78rem;
+    }
+    .topbar .env-chip {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: 3px 9px;
+      background: rgba(239, 68, 68, .12);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, .25);
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: .67rem;
+      font-weight: 600;
+      letter-spacing: .08em;
+    }
+    .topbar .env-chip::before {
+      content: "";
+      width: 6px; height: 6px; border-radius: 999px;
+      background: var(--danger);
+      box-shadow: 0 0 0 0 rgba(239,68,68,.5);
+      animation: pulse-ring 2s infinite;
+    }
+    @keyframes pulse-ring {
+      0%   { box-shadow: 0 0 0 0 rgba(239,68,68,.6); }
+      70%  { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+      100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+    }
+    .topbar .title { color: var(--text-soft); font-weight: 600; letter-spacing: .01em; }
+    .topbar .meta  { margin-left: auto; color: var(--text-mute); font-family: var(--font-mono); font-size: .7rem; }
+
+    /* ── App layout ─────────────────────────────────────────────────────── */
+    .app {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: calc(100vh - 44px);
+      position: relative; z-index: 1;
+    }
+
+    /* ── Sidebar ────────────────────────────────────────────────────────── */
+    .side {
+      background: linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg) 100%);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 1rem 1.1rem;
+      display: flex; flex-direction: column;
+      position: sticky; top: 44px;
+      height: calc(100vh - 44px);
+    }
+
+    .brand {
+      display: flex; align-items: center; gap: .65rem;
+      padding: 0 .35rem 1.2rem;
+      border-bottom: 1px solid var(--border-soft);
+      text-decoration: none;
+      color: var(--text);
+    }
+    .brand-mark {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent) 0%, #0d9488 100%);
+      display: grid; place-items: center;
+      box-shadow: 0 4px 12px rgba(16,185,129,.25), inset 0 1px 0 rgba(255,255,255,.15);
+      font-size: 1rem;
+    }
+    .brand-text { display: flex; flex-direction: column; line-height: 1.15; }
+    .brand-name { font-weight: 700; font-size: .95rem; letter-spacing: -.01em; }
+    .brand-sub  { font-family: var(--font-mono); font-size: .62rem; color: var(--text-mute); letter-spacing: .14em; text-transform: uppercase; }
+
+    .nav { display: flex; flex-direction: column; gap: 1px; margin-top: 1.1rem; }
+    .nav .group {
+      font-size: .62rem;
+      font-weight: 600;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      padding: .9rem .65rem .35rem;
+    }
+    .nav a {
+      display: flex; align-items: center; gap: .7rem;
+      padding: .5rem .65rem;
+      color: var(--text-soft);
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: .85rem;
+      font-weight: 500;
+      transition: background .15s ease, color .15s ease, transform .15s ease;
+      position: relative;
+    }
+    .nav a .ico { font-size: .9rem; opacity: .85; width: 18px; text-align: center; }
+    .nav a .ext { margin-left: auto; opacity: .35; font-size: .7rem; }
+    .nav a:hover { background: var(--bg-hover); color: var(--text); }
+    .nav a.active {
+      background: var(--accent-glow);
+      color: var(--accent-soft);
+    }
+    .nav a.active::before {
+      content: "";
+      position: absolute; left: -1rem; top: 25%; bottom: 25%;
+      width: 3px; background: var(--accent); border-radius: 0 3px 3px 0;
+    }
+
+    .side-foot { margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-soft); }
+    .user-card {
+      display: flex; align-items: center; gap: .65rem;
+      padding: .6rem .65rem;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .user-avatar {
+      width: 32px; height: 32px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+      display: grid; place-items: center;
+      color: #fff; font-weight: 700; font-size: .85rem;
+    }
+    .user-info { display: flex; flex-direction: column; line-height: 1.2; flex: 1; min-width: 0; }
+    .user-name { font-size: .85rem; font-weight: 600; }
+    .user-role { font-family: var(--font-mono); font-size: .62rem; color: var(--text-mute); letter-spacing: .1em; text-transform: uppercase; }
+    .user-logout {
+      width: 28px; height: 28px;
+      display: grid; place-items: center;
+      border-radius: 6px;
+      color: var(--text-mute);
+      text-decoration: none;
+      transition: background .15s, color .15s;
+    }
+    .user-logout:hover { background: rgba(239,68,68,.12); color: var(--danger); }
+
+    /* ── Main ───────────────────────────────────────────────────────────── */
+    .main {
+      padding: 1.6rem 2rem 3rem;
+      overflow-x: auto;
+      min-width: 0;
+    }
+    .crumbs {
+      display: flex; align-items: center; gap: .5rem;
+      font-size: .76rem;
+      color: var(--text-mute);
+      margin-bottom: .7rem;
+      font-weight: 500;
+    }
+    .crumbs a { color: var(--text-soft); text-decoration: none; transition: color .15s; }
+    .crumbs a:hover { color: var(--accent-soft); }
+    .crumbs .sep { color: var(--text-faint); }
+    .crumbs .live-tick {
+      margin-left: auto;
+      font-family: var(--font-mono); font-size: .72rem;
+      color: var(--text-mute);
+      display: inline-flex; align-items: center; gap: .4rem;
+    }
+    .crumbs .live-tick::before {
+      content: "";
+      width: 6px; height: 6px; border-radius: 999px;
+      background: var(--accent);
+      animation: blink 2s infinite;
+    }
+    @keyframes blink { 50% { opacity: .25; } }
+
+    .page-title {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      margin: 0 0 1.4rem;
+      color: var(--text);
+    }
+    .page-title .uid {
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      font-weight: 500;
+      color: var(--text-mute);
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      border-radius: 4px;
+      margin-left: .6rem;
+      vertical-align: middle;
+      letter-spacing: .04em;
+    }
+
+    /* ── Panel primitive ────────────────────────────────────────────────── */
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.1rem 1.2rem;
+      box-shadow: var(--shadow-1);
+    }
+    .panel-h {
+      display: flex; align-items: center; justify-content: space-between;
+      margin: -.2rem 0 .9rem;
+    }
+    .panel-h h2 {
+      font-size: .78rem;
+      font-weight: 600;
+      letter-spacing: .01em;
+      color: var(--text-soft);
+      margin: 0;
+    }
+    .panel-h .h-meta {
+      font-family: var(--font-mono); font-size: .68rem; color: var(--text-mute);
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <div class="topbar">
+    <span class="env-chip">PRODUCCIÓN · OPS</span>
+    <span class="title">{% block topbar_title %}FairBet Lab{% endblock %}</span>
+    <span class="meta">arnoldmar@fairbet · {{ user.username|default:"" }}</span>
+  </div>
+
+  <div class="app">
+
+    <aside class="side">
+      <a href="{% url 'backoffice:dashboard' %}" class="brand">
+        <span class="brand-mark">⚡</span>
+        <span class="brand-text">
+          <span class="brand-name">FairBet Lab</span>
+          <span class="brand-sub">Ops Console</span>
+        </span>
+      </a>
+
+      <nav class="nav">
+        <div class="group">Monitoreo</div>
+        <a href="{% url 'backoffice:dashboard' %}"
+           class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+          <span class="ico">◷</span> Dashboard
+        </a>
+
+        <div class="group">Operación</div>
+        <a href="{% url 'backoffice:event_create' %}">
+          <span class="ico">➕</span> Nuevo evento
+        </a>
+        <a href="{% url 'backoffice:event_list' %}">
+          <span class="ico">📋</span> Lista de eventos
+        </a>
+        <a href="{% url 'backoffice:event_list' %}?status=LIVE">
+          <span class="ico">●</span> Eventos en vivo
+        </a>
+
+        <div class="group">Acceso</div>
+        <a href="{% url 'markets:event_list' %}">
+          <span class="ico">↩</span> Vista cliente
+        </a>
+        <a href="/admin/" target="_blank">
+          <span class="ico">⚙</span> Django Admin
+          <span class="ext">↗</span>
+        </a>
+      </nav>
+
+      <div class="side-foot">
+        <div class="user-card">
+          <div class="user-avatar">{{ user.username|slice:":1"|upper }}</div>
+          <div class="user-info">
+            <span class="user-name">{{ user.username }}</span>
+            <span class="user-role">{% if user.is_superuser %}Superadmin{% else %}Staff{% endif %}</span>
+          </div>
+          <a href="{% url 'accounts_web:logout' %}" class="user-logout" title="Cerrar sesión">⏻</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      {% block crumbs %}{% endblock %}
+      {% block content %}{% endblock %}
+    </main>
+
+  </div>
+
+</body>
+</html>
