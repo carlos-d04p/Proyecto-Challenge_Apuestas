@@ -150,11 +150,11 @@
                     <form class="wallet-form wallet-form-detailed" data-wallet-form="withdraw" novalidate>
                         <div class="wallet-form-row">
                             <label for="withdraw-amount">Monto a retirar</label>
-                            <input id="withdraw-amount" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="5.00" step="0.01">
+                            <input id="withdraw-amount" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="5.00" step="0.01" {% if not user.is_email_verified %}disabled{% endif %}>
                         </div>
                         <div class="wallet-form-row">
                             <label for="withdraw-method">Metodo simulado</label>
-                            <select id="withdraw-method" name="withdraw_method">
+                            <select id="withdraw-method" name="withdraw_method" {% if not user.is_email_verified %}disabled{% endif %}>
                                 <option value="">Selecciona un metodo</option>
                                 <option value="educational_wallet">Billetera educativa</option>
                                 <option value="internal_record">Registro interno simulado</option>
@@ -162,10 +162,15 @@
                             </select>
                         </div>
                         <label class="wallet-check" for="withdraw-confirmation">
-                            <input id="withdraw-confirmation" name="withdraw_confirmation" type="checkbox">
+                            <input id="withdraw-confirmation" name="withdraw_confirmation" type="checkbox" {% if not user.is_email_verified %}disabled{% endif %}>
                             <span>Confirmo que el retiro es simulado y solo usa saldo disponible.</span>
                         </label>
-                        <button class="wallet-button wallet-button-secondary" type="submit">Confirmar retiro simulado</button>
+                        
+                        {% if not user.is_email_verified %}
+                            <p style="color: #ff4d4f; font-size: 0.85rem; margin-top: 10px; font-weight: bold;">⚠️ Tu cuenta no está verificada. Completa el proceso KYC para poder realizar retiros.</p>
+                        {% endif %}
+
+                        <button class="wallet-button wallet-button-secondary" type="submit" {% if not user.is_email_verified %}disabled{% endif %}>Confirmar retiro simulado</button>
                         <p class="wallet-operation-state" data-operation-state>Esperando datos de retiro.</p>
                     </form>
                 </div>

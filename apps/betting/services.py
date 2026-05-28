@@ -47,8 +47,16 @@ def place_simple_bet(user, selection_id, stake, expected_odds, idempotency_key=N
         market = selection.market
         event = market.event
 
-        if event.status != Event.Status.SCHEDULED:
+        # In-play betting: permitir SCHEDULED y LIVE. Bloquear el resto.
+        if event.status not in (Event.Status.SCHEDULED, Event.Status.LIVE):
             raise ValidationError("El evento no está disponible para nuevas apuestas.")
+
+        # RB-RT-06: ventana de suspensión automática (gol/expulsión).
+        if event.suspended_until and event.suspended_until > timezone.now():
+            raise ValidationError(
+                "El mercado está temporalmente suspendido por un evento crítico. "
+                "Intenta de nuevo en unos segundos."
+            )
 
         if not market.is_active or not selection.is_active:
             raise ValidationError("El mercado o selección se encuentran inactivos.")
@@ -115,9 +123,15 @@ def place_acca_bet(user, selection_ids, stake, expected_odds, idempotency_key=No
             )
 
         total_odds = Decimal("1.0000")
+        now = timezone.now()
         for sel in selections:
-            if sel.market.event.status != Event.Status.SCHEDULED:
+            ev = sel.market.event
+            if ev.status not in (Event.Status.SCHEDULED, Event.Status.LIVE):
                 raise ValidationError("Uno o más eventos ya no están disponibles.")
+            if ev.suspended_until and ev.suspended_until > now:
+                raise ValidationError(
+                    "Uno de los mercados está temporalmente suspendido por un evento crítico."
+                )
             if not sel.market.is_active or not sel.is_active:
                 raise ValidationError("Una de las selecciones no está activa.")
             total_odds *= sel.odds
@@ -290,3 +304,83 @@ def cash_out_bet(bet, current_odds, house_factor=HOUSE_FACTOR):
         record_bet_cashout(bet_lock.user, bet_lock.stake, bet_lock.payout, bet_lock.id)
         
         return bet_lock
+
+
+def settle_event_markets(event, home_score: int, away_score: int):
+    """
+    Finaliza un evento y liquida automáticamente todos los mercados y apuestas
+    basándose en el marcador final.
+    """
+    from apps.markets.models import Market
+    
+    with transaction.atomic():
+        event.home_score = home_score
+        event.away_score = away_score
+        event.status = Event.Status.FINISHED
+        event.save(update_fields=["home_score", "away_score", "status", "updated_at"])
+        
+        # Recolectar todas las apuestas ACCA que toquemos para evaluarlas al final
+        affected_acca_bets = set()
+
+        for market in event.markets.filter(is_active=True):
+            market.is_active = False
+            market.save(update_fields=["is_active"])
+            
+            # Determinar qué selecciones ganaron
+            winning_selections = []
+            if market.kind == Market.Kind.MATCH_RESULT:
+                if home_score > away_score:
+                    winning_selections.append("Gana Local")
+                elif away_score > home_score:
+                    winning_selections.append("Gana Visitante")
+                else:
+                    winning_selections.append("Empate")
+            elif market.kind == Market.Kind.OVER_UNDER:
+                if (home_score + away_score) > 2.5:
+                    winning_selections.append("Más de 2.5")
+                else:
+                    winning_selections.append("Menos de 2.5")
+            elif market.kind == Market.Kind.BOTH_TEAMS_SCORE:
+                if home_score > 0 and away_score > 0:
+                    winning_selections.append("Sí")
+                else:
+                    winning_selections.append("No")
+            elif market.kind == Market.Kind.HANDICAP:
+                if (home_score - 1) > away_score:
+                    winning_selections.append("Local -1")
+                else:
+                    winning_selections.append("Visitante +1")
+
+            for sel in market.selections.all():
+                is_winner = sel.name in winning_selections
+                final_result = BetSelection.Result.WON if is_winner else BetSelection.Result.LOST
+                
+                for bs in BetSelection.objects.filter(
+                    selection=sel, 
+                    result=BetSelection.Result.PENDING,
+                    bet__status=Bet.Status.PLACED
+                ).select_related('bet'):
+                    
+                    bs.result = final_result
+                    bs.save(update_fields=["result"])
+                    
+                    if bs.bet.bet_type == Bet.Type.SINGLE:
+                        settle_bet(bs.bet, Bet.Status.WON if is_winner else Bet.Status.LOST)
+                    else:
+                        affected_acca_bets.add(bs.bet)
+
+        # Evaluar apuestas ACCA afectadas
+        for acca_bet in affected_acca_bets:
+            all_bs = list(acca_bet.selections.all())
+            has_lost = any(b.result == BetSelection.Result.LOST for b in all_bs)
+            is_pending = any(b.result == BetSelection.Result.PENDING for b in all_bs)
+            
+            if has_lost:
+                # Perdió una selección, la combinada entera se pierde
+                res_dict = {str(b.id): b.result for b in all_bs}
+                # Asegurar que settle_acca_bet no sobreescriba los previos que sí ganaron
+                settle_acca_bet(acca_bet, res_dict)
+            elif not is_pending:
+                # Todas ganaron (o void), la combinada gana
+                res_dict = {str(b.id): b.result for b in all_bs}
+                settle_acca_bet(acca_bet, res_dict)

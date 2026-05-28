@@ -1,4 +1,5 @@
 from decimal import Decimal
+from django.core.exceptions import ValidationError
 
 from django.contrib.auth import get_user_model
 from django.db import transaction as db_transaction
@@ -33,6 +34,11 @@ WALLET_INTERNAL_TRANSFER_CREATED = "WALLET_INTERNAL_TRANSFER_CREATED"
 
 def deposit_simulated(user, amount, created_by, idempotency_key=None):
     amount = normalize_money(amount)
+    
+    # --- REGLA DE NEGOCIO: Límites de Depósito simulado ---
+    if amount < Decimal("50.0000") or amount > Decimal("10000.0000"):
+        raise ValidationError("El depósito debe estar entre 50.0000 y 10,000.0000 fichas.")
+
     payload = _build_payload(
         operation="deposit_simulated",
         user=user,
@@ -89,6 +95,14 @@ def deposit_simulated(user, amount, created_by, idempotency_key=None):
 
 def withdraw_simulated(user, amount, created_by, idempotency_key=None):
     amount = normalize_money(amount)
+
+    # --- REGLAS DE NEGOCIO: Límites y KYC ---
+    if amount < Decimal("100.0000"):
+        raise ValidationError("El retiro mínimo es de 100.0000 fichas.")
+    
+    if not getattr(user, 'is_email_verified', False):
+        raise PermissionError("Debes verificar tu cuenta (KYC) para poder realizar retiros.")
+
     payload = _build_payload(
         operation="withdraw_simulated",
         user=user,
@@ -149,7 +163,6 @@ def withdraw_simulated(user, amount, created_by, idempotency_key=None):
             amount=amount,
         )
         return transaction
-
 
 def internal_transfer(
     source_account,

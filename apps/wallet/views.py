@@ -6,6 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import TemplateView
+from django.core.exceptions import ValidationError
 
 from apps.wallet.selectors import (
     get_wallet_account_balances,
@@ -160,13 +161,17 @@ class WalletDepositView(APIView):
             )
         except IdempotencyConflict as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_409_CONFLICT)
-        except ValueError as exc:
-            return Response({"detail": wallet_error_detail(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except (ValueError, ValidationError) as exc:
+            error_message = exc.messages[0] if hasattr(exc, 'messages') else wallet_error_detail(exc)
+            return Response({"detail": error_message}, status=status.HTTP_400_BAD_REQUEST)
 
+        # RB-PAY-05: Depósito acreditado instantáneamente
+        balance = get_wallet_balance(request.user)
         return Response(
             {
+                "detail": "Depósito simulado completado.",
                 "transaction_id": str(transaction.id),
-                "balance": format_money(get_wallet_balance(request.user)),
+                "balance": format_money(balance),
             },
             status=status.HTTP_201_CREATED,
         )
@@ -193,14 +198,22 @@ class WalletWithdrawView(APIView):
                 created_by=request.user,
                 idempotency_key=idempotency_key,
             )
+        except PermissionError as exc:
+            # RB-PAY-08: KYC no verificado → 403 Forbidden
+            return Response({"detail": str(exc)}, status=status.HTTP_403_FORBIDDEN)
         except IdempotencyConflict as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_409_CONFLICT)
-        except ValueError as exc:
-            return Response({"detail": wallet_error_detail(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except (ValueError, ValidationError) as exc:
+            error_message = exc.messages[0] if hasattr(exc, 'messages') else wallet_error_detail(exc)
+            return Response({"detail": error_message}, status=status.HTTP_400_BAD_REQUEST)
 
+        balance = get_wallet_balance(request.user)
         return Response(
             {
+                "detail": "Retiro simulado completado.",
                 "transaction_id": str(transaction.id),
-                "balance": format_money(get_wallet_balance(request.user)),
-            }
+                "balance": format_money(balance),
+            },
+            status=status.HTTP_200_OK,
         )
+
