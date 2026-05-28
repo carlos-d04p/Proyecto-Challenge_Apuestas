@@ -37,6 +37,19 @@ class RegistroSerializer(serializers.Serializer):
     birth_date = serializers.DateField()
     dni = serializers.CharField(max_length=8, min_length=8)
     dni_verificador = serializers.CharField(max_length=1, min_length=1, write_only=True)
+    acepta_terminos = serializers.BooleanField(
+        write_only=True,
+        error_messages={
+            "required": "Debes confirmar que tienes 18 años o más y aceptar los términos."
+        }
+    )
+
+    def validate_acepta_terminos(self, value):
+        if not value:
+            raise serializers.ValidationError(
+                "Debes confirmar que tienes 18 años o más y aceptar los términos."
+            )
+        return value
 
     def validate_username(self, value):
         if CustomUser.objects.filter(username=value).exists():
@@ -79,6 +92,7 @@ class RegistroSerializer(serializers.Serializer):
     def create(self, validated_data):
         validated_data.pop("password_confirm")
         validated_data.pop("dni_verificador", None)
+        validated_data.pop("acepta_terminos", None)
         password = validated_data.pop("password")
         birth_date = validated_data.pop("birth_date")
         dni = validated_data.pop("dni")
@@ -97,7 +111,7 @@ class RegistroSerializer(serializers.Serializer):
         if request:
             base_url = request.build_absolute_uri('/')[:-1]
         else:
-            base_url = "http://127.0.0.1:8000"
+            base_url = "http://127.0.0.1:8003"
 
         # 🚀 Encolar la tarea asíncrona de envío de email
         enviar_email_verificacion_async.delay(user.id, token, base_url)

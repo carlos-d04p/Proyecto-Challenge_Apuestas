@@ -1,28 +1,56 @@
 {% extends "base.html" %}
-
 {% block title %}Eventos deportivos — FairBet Lab{% endblock %}
 
 {% block content %}
 
-<h1 class="page-title">Eventos disponibles</h1>
-
-<!-- Filtros por estado -->
-<div class="filters">
-  <a href="?" class="filter-btn {% if not status_filter %}active{% endif %}">Todos</a>
-  <a href="?status=LIVE"      class="filter-btn {% if status_filter == 'LIVE' %}active{% endif %}">🔴 En vivo</a>
-  <a href="?status=SCHEDULED" class="filter-btn {% if status_filter == 'SCHEDULED' %}active{% endif %}">Programados</a>
-  <a href="?status=FINISHED"  class="filter-btn {% if status_filter == 'FINISHED' %}active{% endif %}">Finalizados</a>
+<div class="page-header">
+  <h1 class="page-title">Eventos disponibles</h1>
 </div>
 
+<!-- Filtros por estado con contadores -->
+<div class="filters">
+  <a href="?"
+     class="filter-btn {% if not status_filter %}active{% endif %}">
+    Todos
+    <span class="count">{{ counts.total }}</span>
+  </a>
+
+  <a href="?status=LIVE"
+     class="filter-btn live-tab {% if status_filter == 'LIVE' %}active{% endif %}">
+    <span class="live-dot"></span> En vivo
+    <span class="count">{{ counts.live }}</span>
+  </a>
+
+  <a href="?status=SCHEDULED"
+     class="filter-btn {% if status_filter == 'SCHEDULED' %}active{% endif %}">
+    ⏰ Programados
+    <span class="count">{{ counts.scheduled }}</span>
+  </a>
+
+  <a href="?status=FINISHED"
+     class="filter-btn {% if status_filter == 'FINISHED' %}active{% endif %}">
+    Finalizados
+    <span class="count">{{ counts.finished }}</span>
+  </a>
+</div>
+
+<!-- Grilla de eventos -->
 {% if events %}
   <div class="event-grid">
     {% for event in events %}
       <a href="{% url 'markets:event_detail' event.id %}" class="event-card">
 
-        <div class="card-header">
-          <span class="sport-tag">{{ event.sport }}</span>
+        <div class="card-top">
+          <span class="sport-label">
+            {% if event.sport == 'Fútbol' %}⚽
+            {% elif event.sport == 'Baloncesto' %}🏀
+            {% elif event.sport == 'Tenis' %}🎾
+            {% elif event.sport == 'Vóley' %}🏐
+            {% else %}🏆{% endif %}
+            {{ event.sport }}
+          </span>
           <span class="badge {{ event.status|lower }}">
-            {% if event.status == 'LIVE' %}EN VIVO
+            {% if event.status == 'LIVE' %}En Vivo
             {% elif event.status == 'SCHEDULED' %}Programado
             {% elif event.status == 'FINISHED' %}Finalizado
             {% elif event.status == 'SUSPENDED' %}Suspendido
@@ -30,26 +58,26 @@
           </span>
         </div>
 
-        <h3>{{ event.name }}</h3>
-        <p class="time">{{ event.starts_at|date:"d M Y · H:i" }}</p>
+        <div class="event-name">{{ event.name }}</div>
+        <div class="event-time">
+          🕐 {{ event.starts_at|date:"d/m/Y · H:i" }}
+        </div>
 
-        <!-- Cuotas del mercado 1X2 si existe -->
-        {% with market_1x2=event.markets.all %}
-          {% for market in market_1x2 %}
-            {% if market.kind == '1X2' and market.is_active %}
-              <div class="odds-row">
-                {% for sel in market.selections.all %}
-                  {% if sel.is_active %}
-                    <div class="odds-btn">
-                      <span class="sel-name">{{ sel.name }}</span>
-                      <span class="sel-odds">{{ sel.odds }}</span>
-                    </div>
-                  {% endif %}
-                {% endfor %}
-              </div>
-            {% endif %}
-          {% endfor %}
-        {% endwith %}
+        {% for market in event.markets.all %}
+          {% if market.kind == '1X2' and market.is_active %}
+            <div class="odds-label">Resultado Final</div>
+            <div class="odds-row">
+              {% for sel in market.selections.all %}
+                {% if sel.is_active %}
+                  <div class="odds-btn">
+                    <span class="sel-name">{{ sel.name }}</span>
+                    <span class="sel-odds">{{ sel.odds|floatformat:2 }}</span>
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endfor %}
 
       </a>
     {% endfor %}
@@ -57,8 +85,8 @@
 
 {% else %}
   <div class="empty">
-    <div style="font-size:3rem">📭</div>
-    <p>No hay eventos disponibles en este momento.</p>
+    <div class="empty-icon">📭</div>
+    <p>No hay eventos disponibles con ese filtro.</p>
   </div>
 {% endif %}
 

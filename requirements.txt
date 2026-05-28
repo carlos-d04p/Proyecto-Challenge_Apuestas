@@ -4,6 +4,7 @@ djangorestframework
 djangorestframework-simplejwt
 django-filter
 channels
+channels-redis
 celery
 redis
 psycopg2-binary

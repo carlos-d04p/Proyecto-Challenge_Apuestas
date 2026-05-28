@@ -86,12 +86,13 @@ class TestRegistroView:
             "birth_date": "1995-05-15",
             "dni": "12345678",  # DNI válido
             "dni_verificador": "1",  # Verificador correcto
+            "acepta_terminos": True,
         })
         assert response.status_code == 201
         assert PerfilKYC.objects.filter(user__username="nuevo_user").exists()
         perfil = PerfilKYC.objects.get(user__username="nuevo_user")
         assert perfil.status == PerfilKYC.Status.PENDING
-        mock_delay.assert_called_once_with(perfil.user.id, "token123", "http://127.0.0.1:8000")
+        mock_delay.assert_called_once_with(perfil.user.id, "token123", "http://127.0.0.1:8003")
 
     def test_registro_menor_de_edad(self, db, api_client):
         """Registro con usuario menor de 18 años devuelve 400."""
@@ -103,6 +104,7 @@ class TestRegistroView:
             "birth_date": menor,
             "dni": "45678901",
             "dni_verificador": "9",
+            "acepta_terminos": True,
         })
         assert response.status_code == 400
         assert "birth_date" in response.data.get("errors", {})
@@ -116,6 +118,7 @@ class TestRegistroView:
             "birth_date": "1995-05-15",
             "dni": "12345678",
             "dni_verificador": "2",  # dígito verificador incorrecto (debería ser 1)
+            "acepta_terminos": True,
         })
         assert response.status_code == 400
         assert "dni" in response.data.get("errors", {})
@@ -129,6 +132,7 @@ class TestRegistroView:
             "birth_date": "1995-05-15",
             "dni": "12345678",
             "dni_verificador": "1",
+            "acepta_terminos": True,
         })
         assert response.status_code == 400
 
@@ -141,6 +145,7 @@ class TestRegistroView:
             "birth_date": "1995-05-15",
             "dni": "45678901",
             "dni_verificador": "9",
+            "acepta_terminos": True,
         })
         assert response.status_code == 400
 
