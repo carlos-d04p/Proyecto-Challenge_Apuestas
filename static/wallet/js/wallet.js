@@ -8,7 +8,7 @@
     const pendingNode = app.querySelector("[data-wallet-pending]");
     const bonusNode = app.querySelector("[data-wallet-bonus]");
     const messageNode = app.querySelector("[data-wallet-message]");
-    const activityNode = app.querySelector("[data-wallet-activity]");
+    const historyNode = app.querySelector("[data-wallet-history]");
     const refreshButton = app.querySelector("[data-refresh-balance]");
     const forms = app.querySelectorAll("[data-wallet-form]");
     const openDepositButton = app.querySelector("[data-open-deposit]");
@@ -85,15 +85,6 @@
         welcomeBonusStatus.classList.add(state.className);
         welcomeBonusAmount.textContent = amount || "0.0000";
         welcomeBonusHelp.textContent = state.help;
-    }
-
-    function addActivity(text) {
-        if (activityNode.children.length === 1 && activityNode.children[0].textContent.includes("No hay")) {
-            activityNode.innerHTML = "";
-        }
-        const item = document.createElement("li");
-        item.textContent = text;
-        activityNode.prepend(item);
     }
 
     function validateAmount(value) {
@@ -237,6 +228,58 @@
         }
     }
 
+    function formatDate(value) {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+            return "-";
+        }
+        return new Intl.DateTimeFormat("es-PE", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        }).format(date);
+    }
+
+    function renderHistory(movements) {
+        if (!historyNode) {
+            return;
+        }
+        if (!movements.length) {
+            historyNode.innerHTML = '<tr><td colspan="6">Sin movimientos registrados.</td></tr>';
+            return;
+        }
+
+        historyNode.innerHTML = movements.map((movement) => {
+            const isDebit = movement.amount.startsWith("-");
+            const amountClass = isDebit ? "is-debit" : "is-credit";
+            const reference = movement.reference ? `TX-${movement.reference}` : "-";
+            return `
+                <tr>
+                    <td>${formatDate(movement.date)}</td>
+                    <td>${movement.operation_type}</td>
+                    <td>${movement.account_label}</td>
+                    <td class="${amountClass}">${movement.amount}</td>
+                    <td><span class="wallet-history-status">${movement.status}</span></td>
+                    <td><code>${reference}</code></td>
+                </tr>
+            `;
+        }).join("");
+    }
+
+    async function refreshHistory() {
+        if (!historyNode) {
+            return;
+        }
+        const response = await fetch("/api/wallet/history/", {
+            headers: { "Accept": "application/json" },
+            credentials: "same-origin",
+        });
+        const data = await parseResponse(response);
+        renderHistory(data.movements || []);
+    }
+
     async function submitOperation(kind, amount) {
         const endpoint = kind === "deposit" ? "/api/wallet/deposit/" : "/api/wallet/withdraw/";
         const response = await fetch(endpoint, {
@@ -314,9 +357,9 @@
                 button.disabled = true;
                 await submitOperation(kind, amount);
                 const balance = await refreshBalance();
+                await refreshHistory();
                 const label = kind === "deposit" ? "Recarga simulada" : "Retiro simulado";
                 setMessage(`${label} completado. Saldo actualizado: ${balance} fichas.`, "success");
-                addActivity(`${label}: ${amount} fichas virtuales`);
                 form.reset();
             } catch (error) {
                 setMessage(error.message, "error");
@@ -385,6 +428,9 @@
     });
 
     refreshBalance().catch((error) => {
+        setMessage(error.message, "error");
+    });
+    refreshHistory().catch((error) => {
         setMessage(error.message, "error");
     });
 })();

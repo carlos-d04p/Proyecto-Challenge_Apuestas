@@ -2,6 +2,7 @@ from decimal import Decimal
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -47,7 +48,7 @@ def test_wallet_balance_endpoint_returns_account_breakdown():
         kind="INTERNAL_TRANSFER",
         created_by=user,
     )
-    LedgerEntry.objects.create(
+    source_entry = LedgerEntry.objects.create(
         transaction=pending_transaction,
         account="USER_WALLET",
         account_owner=user,
@@ -85,6 +86,76 @@ def test_wallet_balance_endpoint_returns_account_breakdown():
         "PENDING_BETS": "7.0000",
         "BONUS": "2.5000",
     }
+
+
+@pytest.mark.django_db
+def test_wallet_history_endpoint_returns_movements_ordered_without_sensitive_accounts():
+    user = create_user("api-history")
+    deposit_transaction = deposit_simulated(user=user, amount="30.0000", created_by=user)
+    withdraw_transaction = Transaction.objects.create(kind="WITHDRAWAL", created_by=user)
+    LedgerEntry.objects.create(
+        transaction=withdraw_transaction,
+        account="USER_WALLET",
+        account_owner=user,
+        direction="DEBIT",
+        amount=Decimal("8.0000"),
+    )
+    LedgerEntry.objects.create(
+        transaction=withdraw_transaction,
+        account="HOUSE",
+        direction="CREDIT",
+        amount=Decimal("8.0000"),
+    )
+    pending_transaction = Transaction.objects.create(
+        kind="INTERNAL_TRANSFER",
+        created_by=user,
+    )
+    source_entry = LedgerEntry.objects.create(
+        transaction=pending_transaction,
+        account="USER_WALLET",
+        account_owner=user,
+        direction="DEBIT",
+        amount=Decimal("5.0000"),
+    )
+    pending_entry = LedgerEntry.objects.create(
+        transaction=pending_transaction,
+        account="PENDING_BETS",
+        account_owner=user,
+        direction="CREDIT",
+        amount=Decimal("5.0000"),
+    )
+    now = timezone.now()
+    LedgerEntry.objects.filter(transaction=deposit_transaction).update(
+        created_at=now - timezone.timedelta(minutes=3),
+    )
+    LedgerEntry.objects.filter(transaction=withdraw_transaction).update(
+        created_at=now - timezone.timedelta(minutes=2),
+    )
+    LedgerEntry.objects.filter(id=source_entry.id).update(
+        created_at=now - timezone.timedelta(seconds=90),
+    )
+    LedgerEntry.objects.filter(id=pending_entry.id).update(
+        created_at=now - timezone.timedelta(minutes=1),
+    )
+    client = authenticated_client(user)
+
+    response = client.get("/api/wallet/history/")
+
+    assert response.status_code == status.HTTP_200_OK
+    movements = response.data["movements"]
+    assert [movement["operation_type"] for movement in movements[:4]] == [
+        "Fichas pendientes en apuestas",
+        "Transferencia interna",
+        "Retiro simulado",
+        "Recarga simulada",
+    ]
+    assert all(movement["account"] != "HOUSE" for movement in movements)
+    assert movements[0]["account_label"] == "Fichas pendientes en apuestas"
+    assert movements[0]["amount"] == "5.0000"
+    assert movements[1]["amount"] == "-5.0000"
+    assert movements[2]["amount"] == "-8.0000"
+    assert movements[0]["status"] == "Completado"
+    assert movements[0]["reference"] == str(pending_transaction.id)[:8]
 
 
 @pytest.mark.django_db

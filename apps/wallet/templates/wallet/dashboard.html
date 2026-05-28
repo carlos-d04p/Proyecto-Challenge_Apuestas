@@ -178,11 +178,33 @@
         <div class="wallet-message" data-wallet-message>Listo para operar con moneda virtual educativa.</div>
     </section>
 
-    <section class="wallet-history" aria-label="Actividad reciente">
-        <h2>Actividad de la sesion</h2>
-        <ul data-wallet-activity>
-            <li>No hay operaciones registradas en esta sesion.</li>
-        </ul>
+    <section class="wallet-history" aria-labelledby="wallet-history-title">
+        <div class="wallet-history-header">
+            <div>
+                <p class="wallet-kicker">Ledger</p>
+                <h2 id="wallet-history-title">Historial de movimientos</h2>
+            </div>
+            <span class="wallet-history-note">Ordenado por fecha descendente</span>
+        </div>
+        <div class="wallet-history-table-wrap">
+            <table class="wallet-history-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo de operacion</th>
+                        <th>Cuenta afectada</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                        <th>Referencia</th>
+                    </tr>
+                </thead>
+                <tbody data-wallet-history>
+                    <tr>
+                        <td colspan="6">Sin movimientos registrados.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </section>
 </div>
 <script src="{% static 'wallet/js/wallet.js' %}" defer></script>

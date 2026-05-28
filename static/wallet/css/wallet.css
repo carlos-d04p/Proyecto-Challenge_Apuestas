@@ -574,18 +574,80 @@ h2 {
     padding: 18px 20px;
 }
 
-.wallet-history ul {
-    display: grid;
-    gap: 8px;
-    margin: 12px 0 0;
-    padding: 0;
-    list-style: none;
-    color: var(--muted);
+.wallet-history-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
 }
 
-.wallet-history li {
-    padding: 10px 0;
+.wallet-history-note {
+    color: var(--muted);
+    font-size: 0.88rem;
+}
+
+.wallet-history-table-wrap {
+    margin-top: 16px;
+    overflow-x: auto;
+}
+
+.wallet-history-table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+    color: var(--text);
+}
+
+.wallet-history-table th,
+.wallet-history-table td {
+    padding: 12px 10px;
     border-top: 1px solid rgba(80, 148, 219, 0.18);
+    text-align: left;
+    vertical-align: middle;
+}
+
+.wallet-history-table th {
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.wallet-history-table td {
+    font-size: 0.92rem;
+}
+
+.wallet-history-table td.is-credit {
+    color: #bbf7d0;
+    font-weight: 800;
+}
+
+.wallet-history-table td.is-debit {
+    color: #fecaca;
+    font-weight: 800;
+}
+
+.wallet-history-table code {
+    padding: 4px 7px;
+    border: 1px solid rgba(32, 211, 238, 0.22);
+    border-radius: 8px;
+    background: rgba(32, 211, 238, 0.07);
+    color: #b8ecf6;
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: 0.82rem;
+}
+
+.wallet-history-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 9px;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 8px;
+    background: rgba(34, 197, 94, 0.09);
+    color: #bbf7d0;
+    font-size: 0.78rem;
+    font-weight: 800;
 }
 
 @media (max-width: 980px) {
@@ -603,6 +665,11 @@ h2 {
 
     .wallet-section-title .wallet-muted {
         text-align: left;
+    }
+
+    .wallet-history-header {
+        align-items: flex-start;
+        flex-direction: column;
     }
 }
 
