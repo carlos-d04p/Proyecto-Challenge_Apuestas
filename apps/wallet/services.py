@@ -99,7 +99,7 @@ def withdraw_simulated(user, amount, created_by, idempotency_key=None):
         raise ValidationError("El retiro mínimo es de 100.0000 fichas.")
     
     if not getattr(user, 'is_email_verified', False):
-        raise ValidationError("Debes verificar tu cuenta (KYC) para poder realizar retiros.")
+        raise PermissionError("Debes verificar tu cuenta (KYC) para poder realizar retiros.")
 
     payload = _build_payload(
         operation="withdraw_simulated",

@@ -162,38 +162,89 @@ document.addEventListener("DOMContentLoaded", function() {
     const eventId = "{{ event.id }}";
     if (!eventId) return;
 
-    // Conectar al canal WebSocket específico para este evento
+    // Conectar al canal WebSocket específico para este evento (RB-RT-02)
     const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
     const socket = new WebSocket(protocol + window.location.host + '/ws/realtime/match/' + eventId + '/');
 
+    // RB-RT-05: Función para bloqueo visual instantáneo de TODO el evento
+    function lockEntireEvent(message) {
+        // Deshabilitar todos los botones de selección
+        document.querySelectorAll('.selection-btn').forEach(btn => {
+            if (btn.tagName === 'BUTTON') {
+                btn.disabled = true;
+                btn.onclick = null;
+            }
+            btn.classList.add('locked');
+            btn.title = message;
+        });
+
+        // Mostrar banner de estado si no existe
+        if (!document.getElementById('event-lock-banner')) {
+            const banner = document.createElement('div');
+            banner.id = 'event-lock-banner';
+            banner.style.cssText = 'background:linear-gradient(135deg,#ff5252,#b71c1c);color:#fff;padding:1rem 1.5rem;border-radius:10px;margin-bottom:1.5rem;font-weight:700;font-size:1rem;text-align:center;animation:fadeIn 0.3s ease;';
+            banner.textContent = message;
+            const hero = document.querySelector('.event-hero');
+            if (hero) hero.after(banner);
+        }
+
+        // Actualizar badge de estado
+        const badge = document.querySelector('.badge');
+        if (badge) {
+            badge.className = 'badge suspended';
+            badge.textContent = 'Suspendido';
+        }
+    }
+
     socket.onmessage = function(e) {
         const data = JSON.parse(e.data);
+        const action = data.type || data.action; // RB-RT-03: Usa 'type' del nuevo formato
 
-        // REGLA: Si el mercado se suspende
-        if (data.action === 'SUSPEND') {
+        // ═══ ACCIONES A NIVEL DE EVENTO ═══
+
+        // RB-RT-04 + RB-RT-05: Suspensión instantánea del evento completo
+        if (action === 'EVENT_SUSPENDED' || action === 'EVENT_CANCELLED' || action === 'EVENT_FINISHED') {
+            lockEntireEvent(data.message || '🔒 Evento no disponible');
+        }
+
+        // Evento pasa a EN VIVO (informativo)
+        else if (action === 'EVENT_LIVE') {
+            const badge = document.querySelector('.badge');
+            if (badge) {
+                badge.className = 'badge live';
+                badge.textContent = 'En Vivo';
+            }
+            // Remover banner de bloqueo si existía
+            const banner = document.getElementById('event-lock-banner');
+            if (banner) banner.remove();
+        }
+
+        // ═══ ACCIONES A NIVEL DE MERCADO ═══
+
+        // Suspensión de un mercado individual
+        else if (action === 'MARKET_SUSPEND' || action === 'SUSPEND') {
             const marketButtons = document.querySelectorAll(`[data-market-id="${data.market_id}"]`);
-            
             marketButtons.forEach(btn => {
                 if (btn.tagName === 'BUTTON') {
-                    btn.disabled = true; // Deshabilita clics
-                    btn.onclick = null; // Remueve la función de la betslip
+                    btn.disabled = true;
+                    btn.onclick = null;
                 }
                 btn.classList.add('locked');
                 btn.title = "🔒 Mercado Suspendido";
             });
-        } 
-        // REGLA: Si se actualiza una cuota
-        else if (data.action === 'ODDS_UPDATE') {
+        }
+
+        // Actualización de cuota en tiempo real
+        else if (action === 'ODDS_UPDATE') {
             const selectionBtn = document.querySelector(`[data-selection-id="${data.selection_id}"]`);
-            
+
             if (selectionBtn) {
-                // Actualiza el número de la cuota en el HTML
                 const oddsSpan = selectionBtn.querySelector('.odds-value');
                 if (oddsSpan) {
                     oddsSpan.innerText = parseFloat(data.odds).toFixed(2);
                 }
 
-                // Animación visual para llamar la atención del usuario
+                // Animación visual flash
                 selectionBtn.classList.add('flash-update');
                 setTimeout(() => {
                     selectionBtn.classList.remove('flash-update');

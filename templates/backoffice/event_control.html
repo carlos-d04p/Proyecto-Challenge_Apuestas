@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% load l10n %}
+{% block title %}Control de Evento — {{ event.name }} — FairBet Lab{% endblock %}
+
+{% block content %}
+
+<style>
+  /* ── Panel de control backoffice ─────────────────────────────────────── */
+  .bo-header { margin-bottom: 2rem; }
+  .bo-header h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+  .bo-header .bo-meta { color: var(--text-soft); font-size: 0.85rem; }
+
+  .bo-status-bar {
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    padding: 1rem 1.25rem; border-radius: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+  }
+  .bo-status-bar .current-status {
+    font-weight: 700; font-size: 1.1rem;
+    padding: 0.4rem 1rem; border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+  }
+  .bo-status-bar .current-status.scheduled { color: #60a5fa; }
+  .bo-status-bar .current-status.live { color: #f44336; }
+  .bo-status-bar .current-status.suspended { color: #ff9800; }
+  .bo-status-bar .current-status.finished { color: #4caf50; }
+  .bo-status-bar .current-status.cancelled { color: #9e9e9e; }
+
+  .bo-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+  .bo-btn {
+    padding: 0.5rem 1rem; border: none; border-radius: 8px; cursor: pointer;
+    font-weight: 600; font-size: 0.85rem; transition: all 0.2s;
+    color: #fff;
+  }
+  .bo-btn:hover { filter: brightness(1.2); transform: translateY(-1px); }
+  .bo-btn.success { background: #2e7d32; }
+  .bo-btn.warning { background: #e65100; }
+  .bo-btn.info { background: #1565c0; }
+  .bo-btn.danger { background: #c62828; }
+  .bo-btn.neutral { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+
+  .bo-section {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;
+  }
+  .bo-section h2 {
+    font-size: 1.1rem; margin-bottom: 1rem;
+    padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);
+  }
+
+  .bo-market-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+    gap: 1rem;
+  }
+  .bo-market-row:last-child { border-bottom: none; }
+  .bo-market-info { flex: 1; }
+  .bo-market-name { font-weight: 600; }
+  .bo-market-kind { font-size: 0.8rem; color: var(--text-soft); }
+  .bo-market-status {
+    font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+  }
+  .bo-market-status.active { background: rgba(46,125,50,0.2); color: #66bb6a; }
+  .bo-market-status.inactive { background: rgba(198,40,40,0.2); color: #ef5350; }
+
+  .bo-odds-table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
+  .bo-odds-table th {
+    text-align: left; padding: 0.5rem; font-size: 0.8rem;
+    color: var(--text-soft); border-bottom: 1px solid var(--border);
+  }
+  .bo-odds-table td { padding: 0.5rem; }
+  .bo-odds-input {
+    width: 80px; padding: 0.35rem 0.5rem; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--bg);
+    color: var(--text); font-weight: 700; text-align: center;
+  }
+  .bo-odds-input:focus { border-color: var(--primary); outline: none; }
+
+  .bo-alert {
+    padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem;
+  }
+  .bo-alert.success { background: #1e2a1e; border: 1px solid var(--green); color: var(--green); }
+  .bo-alert.error { background: #3f0d0d; border: 1px solid #f44336; color: #ef5350; }
+  .bo-alert.info { background: #1e3a5f; border: 1px solid #2563eb; color: #60a5fa; }
+  .bo-alert.warning { background: #3f2c00; border: 1px solid #ff9800; color: #ffa726; }
+
+  .bo-empty { text-align: center; color: var(--text-soft); padding: 2rem; }
+</style>
+
+<a href="{% url 'markets:event_list' %}" class="back-link">← Volver a eventos</a>
+
+{% if messages %}
+<div style="margin-bottom: 1rem;">
+  {% for message in messages %}
+  <div class="bo-alert {{ message.tags }}">{{ message }}</div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ═══ Header del evento ═══ -->
+<div class="bo-header">
+  <h1>🎛️ Panel de Control: {{ event.name }}</h1>
+  <p class="bo-meta">
+    {{ event.sport }} · 🕐 {{ event.starts_at|date:"d/m/Y H:i" }} · ID: <code>{{ event.id }}</code>
+  </p>
+</div>
+
+<!-- ═══ Barra de estado y transiciones ═══ -->
+<div class="bo-status-bar">
+  <span>Estado actual:</span>
+  <span class="current-status {{ event.status|lower }}">
+    {% if event.status == 'LIVE' %}🔴 En Vivo
+    {% elif event.status == 'SCHEDULED' %}📅 Programado
+    {% elif event.status == 'FINISHED' %}🏁 Finalizado
+    {% elif event.status == 'SUSPENDED' %}⏸️ Suspendido
+    {% elif event.status == 'CANCELLED' %}❌ Cancelado
+    {% endif %}
+  </span>
+
+  {% if status_transitions %}
+  <div class="bo-actions">
+    {% for status_value, label, btn_class in status_transitions %}
+    <form method="post" style="display:inline;">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="change_event_status">
+      <input type="hidden" name="new_status" value="{{ status_value }}">
+      <button type="submit" class="bo-btn {{ btn_class }}"
+        {% if btn_class == 'danger' %}onclick="return confirm('¿Seguro que deseas {{ label|lower }}?')"{% endif %}>
+        {{ label }}
+      </button>
+    </form>
+    {% endfor %}
+  </div>
+  {% else %}
+  <span style="color: var(--text-soft); font-style: italic;">Estado terminal — sin transiciones disponibles</span>
+  {% endif %}
+</div>
+
+<!-- ═══ Mercados y cuotas ═══ -->
+{% if markets_data %}
+{% for item in markets_data %}
+<div class="bo-section">
+  <h2>
+    {% if item.market.kind == '1X2' %}🏆{% elif item.market.kind == 'OU' %}⚡{% elif item.market.kind == 'BTTS' %}🎯{% elif item.market.kind == 'HCAP' %}⚖️{% endif %}
+    {{ item.market.name }} <small style="color:var(--text-soft);">[{{ item.market.kind }}]</small>
+  </h2>
+
+  <div class="bo-market-row">
+    <div class="bo-market-info">
+      <span class="bo-market-status {% if item.market.is_active %}active{% else %}inactive{% endif %}">
+        {% if item.market.is_active %}✅ ACTIVO{% else %}🔒 SUSPENDIDO{% endif %}
+      </span>
+    </div>
+    <form method="post" style="display:inline;">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="toggle_market">
+      <input type="hidden" name="market_id" value="{{ item.market.id }}">
+      <button type="submit" class="bo-btn {% if item.market.is_active %}warning{% else %}success{% endif %}">
+        {% if item.market.is_active %}⏸️ Suspender mercado{% else %}▶️ Reactivar mercado{% endif %}
+      </button>
+    </form>
+  </div>
+
+  {% if item.selections %}
+  <table class="bo-odds-table">
+    <thead>
+      <tr>
+        <th>Selección</th>
+        <th>Estado</th>
+        <th>Cuota actual</th>
+        <th>Nueva cuota</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for sel in item.selections %}
+      {% localize off %}
+      <tr>
+        <td style="font-weight:600;">{{ sel.name }}</td>
+        <td>
+          <span class="bo-market-status {% if sel.is_active %}active{% else %}inactive{% endif %}">
+            {% if sel.is_active %}Activa{% else %}Inactiva{% endif %}
+          </span>
+        </td>
+        <td style="font-weight:800; color:var(--primary);">{{ sel.odds|floatformat:'4u' }}</td>
+        <td>
+          <form method="post" style="display:flex; gap:0.5rem; align-items:center;" id="odds-form-{{ sel.id }}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_odds">
+            <input type="hidden" name="selection_id" value="{{ sel.id }}">
+            <input type="text" name="new_odds" class="bo-odds-input" value="{{ sel.odds|floatformat:'4u' }}" placeholder="1.5000">
+          </form>
+        </td>
+        <td>
+          <button type="submit" form="odds-form-{{ sel.id }}" class="bo-btn neutral" style="font-size:0.8rem;">
+            📝 Actualizar
+          </button>
+        </td>
+      </tr>
+      {% endlocalize %}
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="bo-empty">Sin selecciones para este mercado.</p>
+  {% endif %}
+</div>
+{% endfor %}
+{% else %}
+<div class="bo-section">
+  <p class="bo-empty">📋 Este evento no tiene mercados configurados.</p>
+</div>
+{% endif %}
+
+{% endblock %}
