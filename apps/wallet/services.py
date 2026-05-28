@@ -227,6 +227,217 @@ def internal_transfer(
         return transaction
 
 
+def record_bet_placement(user, amount, bet_id):
+    """
+    Descuenta de USER_WALLET y abona a PENDING_BETS.
+    """
+    amount = normalize_money(amount)
+    
+    with db_transaction.atomic():
+        locked_user = _lock_users_in_order(user)[user.pk]
+        
+        _ensure_sufficient_balance(
+            owner=locked_user,
+            account=LedgerAccount.USER_WALLET,
+            amount=amount,
+            message="Saldo insuficiente.",
+        )
+        
+        transaction = Transaction.objects.create(
+            kind=TransactionKind.BET_PLACEMENT,
+            description=f"Bet placement for bet {bet_id}",
+            created_by=locked_user,
+        )
+        entries = [
+            _create_entry(
+                transaction=transaction,
+                account=LedgerAccount.USER_WALLET,
+                account_owner=locked_user,
+                direction=LedgerDirection.DEBIT,
+                amount=amount,
+            ),
+            _create_entry(
+                transaction=transaction,
+                account=LedgerAccount.PENDING_BETS,
+                account_owner=locked_user,
+                direction=LedgerDirection.CREDIT,
+                amount=amount,
+            ),
+        ]
+        _validate_transaction_is_balanced(entries)
+        return transaction
+
+
+def record_bet_settlement_won(user, stake, payout, bet_id):
+    """
+    Mueve el stake de PENDING_BETS a HOUSE y el payout de HOUSE a USER_WALLET.
+    """
+    stake = normalize_money(stake)
+    payout = normalize_money(payout)
+    
+    with db_transaction.atomic():
+        locked_user = _lock_users_in_order(user)[user.pk]
+        
+        transaction = Transaction.objects.create(
+            kind=TransactionKind.BET_PAYOUT,
+            description=f"Bet payout for bet {bet_id}",
+            created_by=locked_user,
+        )
+        
+        entries = [
+            # 1. Stake from pending bets to house
+            _create_entry(
+                transaction=transaction,
+                account=LedgerAccount.PENDING_BETS,
+                account_owner=locked_user,
+                direction=LedgerDirection.DEBIT,
+                amount=stake,
+            ),
+            _create_entry(
+                transaction=transaction,
+                account=LedgerAccount.HOUSE,
+                account_owner=None,
+                direction=LedgerDirection.CREDIT,
+                amount=stake,
+            ),
+            # 2. Payout from house to user wallet
+            _create_entry(
+                transaction=transaction,
+                account=LedgerAccount.HOUSE,
+                account_owner=None,
+                direction=LedgerDirection.DEBIT,
+                amount=payout,
+            ),
+            _create_entry(
+                transaction=transaction,
+                account=LedgerAccount.USER_WALLET,
+                account_owner=locked_user,
+                direction=LedgerDirection.CREDIT,
+                amount=payout,
+            ),
+        ]
+        _validate_transaction_is_balanced(entries)
+        return transaction
+
+
+def record_bet_settlement_lost(user, stake, bet_id):
+    """
+    Mueve el stake de PENDING_BETS a HOUSE.
+    """
+    stake = normalize_money(stake)
+    
+    with db_transaction.atomic():
+        locked_user = _lock_users_in_order(user)[user.pk]
+        
+        transaction = Transaction.objects.create(
+            kind=TransactionKind.BET_LOSS,
+            description=f"Bet lost for bet {bet_id}",
+            created_by=locked_user,
+        )
+        entries = [
+            _create_entry(
+                transaction=transaction,
+                account=LedgerAccount.PENDING_BETS,
+                account_owner=locked_user,
+                direction=LedgerDirection.DEBIT,
+                amount=stake,
+            ),
+            _create_entry(
+                transaction=transaction,
+                account=LedgerAccount.HOUSE,
+                account_owner=None,
+                direction=LedgerDirection.CREDIT,
+                amount=stake,
+            ),
+        ]
+        _validate_transaction_is_balanced(entries)
+        return transaction
+
+
+def record_bet_settlement_void(user, stake, bet_id):
+    """
+    Devuelve el stake de PENDING_BETS a USER_WALLET (Refund).
+    """
+    stake = normalize_money(stake)
+    
+    with db_transaction.atomic():
+        locked_user = _lock_users_in_order(user)[user.pk]
+        
+        transaction = Transaction.objects.create(
+            kind=TransactionKind.BET_REFUND,
+            description=f"Bet void for bet {bet_id}",
+            created_by=locked_user,
+        )
+        entries = [
+            _create_entry(
+                transaction=transaction,
+                account=LedgerAccount.PENDING_BETS,
+                account_owner=locked_user,
+                direction=LedgerDirection.DEBIT,
+                amount=stake,
+            ),
+            _create_entry(
+                transaction=transaction,
+                account=LedgerAccount.USER_WALLET,
+                account_owner=locked_user,
+                direction=LedgerDirection.CREDIT,
+                amount=stake,
+            ),
+        ]
+        _validate_transaction_is_balanced(entries)
+        return transaction
+
+
+def record_bet_cashout(user, stake, payout, bet_id):
+    """
+    Igual que won pero tipo CASHOUT.
+    """
+    stake = normalize_money(stake)
+    payout = normalize_money(payout)
+    
+    with db_transaction.atomic():
+        locked_user = _lock_users_in_order(user)[user.pk]
+        
+        transaction = Transaction.objects.create(
+            kind=TransactionKind.CASHOUT,
+            description=f"Cashout for bet {bet_id}",
+            created_by=locked_user,
+        )
+        
+        entries = [
+            _create_entry(
+                transaction=transaction,
+                account=LedgerAccount.PENDING_BETS,
+                account_owner=locked_user,
+                direction=LedgerDirection.DEBIT,
+                amount=stake,
+            ),
+            _create_entry(
+                transaction=transaction,
+                account=LedgerAccount.HOUSE,
+                account_owner=None,
+                direction=LedgerDirection.CREDIT,
+                amount=stake,
+            ),
+            _create_entry(
+                transaction=transaction,
+                account=LedgerAccount.HOUSE,
+                account_owner=None,
+                direction=LedgerDirection.DEBIT,
+                amount=payout,
+            ),
+            _create_entry(
+                transaction=transaction,
+                account=LedgerAccount.USER_WALLET,
+                account_owner=locked_user,
+                direction=LedgerDirection.CREDIT,
+                amount=payout,
+            ),
+        ]
+        _validate_transaction_is_balanced(entries)
+        return transaction
+
+
 def _lock_users_in_order(*users):
     user_ids = sorted({user.pk for user in users}, key=str)
     locked_users = (
@@ -474,6 +685,11 @@ __all__ = [
     "deposit_simulated",
     "get_wallet_balance",
     "internal_transfer",
+    "record_bet_placement",
+    "record_bet_settlement_won",
+    "record_bet_settlement_lost",
+    "record_bet_settlement_void",
+    "record_bet_cashout",
     "WALLET_DEPOSIT_CREATED",
     "WALLET_WITHDRAWAL_CREATED",
     "WALLET_INTERNAL_TRANSFER_CREATED",

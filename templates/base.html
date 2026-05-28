@@ -1115,6 +1115,7 @@
   <meta name="description" content="Simulador educativo de apuestas deportivas con moneda virtual. Ley 31557.">
   <link rel="stylesheet" href="{% static 'css/main.css' %}">
   {% block extra_head %}{% endblock %}
+  <script src="{% static 'js/betslip.js' %}"></script>
 </head>
 <body>
 
@@ -1989,6 +1990,9 @@
 
   <main>
     {% block content %}{% endblock %}
+    
+    <!-- Contenedor del Boleto de Apuestas -->
+    <div id="bet-slip-container"></div>
   </main>
 
   <footer>
