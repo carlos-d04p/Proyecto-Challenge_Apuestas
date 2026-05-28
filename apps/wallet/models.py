@@ -1,9 +1,19 @@
 import uuid
 from decimal import Decimal
+from inspect import signature
 
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
+
+
+def check_constraint(*, condition, name):
+    constraint_kwargs = {"name": name}
+    if "condition" in signature(models.CheckConstraint).parameters:
+        constraint_kwargs["condition"] = condition
+    else:
+        constraint_kwargs["check"] = condition
+    return models.CheckConstraint(**constraint_kwargs)
 
 
 class TransactionKind(models.TextChoices):
@@ -81,12 +91,12 @@ class LedgerEntry(models.Model):
             models.Index(fields=["created_at"], name="ledger_created_at_idx"),
         ]
         constraints = [
-            models.CheckConstraint(
-                check=models.Q(amount__gt=Decimal("0.0000")),
+            check_constraint(
+                condition=models.Q(amount__gt=Decimal("0.0000")),
                 name="ledger_amount_gt_zero",
             ),
-            models.CheckConstraint(
-                check=(
+            check_constraint(
+                condition=(
                     models.Q(
                         account=LedgerAccount.HOUSE,
                         account_owner__isnull=True,
