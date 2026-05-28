@@ -11,10 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // Si el usuario agrega opciones del mismo evento, forzamos el modo SIMPLES
-        // ya que no se pueden combinar selecciones del mismo evento.
-        let hasSameEvent = betSlip.some(item => item.eventId === eventId);
-        if (hasSameEvent && betSlipMode === 'COMBINADA') {
+        // Si el usuario agrega opciones excluyentes (mismo mercado del mismo evento),
+        // forzamos el modo SIMPLES, ya que no se pueden combinar.
+        let hasSameMarket = betSlip.some(item => item.eventId === eventId && item.marketName === marketName);
+        if (hasSameMarket && betSlipMode === 'COMBINADA') {
             betSlipMode = 'SIMPLES';
             localStorage.setItem('fairbet_mode', 'SIMPLES');
             // Muestra un pequeño toast o dejamos que el cambio visual hable por sí solo
@@ -41,18 +41,19 @@ document.addEventListener('DOMContentLoaded', () => {
     
     window.setBetSlipMode = function(mode) {
         if (mode === 'COMBINADA') {
-            // Validate exclusivity by EVENT
+            // Validate exclusivity by MARKET (mutually exclusive)
             let conflict = false;
-            let seenEvents = new Set();
+            let seenMarkets = new Set();
             for (let item of betSlip) {
-                if (seenEvents.has(item.eventId)) {
+                let key = item.eventId + '_' + item.marketName;
+                if (seenMarkets.has(key)) {
                     conflict = true;
                     break;
                 }
-                seenEvents.add(item.eventId);
+                seenMarkets.add(key);
             }
             if (conflict) {
-                alert("No puedes armar una Combinada con selecciones del mismo evento. Se mantendrán como Simples.");
+                alert("No puedes armar una Combinada con opciones mutuamente excluyentes (del mismo mercado). Se mantendrán como Simples.");
                 return;
             }
         }
@@ -137,32 +138,49 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
         } else {
-            // SIMPLES MODE
+            // SIMPLES MODE (Grouped by Event)
+            const groupedBets = {};
             betSlip.forEach(item => {
-                const displayMarket = item.marketName || 'Mercado';
-                const itemPayout = (item.stake || 10) * item.odds;
+                if (!groupedBets[item.eventId]) {
+                    groupedBets[item.eventId] = { eventName: item.eventName, selections: [] };
+                }
+                groupedBets[item.eventId].selections.push(item);
+            });
+
+            Object.values(groupedBets).forEach(group => {
                 selectionsHtml += `
-                    <div class="betslip-item" style="margin-bottom: 0.75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                            <div>
-                                <div style="font-size: 0.8rem; color: var(--text-soft); margin-bottom: 0.2rem;">⚽ ${item.eventName}</div>
-                                <div style="font-size: 0.9rem; font-weight: 600; color: var(--text);">${item.name}</div>
-                                <div style="font-size: 0.75rem; color: var(--text-soft);">${displayMarket}</div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <span style="font-weight: 700; color: var(--primary); font-size: 1.1rem;">${item.odds.toFixed(2)}</span>
-                                <button type="button" onclick="removeFromBetSlip('${item.id}')" style="color: var(--text-soft); font-size: 0.9rem; padding: 0.2rem; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px; background: rgba(255,255,255,0.1); cursor: pointer; border: none;">✕</button>
-                            </div>
+                    <div class="betslip-event-group" style="margin-bottom: 0.75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+                        <div class="betslip-group-header" style="background: rgba(255,255,255,0.05); padding: 0.5rem 0.75rem; font-weight: 600; font-size: 0.85rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.4rem;">
+                            ⚽ ${group.eventName}
                         </div>
-                        <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem;">
-                            <span style="font-size: 0.8rem; color: var(--text-soft);">Fichas:</span>
-                            <input type="number" class="single-stake-input" data-id="${item.id}" name="stake" value="${item.stake || 10}" min="10" step="0.01" style="width: 80px; padding: 0.3rem; border-radius: 4px; border: 1px solid var(--border); background: #111; color: white;" required>
-                            <input type="hidden" name="selection_id" value="${item.id}">
-                            <input type="hidden" name="expected_odds" value="${item.odds.toFixed(4)}">
-                            <div style="margin-left: auto; font-size: 0.8rem;">Retorno: <span style="color: var(--green); font-weight: 600;">${itemPayout.toFixed(2)}</span></div>
-                        </div>
-                    </div>
+                        <div class="betslip-group-body" style="padding: 0.25rem 0;">
                 `;
+                group.selections.forEach(item => {
+                    const displayMarket = item.marketName || 'Mercado';
+                    const itemPayout = (item.stake || 10) * item.odds;
+                    selectionsHtml += `
+                            <div class="betslip-item" style="padding: 0.5rem 0.75rem; border-radius: 0; margin: 0; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                                    <div>
+                                        <div style="font-size: 0.9rem; font-weight: 600; color: var(--text);">${item.name}</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-soft);">${displayMarket}</div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span style="font-weight: 700; color: var(--primary); font-size: 1.1rem;">${item.odds.toFixed(2)}</span>
+                                        <button type="button" onclick="removeFromBetSlip('${item.id}')" style="color: var(--text-soft); font-size: 0.9rem; padding: 0.2rem; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px; background: rgba(255,255,255,0.1); cursor: pointer; border: none;">✕</button>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; align-items: center; margin-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem;">
+                                    <span style="font-size: 0.8rem; color: var(--text-soft);">Fichas:</span>
+                                    <input type="number" class="single-stake-input" data-id="${item.id}" name="stake" value="${item.stake || 10}" min="10" step="0.01" style="width: 80px; padding: 0.3rem; border-radius: 4px; border: 1px solid var(--border); background: #111; color: white;" required>
+                                    <input type="hidden" name="selection_id" value="${item.id}">
+                                    <input type="hidden" name="expected_odds" value="${item.odds.toFixed(4)}">
+                                    <div style="margin-left: auto; font-size: 0.8rem;">Retorno: <span style="color: var(--green); font-weight: 600;">${itemPayout.toFixed(2)}</span></div>
+                                </div>
+                            </div>
+                    `;
+                });
+                selectionsHtml += `</div></div>`;
             });
         }
 
