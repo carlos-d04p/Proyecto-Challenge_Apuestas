@@ -12,44 +12,75 @@
     <section class="wallet-header" aria-labelledby="wallet-title">
         <div>
             <p class="wallet-kicker">FairBet Lab Wallet</p>
-            <h1 id="wallet-title">Fichas virtuales</h1>
+            <h1 id="wallet-title">Billetera</h1>
+            <p class="wallet-lead">Gestiona tus fichas educativas desde un panel claro y seguro.</p>
         </div>
         <p class="wallet-disclaimer">Plataforma educativa con moneda virtual. No constituye una casa de apuestas.</p>
     </section>
 
-    <section class="wallet-grid" aria-label="Panel de wallet">
-        <article class="wallet-card wallet-balance-card">
-            <div class="wallet-card-header">
-                <span class="wallet-label">Saldo actual</span>
-                <button class="wallet-icon-button" type="button" data-refresh-balance aria-label="Actualizar saldo">↻</button>
+    <section class="wallet-summary" aria-label="Resumen financiero">
+        <article class="wallet-summary-card wallet-summary-primary">
+            <div>
+                <span class="wallet-label">Saldo disponible</span>
+                <div class="wallet-balance" data-wallet-balance>0.0000</div>
+                <p class="wallet-muted">Fichas educativas listas para usar</p>
             </div>
-            <div class="wallet-balance" data-wallet-balance>0.0000</div>
-            <p class="wallet-muted">Fichas educativas disponibles</p>
+            <button class="wallet-icon-button" type="button" data-refresh-balance aria-label="Actualizar saldo">Actualizar</button>
         </article>
 
-        <article class="wallet-card">
-            <div class="wallet-card-header">
-                <span class="wallet-label">Recarga simulada</span>
-                <span class="wallet-status-dot"></span>
-            </div>
-            <form class="wallet-form" data-wallet-form="deposit" novalidate>
-                <label for="deposit-amount">Monto en fichas</label>
-                <input id="deposit-amount" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="10.0000">
-                <button class="wallet-button wallet-button-primary" type="submit">Recargar fichas</button>
-            </form>
+        <article class="wallet-summary-card">
+            <span class="wallet-label">Tipo de cuenta</span>
+            <strong>Moneda virtual</strong>
+            <p class="wallet-muted">Sin dinero real ni pasarelas externas</p>
         </article>
 
-        <article class="wallet-card">
-            <div class="wallet-card-header">
-                <span class="wallet-label">Retiro simulado</span>
-                <span class="wallet-status-dot wallet-status-dot-cyan"></span>
-            </div>
-            <form class="wallet-form" data-wallet-form="withdraw" novalidate>
-                <label for="withdraw-amount">Monto en fichas</label>
-                <input id="withdraw-amount" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="5.0000">
-                <button class="wallet-button wallet-button-secondary" type="submit">Retirar fichas</button>
-            </form>
+        <article class="wallet-summary-card">
+            <span class="wallet-label">Operaciones</span>
+            <strong>Recarga y retiro</strong>
+            <p class="wallet-muted">Movimientos simulados con validacion del backend</p>
         </article>
+    </section>
+
+    <section class="wallet-actions" aria-label="Operaciones del wallet">
+        <div class="wallet-section-title">
+            <div>
+                <p class="wallet-kicker">Movimientos</p>
+                <h2>Operaciones simuladas</h2>
+            </div>
+            <p class="wallet-muted">Los montos se procesan como fichas virtuales educativas.</p>
+        </div>
+
+        <div class="wallet-actions-grid">
+            <article class="wallet-card wallet-action-card">
+                <div class="wallet-card-header">
+                    <div>
+                        <span class="wallet-label">Recarga simulada</span>
+                        <p class="wallet-card-copy">Aumenta tu saldo educativo para practicar operaciones.</p>
+                    </div>
+                    <span class="wallet-status-dot"></span>
+                </div>
+                <form class="wallet-form" data-wallet-form="deposit" novalidate>
+                    <label for="deposit-amount">Monto en fichas</label>
+                    <input id="deposit-amount" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="10.0000">
+                    <button class="wallet-button wallet-button-primary" type="submit">Recargar fichas</button>
+                </form>
+            </article>
+
+            <article class="wallet-card wallet-action-card">
+                <div class="wallet-card-header">
+                    <div>
+                        <span class="wallet-label">Retiro simulado</span>
+                        <p class="wallet-card-copy">Reduce fichas del saldo disponible de forma controlada.</p>
+                    </div>
+                    <span class="wallet-status-dot wallet-status-dot-cyan"></span>
+                </div>
+                <form class="wallet-form" data-wallet-form="withdraw" novalidate>
+                    <label for="withdraw-amount">Monto en fichas</label>
+                    <input id="withdraw-amount" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="5.0000">
+                    <button class="wallet-button wallet-button-secondary" type="submit">Retirar fichas</button>
+                </form>
+            </article>
+        </div>
     </section>
 
     <section class="wallet-message-panel" aria-live="polite" aria-atomic="true">
