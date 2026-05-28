@@ -39,6 +39,19 @@ class LedgerDirection(models.TextChoices):
     CREDIT = "CREDIT", "Credit"
 
 
+class BonusType(models.TextChoices):
+    WELCOME = "WELCOME", "Welcome"
+    FIRST_DEPOSIT = "FIRST_DEPOSIT", "First deposit"
+    RESPONSIBLE_GAMING = "RESPONSIBLE_GAMING", "Responsible gaming"
+
+
+class UserBonusStatus(models.TextChoices):
+    ACTIVE = "ACTIVE", "Active"
+    COMPLETED = "COMPLETED", "Completed"
+    CANCELLED = "CANCELLED", "Cancelled"
+    EXPIRED = "EXPIRED", "Expired"
+
+
 class Transaction(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     kind = models.CharField(max_length=32, choices=TransactionKind.choices)
@@ -147,3 +160,87 @@ class WalletIdempotencyRecord(models.Model):
 
     def __str__(self):
         return f"{self.user_id}:{self.key}"
+
+
+class BonusCampaign(models.Model):
+    code = models.CharField(max_length=32, unique=True)
+    name = models.CharField(max_length=120)
+    bonus_type = models.CharField(max_length=32, choices=BonusType.choices)
+    amount = models.DecimalField(
+        max_digits=18,
+        decimal_places=4,
+        validators=[MinValueValidator(Decimal("0.0001"))],
+    )
+    is_active = models.BooleanField(default=True)
+    required_bets_count = models.PositiveIntegerField(default=5)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["code"], name="bonus_campaign_code_idx"),
+            models.Index(fields=["bonus_type"], name="bonus_campaign_type_idx"),
+            models.Index(fields=["is_active"], name="bonus_campaign_active_idx"),
+        ]
+        constraints = [
+            check_constraint(
+                condition=models.Q(amount__gt=Decimal("0.0000")),
+                name="bonus_campaign_amount_gt_zero",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.code} - {self.name}"
+
+
+class UserBonus(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="wallet_bonuses",
+    )
+    campaign = models.ForeignKey(
+        BonusCampaign,
+        on_delete=models.PROTECT,
+        related_name="redemptions",
+    )
+    transaction = models.ForeignKey(
+        Transaction,
+        on_delete=models.PROTECT,
+        related_name="bonus_redemptions",
+    )
+    amount = models.DecimalField(
+        max_digits=18,
+        decimal_places=4,
+        validators=[MinValueValidator(Decimal("0.0001"))],
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=UserBonusStatus.choices,
+        default=UserBonusStatus.ACTIVE,
+    )
+    required_bets_count = models.PositiveIntegerField(default=5)
+    completed_bets_count = models.PositiveIntegerField(default=0)
+    is_withdrawable = models.BooleanField(default=False)
+    redeemed_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "campaign"],
+                name="user_bonus_user_campaign_uniq",
+            ),
+            check_constraint(
+                condition=models.Q(amount__gt=Decimal("0.0000")),
+                name="user_bonus_amount_gt_zero",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["user", "status"], name="user_bonus_user_status_idx"),
+            models.Index(fields=["campaign"], name="user_bonus_campaign_idx"),
+            models.Index(fields=["redeemed_at"], name="user_bonus_redeemed_idx"),
+        ]
+
+    def __str__(self):
+        return f"{self.user_id}:{self.campaign.code}"

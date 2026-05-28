@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load l10n %}
 {% block title %}Eventos deportivos — FairBet Lab{% endblock %}
 
 {% block content %}
@@ -63,6 +64,7 @@
           🕐 {{ event.starts_at|date:"d/m/Y · H:i" }}
         </div>
 
+        {% localize off %}
         {% for market in event.markets.all %}
           {% if market.kind == '1X2' and market.is_active %}
             <div class="odds-label">Resultado Final</div>
@@ -71,13 +73,14 @@
                 {% if sel.is_active %}
                   <div class="odds-btn">
                     <span class="sel-name">{{ sel.name }}</span>
-                    <span class="sel-odds">{{ sel.odds|floatformat:2 }}</span>
+                    <span class="sel-odds">{{ sel.odds|floatformat:'2u' }}</span>
                   </div>
                 {% endif %}
               {% endfor %}
             </div>
           {% endif %}
         {% endfor %}
+        {% endlocalize %}
 
       </a>
     {% endfor %}
