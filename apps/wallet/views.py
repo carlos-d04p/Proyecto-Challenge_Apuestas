@@ -6,6 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import TemplateView
+from django.core.exceptions import ValidationError
 
 from apps.wallet.selectors import (
     get_wallet_account_balances,
@@ -160,17 +161,9 @@ class WalletDepositView(APIView):
             )
         except IdempotencyConflict as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_409_CONFLICT)
-        except ValueError as exc:
-            return Response({"detail": wallet_error_detail(exc)}, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(
-            {
-                "transaction_id": str(transaction.id),
-                "balance": format_money(get_wallet_balance(request.user)),
-            },
-            status=status.HTTP_201_CREATED,
-        )
-
+        except (ValueError, ValidationError) as exc:
+            error_message = exc.messages[0] if hasattr(exc, 'messages') else wallet_error_detail(exc)
+            return Response({"detail": error_message}, status=status.HTTP_400_BAD_REQUEST)
 
 class WalletWithdrawView(APIView):
     permission_classes = [IsAuthenticated]
@@ -195,12 +188,6 @@ class WalletWithdrawView(APIView):
             )
         except IdempotencyConflict as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_409_CONFLICT)
-        except ValueError as exc:
-            return Response({"detail": wallet_error_detail(exc)}, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(
-            {
-                "transaction_id": str(transaction.id),
-                "balance": format_money(get_wallet_balance(request.user)),
-            }
-        )
+        except (ValueError, ValidationError) as exc:
+            error_message = exc.messages[0] if hasattr(exc, 'messages') else wallet_error_detail(exc)
+            return Response({"detail": error_message}, status=status.HTTP_400_BAD_REQUEST)
