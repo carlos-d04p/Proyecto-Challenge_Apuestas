@@ -40,6 +40,19 @@ def get_idempotency_key(request):
     return request.headers.get("Idempotency-Key")
 
 
+def wallet_error_detail(exc):
+    message = str(exc)
+    if message == "Insufficient wallet balance.":
+        return "Saldo disponible insuficiente para completar el retiro simulado."
+    if message == "Invalid money amount.":
+        return "Ingresa un monto valido."
+    if message == "Money amount must be greater than zero.":
+        return "El monto debe ser mayor a cero."
+    if message == "Money values must not be float.":
+        return "El monto debe enviarse como decimal valido, no como float."
+    return message
+
+
 class WalletBalanceView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -148,7 +161,7 @@ class WalletDepositView(APIView):
         except IdempotencyConflict as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_409_CONFLICT)
         except ValueError as exc:
-            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": wallet_error_detail(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(
             {
@@ -183,7 +196,7 @@ class WalletWithdrawView(APIView):
         except IdempotencyConflict as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_409_CONFLICT)
         except ValueError as exc:
-            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": wallet_error_detail(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(
             {

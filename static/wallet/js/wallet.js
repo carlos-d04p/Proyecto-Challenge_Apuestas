@@ -59,22 +59,29 @@
 
     function getFriendlyError(error) {
         const message = String(error && error.message ? error.message : error);
+        const lowerMessage = message.toLowerCase();
         if (message.includes("Authentication credentials")) {
             return "Inicia sesion para operar tu wallet.";
         }
-        if (message.toLowerCase().includes("saldo") || message.toLowerCase().includes("insufficient")) {
-            return "Saldo disponible insuficiente.";
+        if (lowerMessage.includes("bonus") || lowerMessage.includes("bono") || lowerMessage.includes("apuestas validas")) {
+            return message;
         }
-        if (message.toLowerCase().includes("luhn") || message.toLowerCase().includes("tarjeta")) {
-            return "Tarjeta simulada invalida.";
+        if (lowerMessage.includes("saldo") || lowerMessage.includes("insufficient")) {
+            return "Saldo disponible insuficiente para completar el retiro simulado.";
         }
-        if (message.toLowerCase().includes("codigo") || message.toLowerCase().includes("code")) {
+        if (lowerMessage.includes("luhn")) {
+            return "El numero de tarjeta simulada no es valido.";
+        }
+        if (lowerMessage.includes("tarjeta")) {
+            return message;
+        }
+        if (lowerMessage.includes("codigo") || lowerMessage.includes("code")) {
             return "Codigo promocional invalido.";
         }
-        if (message.toLowerCase().includes("network") || message.toLowerCase().includes("failed to fetch")) {
+        if (lowerMessage.includes("network") || lowerMessage.includes("failed to fetch")) {
             return "No se pudo conectar con el servidor.";
         }
-        return message || "No se pudo completar la operacion.";
+        return message || "La operacion fue rechazada. Revisa los datos e intenta nuevamente.";
     }
 
     function setPromoState(text, type) {
@@ -300,7 +307,7 @@
             throw new Error("Confirma que el retiro es simulado y usa solo saldo disponible.");
         }
         if (moneyToUnits(amount) > moneyToUnits(available)) {
-            throw new Error("Saldo disponible insuficiente. No puedes retirar fichas pendientes ni bonos.");
+            throw new Error("Saldo disponible insuficiente para completar el retiro simulado.");
         }
     }
 
@@ -322,10 +329,22 @@
         input.value = `${digits.slice(0, 2)}/${digits.slice(2)}`;
     }
 
+    function formatAmountInput(input) {
+        if (!input.value.trim()) {
+            return;
+        }
+        try {
+            input.value = validateAmount(input.value);
+            input.classList.remove("is-invalid");
+        } catch (_error) {
+            input.classList.add("is-invalid");
+        }
+    }
+
     async function parseResponse(response) {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-            const detail = data.detail || data.amount || "No se pudo completar la operacion.";
+            const detail = data.detail || data.amount || data.non_field_errors || "La operacion fue rechazada.";
             throw new Error(getFriendlyError(Array.isArray(detail) ? detail.join(" ") : String(detail)));
         }
         return data;
@@ -561,7 +580,9 @@
             const kind = form.dataset.walletForm;
 
             try {
+                input.classList.remove("is-invalid");
                 const amount = validateAmount(input.value);
+                input.value = amount;
                 if (kind === "deposit") {
                     validateDepositSimulation(form);
                 }
@@ -578,13 +599,18 @@
                 const balance = await refreshBalance();
                 await refreshBonuses();
                 await refreshHistory();
-                const label = kind === "deposit" ? "Recarga simulada" : "Retiro simulado";
-                const successText = `${label} completado. Saldo: ${balance}.`;
+                const successText = kind === "deposit"
+                    ? `Recarga simulada completada. Saldo disponible: ${balance}. No se proceso dinero real.`
+                    : `Retiro simulado completado. Saldo disponible: ${balance}.`;
                 setMessage(successText, "success");
                 setInlineState(operationState, successText, "success");
                 form.reset();
             } catch (error) {
                 const friendlyError = getFriendlyError(error);
+                const lowerError = friendlyError.toLowerCase();
+                if (lowerError.includes("monto") || lowerError.includes("saldo")) {
+                    input.classList.add("is-invalid");
+                }
                 setMessage(friendlyError, "error");
                 setInlineState(operationState, friendlyError, "error");
             } finally {
@@ -664,6 +690,11 @@
 
     app.querySelectorAll("input[name='card_number']").forEach((input) => {
         input.addEventListener("input", () => formatCardNumber(input));
+    });
+
+    app.querySelectorAll("input[name='amount']").forEach((input) => {
+        input.addEventListener("blur", () => formatAmountInput(input));
+        input.addEventListener("input", () => input.classList.remove("is-invalid"));
     });
 
     app.querySelectorAll("input[name='expiration']").forEach((input) => {
