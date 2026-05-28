@@ -177,7 +177,7 @@
     <button type="button" class="selection-btn"
       data-market-id="{{ market.id }}" 
       data-selection-id="{{ sel.id }}"
-      onclick="addToBetSlip('{{ sel.id }}', '{{ sel.name|escapejs }}', '{{ sel.odds }}', '{{ event.id }}', '{{ event.name|escapejs }}', '{% if market.kind == '1X2' %}Resultado del partido{% elif market.kind == 'OU' %}Goles totales Más/Menos{% elif market.kind == 'BTTS' %}Ambos equipos anotan{% elif market.kind == 'HCAP' %}Hándicap asiático{% else %}{{ market.name|escapejs }}{% endif %}')">
+      onclick="addToBetSlip('{{ sel.id }}', '{{ sel.name|escapejs }}', '{{ sel.odds }}', '{{ event.id }}', '{{ event.name|escapejs }}')">
       <span style="font-size: 0.8rem; color: var(--text-soft);">{{ sel.name }}</span>
       <span class="odds-value" style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds|floatformat:'2u' }}</span>
     </button>
