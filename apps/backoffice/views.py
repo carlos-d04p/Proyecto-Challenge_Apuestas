@@ -168,7 +168,10 @@ from django.db.models import Count, Q, Sum
 from django.http import JsonResponse
 from django.utils import timezone
 
+from apps.accounts.models import PerfilKYC
 from apps.betting.models import Bet
+from apps.compliance.models import SuspiciousActivity, AuditLog
+from apps.compliance.services import verify_audit_chain
 from apps.wallet.models import Transaction, TransactionKind, LedgerEntry, LedgerDirection
 from apps.wallet.selectors import get_wallet_balance
 
@@ -237,15 +240,32 @@ def dashboard_view(request):
         .order_by("-total_stake")[:10]
     )
 
+    # 0. Eventos en vivo para el Dashboard unificado
     live_events = (
         Event.objects.filter(status=Event.Status.LIVE)
         .order_by("live_started_at")[:10]
     )
 
+    # Datos de cumplimiento
+    usuarios_kyc = PerfilKYC.objects.select_related("user").order_by("user__username")
+    pending_alerts = SuspiciousActivity.objects.filter(
+        status="PENDING"
+    ).select_related("user").order_by("-detected_at")[:50]
+    audit_logs = AuditLog.objects.order_by("-created_at")[:100]
+    try:
+        audit_chain_ok = verify_audit_chain()
+    except Exception:
+        audit_chain_ok = False
+
     context = {
         "kpis": kpis,
         "top_bettors": list(top_bettors),
         "live_events": live_events,
+        # Cumplimiento
+        "usuarios_kyc": usuarios_kyc,
+        "pending_alerts": pending_alerts,
+        "audit_logs": audit_logs,
+        "audit_chain_ok": audit_chain_ok,
     }
     return render(request, "backoffice/dashboard.html", context)
 
