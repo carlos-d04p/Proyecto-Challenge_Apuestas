@@ -83,6 +83,56 @@
         </div>
     </section>
 
+    <section class="wallet-internal-transfer" aria-labelledby="wallet-transfer-title">
+        <div class="wallet-transfer-heading">
+            <div>
+                <p class="wallet-kicker">Transferencia interna</p>
+                <h2 id="wallet-transfer-title">Movimientos entre cuentas</h2>
+                <p class="wallet-muted">Vista preparada para transferencias internas seguras. La casa no aparece como opcion editable.</p>
+            </div>
+            <span class="wallet-transfer-state">Pendiente de endpoint publico</span>
+        </div>
+
+        <div class="wallet-transfer-routes" aria-label="Rutas permitidas">
+            <article class="wallet-transfer-route">
+                <span>USER_WALLET</span>
+                <b>→</b>
+                <span>PENDING_BETS</span>
+                <p>Reserva fichas disponibles para apuestas pendientes.</p>
+            </article>
+            <article class="wallet-transfer-route">
+                <span>PENDING_BETS</span>
+                <b>→</b>
+                <span>USER_WALLET</span>
+                <p>Devuelve fichas pendientes al saldo disponible cuando corresponda.</p>
+            </article>
+            <article class="wallet-transfer-route">
+                <span>BONUS</span>
+                <b>→</b>
+                <span>USER_WALLET</span>
+                <p>Flujo visual preparado para conversion de bonos con reglas del backend.</p>
+            </article>
+        </div>
+
+        <form class="wallet-transfer-form" data-internal-transfer-form novalidate>
+            <div class="wallet-form-row">
+                <label for="transfer-route">Ruta permitida</label>
+                <select id="transfer-route" name="transfer_route">
+                    <option value="">Selecciona una ruta</option>
+                    <option value="USER_WALLET:PENDING_BETS">USER_WALLET -> PENDING_BETS</option>
+                    <option value="PENDING_BETS:USER_WALLET">PENDING_BETS -> USER_WALLET</option>
+                    <option value="BONUS:USER_WALLET">BONUS -> USER_WALLET</option>
+                </select>
+            </div>
+            <div class="wallet-form-row">
+                <label for="transfer-amount">Monto en fichas</label>
+                <input id="transfer-amount" name="transfer_amount" type="text" inputmode="decimal" autocomplete="off" placeholder="1.0000">
+            </div>
+            <button class="wallet-button wallet-button-secondary" type="submit">Preparar transferencia</button>
+        </form>
+        <p class="wallet-transfer-message" data-internal-transfer-message>No se ejecutaran movimientos hasta contar con un endpoint seguro de backend.</p>
+    </section>
+
     <section class="wallet-actions" aria-label="Operaciones del wallet">
         <div class="wallet-section-title">
             <div>
