@@ -100,3 +100,34 @@ class LedgerEntry(models.Model):
 
     def __str__(self):
         return f"{self.direction} {self.account} {self.amount}"
+
+
+class WalletIdempotencyRecord(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="wallet_idempotency_records",
+    )
+    key = models.CharField(max_length=128)
+    request_hash = models.CharField(max_length=64)
+    transaction = models.ForeignKey(
+        Transaction,
+        on_delete=models.PROTECT,
+        related_name="idempotency_records",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "key"],
+                name="wallet_idempotency_user_key_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["user", "key"], name="wallet_idem_user_key_idx"),
+            models.Index(fields=["created_at"], name="wallet_idem_created_at_idx"),
+        ]
+
+    def __str__(self):
+        return f"{self.user_id}:{self.key}"

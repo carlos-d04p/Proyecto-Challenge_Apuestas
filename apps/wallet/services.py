@@ -11,8 +11,10 @@ from apps.wallet.models import (
     LedgerEntry,
     Transaction,
     TransactionKind,
+    WalletIdempotencyRecord,
 )
 from apps.wallet.selectors import get_wallet_balance
+from core.idempotency import IdempotencyConflict, build_request_hash
 from core.money import normalize_money
 
 
@@ -27,9 +29,22 @@ USER_OWNED_ACCOUNTS = {
 
 def deposit_simulated(user, amount, created_by, idempotency_key=None):
     amount = normalize_money(amount)
+    payload = _build_payload(
+        operation="deposit_simulated",
+        user=user,
+        amount=amount,
+    )
 
     with db_transaction.atomic():
         locked_user = _lock_user(user)
+        existing_transaction = _get_existing_idempotent_transaction(
+            user=locked_user,
+            idempotency_key=idempotency_key,
+            payload=payload,
+        )
+        if existing_transaction is not None:
+            return existing_transaction
+
         transaction = Transaction.objects.create(
             kind=TransactionKind.DEPOSIT,
             created_by=created_by,
@@ -51,14 +66,33 @@ def deposit_simulated(user, amount, created_by, idempotency_key=None):
             ),
         ]
         _validate_transaction_is_balanced(entries)
+        _record_idempotency(
+            user=locked_user,
+            idempotency_key=idempotency_key,
+            payload=payload,
+            transaction=transaction,
+        )
         return transaction
 
 
 def withdraw_simulated(user, amount, created_by, idempotency_key=None):
     amount = normalize_money(amount)
+    payload = _build_payload(
+        operation="withdraw_simulated",
+        user=user,
+        amount=amount,
+    )
 
     with db_transaction.atomic():
         locked_user = _lock_user(user)
+        existing_transaction = _get_existing_idempotent_transaction(
+            user=locked_user,
+            idempotency_key=idempotency_key,
+            payload=payload,
+        )
+        if existing_transaction is not None:
+            return existing_transaction
+
         balance = get_wallet_balance(locked_user)
         if balance < amount:
             raise ValueError("Insufficient wallet balance.")
@@ -84,6 +118,12 @@ def withdraw_simulated(user, amount, created_by, idempotency_key=None):
             ),
         ]
         _validate_transaction_is_balanced(entries)
+        _record_idempotency(
+            user=locked_user,
+            idempotency_key=idempotency_key,
+            payload=payload,
+            transaction=transaction,
+        )
         return transaction
 
 
@@ -94,13 +134,29 @@ def internal_transfer(
     amount,
     created_by,
     description=None,
+    idempotency_key=None,
 ):
     amount = normalize_money(amount)
     source_account = _validate_account(source_account)
     target_account = _validate_account(target_account)
+    payload = _build_payload(
+        operation="internal_transfer",
+        user=owner,
+        amount=amount,
+        source_account=source_account,
+        target_account=target_account,
+        description=description or "",
+    )
 
     with db_transaction.atomic():
         locked_owner = _lock_user(owner)
+        existing_transaction = _get_existing_idempotent_transaction(
+            user=locked_owner,
+            idempotency_key=idempotency_key,
+            payload=payload,
+        )
+        if existing_transaction is not None:
+            return existing_transaction
 
         if source_account in USER_OWNED_ACCOUNTS:
             source_balance = _get_account_balance(locked_owner, source_account)
@@ -129,6 +185,12 @@ def internal_transfer(
             ),
         ]
         _validate_transaction_is_balanced(entries)
+        _record_idempotency(
+            user=locked_owner,
+            idempotency_key=idempotency_key,
+            payload=payload,
+            transaction=transaction,
+        )
         return transaction
 
 
@@ -193,6 +255,46 @@ def _account_owner(account, owner):
     if account == LedgerAccount.HOUSE:
         return None
     return owner
+
+
+def _build_payload(operation, user, amount, **extra):
+    payload = {
+        "operation": operation,
+        "user_id": str(user.pk),
+        "amount": str(amount),
+    }
+    payload.update(extra)
+    return payload
+
+
+def _get_existing_idempotent_transaction(*, user, idempotency_key, payload):
+    if not idempotency_key:
+        return None
+
+    request_hash = build_request_hash(payload)
+    record = (
+        WalletIdempotencyRecord.objects.select_for_update()
+        .select_related("transaction")
+        .filter(user=user, key=idempotency_key)
+        .first()
+    )
+    if record is None:
+        return None
+    if record.request_hash != request_hash:
+        raise IdempotencyConflict("Idempotency key was reused with a different payload.")
+    return record.transaction
+
+
+def _record_idempotency(*, user, idempotency_key, payload, transaction):
+    if not idempotency_key:
+        return
+
+    WalletIdempotencyRecord.objects.create(
+        user=user,
+        key=idempotency_key,
+        request_hash=build_request_hash(payload),
+        transaction=transaction,
+    )
 
 
 __all__ = [
