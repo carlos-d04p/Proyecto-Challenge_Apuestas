@@ -186,6 +186,20 @@
             </div>
             <span class="wallet-history-note">Ordenado por fecha descendente</span>
         </div>
+        <div class="wallet-history-filters" aria-label="Filtros de historial">
+            <div class="wallet-filter-group" aria-label="Filtrar por tipo">
+                <button class="wallet-filter-chip is-active" type="button" data-history-type-filter="all">Todos</button>
+                <button class="wallet-filter-chip" type="button" data-history-type-filter="deposit">Recargas</button>
+                <button class="wallet-filter-chip" type="button" data-history-type-filter="withdrawal">Retiros</button>
+                <button class="wallet-filter-chip" type="button" data-history-type-filter="bonus">Bonos</button>
+                <button class="wallet-filter-chip" type="button" data-history-type-filter="internal_transfer">Transferencias internas</button>
+                <button class="wallet-filter-chip" type="button" data-history-type-filter="pending_bets">Apuestas pendientes</button>
+            </div>
+            <div class="wallet-filter-group" aria-label="Filtrar por fecha">
+                <button class="wallet-filter-chip" type="button" data-history-date-filter="7">Ultimos 7 dias</button>
+                <button class="wallet-filter-chip" type="button" data-history-date-filter="30">Ultimos 30 dias</button>
+            </div>
+        </div>
         <div class="wallet-history-table-wrap">
             <table class="wallet-history-table">
                 <thead>

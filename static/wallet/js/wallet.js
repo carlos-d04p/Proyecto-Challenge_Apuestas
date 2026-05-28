@@ -9,6 +9,8 @@
     const bonusNode = app.querySelector("[data-wallet-bonus]");
     const messageNode = app.querySelector("[data-wallet-message]");
     const historyNode = app.querySelector("[data-wallet-history]");
+    const historyTypeButtons = app.querySelectorAll("[data-history-type-filter]");
+    const historyDateButtons = app.querySelectorAll("[data-history-date-filter]");
     const refreshButton = app.querySelector("[data-refresh-balance]");
     const forms = app.querySelectorAll("[data-wallet-form]");
     const openDepositButton = app.querySelector("[data-open-deposit]");
@@ -20,6 +22,9 @@
     const welcomeBonusStatus = app.querySelector("[data-welcome-bonus-status]");
     const welcomeBonusAmount = app.querySelector("[data-welcome-bonus-amount]");
     const welcomeBonusHelp = app.querySelector("[data-welcome-bonus-help]");
+    let historyMovements = [];
+    let activeHistoryType = "all";
+    let activeHistoryDays = null;
 
     function getCookie(name) {
         const value = `; ${document.cookie}`;
@@ -242,12 +247,67 @@
         }).format(date);
     }
 
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function matchesHistoryType(movement) {
+        if (activeHistoryType === "all") {
+            return true;
+        }
+
+        const type = movement.operation_type;
+        const account = movement.account;
+        const matchers = {
+            deposit: () => type === "Recarga simulada",
+            withdrawal: () => type === "Retiro simulado",
+            bonus: () => type === "Bono" || account === "BONUS",
+            internal_transfer: () => type === "Transferencia interna",
+            pending_bets: () => type === "Fichas pendientes en apuestas" || account === "PENDING_BETS",
+        };
+
+        return matchers[activeHistoryType] ? matchers[activeHistoryType]() : true;
+    }
+
+    function matchesHistoryDate(movement) {
+        if (!activeHistoryDays) {
+            return true;
+        }
+
+        const movementDate = new Date(movement.date);
+        if (Number.isNaN(movementDate.getTime())) {
+            return false;
+        }
+        const threshold = new Date();
+        threshold.setDate(threshold.getDate() - activeHistoryDays);
+        return movementDate >= threshold;
+    }
+
+    function getFilteredHistory() {
+        return historyMovements.filter((movement) => matchesHistoryType(movement) && matchesHistoryDate(movement));
+    }
+
+    function updateHistoryFilterButtons() {
+        historyTypeButtons.forEach((button) => {
+            button.classList.toggle("is-active", button.dataset.historyTypeFilter === activeHistoryType);
+        });
+        historyDateButtons.forEach((button) => {
+            button.classList.toggle("is-active", Number(button.dataset.historyDateFilter) === activeHistoryDays);
+        });
+    }
+
     function renderHistory(movements) {
         if (!historyNode) {
             return;
         }
         if (!movements.length) {
-            historyNode.innerHTML = '<tr><td colspan="6">Sin movimientos registrados.</td></tr>';
+            const emptyText = historyMovements.length ? "Sin movimientos para el filtro seleccionado." : "Sin movimientos registrados.";
+            historyNode.innerHTML = `<tr><td colspan="6">${emptyText}</td></tr>`;
             return;
         }
 
@@ -258,14 +318,19 @@
             return `
                 <tr>
                     <td>${formatDate(movement.date)}</td>
-                    <td>${movement.operation_type}</td>
-                    <td>${movement.account_label}</td>
-                    <td class="${amountClass}">${movement.amount}</td>
-                    <td><span class="wallet-history-status">${movement.status}</span></td>
-                    <td><code>${reference}</code></td>
+                    <td>${escapeHtml(movement.operation_type)}</td>
+                    <td>${escapeHtml(movement.account_label)}</td>
+                    <td class="${amountClass}">${escapeHtml(movement.amount)}</td>
+                    <td><span class="wallet-history-status">${escapeHtml(movement.status)}</span></td>
+                    <td><code>${escapeHtml(reference)}</code></td>
                 </tr>
             `;
         }).join("");
+    }
+
+    function applyHistoryFilters() {
+        updateHistoryFilterButtons();
+        renderHistory(getFilteredHistory());
     }
 
     async function refreshHistory() {
@@ -277,7 +342,8 @@
             credentials: "same-origin",
         });
         const data = await parseResponse(response);
-        renderHistory(data.movements || []);
+        historyMovements = data.movements || [];
+        applyHistoryFilters();
     }
 
     async function submitOperation(kind, amount) {
@@ -391,6 +457,27 @@
             }
         });
     }
+
+    historyTypeButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            activeHistoryType = button.dataset.historyTypeFilter;
+            if (activeHistoryType === "all") {
+                activeHistoryDays = null;
+            }
+            applyHistoryFilters();
+        });
+    });
+
+    historyDateButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            const days = Number(button.dataset.historyDateFilter);
+            activeHistoryDays = activeHistoryDays === days ? null : days;
+            if (activeHistoryDays) {
+                activeHistoryType = activeHistoryType === "all" ? "all" : activeHistoryType;
+            }
+            applyHistoryFilters();
+        });
+    });
 
     if (openDepositButton && depositPanel) {
         openDepositButton.addEventListener("click", () => {
