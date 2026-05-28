@@ -1,0 +1,85 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Eventos - OPS Console{% endblock %}
+
+{% block content %}
+<div class="row" style="margin-bottom: 2rem;">
+  <div class="col-12" style="display: flex; justify-content: space-between; align-items: flex-end;">
+    <h2 style="margin: 0; display: flex; align-items: center; gap: 1rem;">
+      <span style="font-weight: 300; color: var(--text-mute);">Operación:</span> 
+      <span style="color: #0ea5e9;">Lista de Eventos</span>
+    </h2>
+    <a href="{% url 'backoffice:event_create' %}" class="btn" style="background: #0ea5e9; color: #fff; padding: 0.6rem 1.2rem; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: bold;">
+      ➕ Nuevo Evento
+    </a>
+  </div>
+</div>
+
+<div class="panel" style="padding: 0;">
+  <!-- FILTROS -->
+  <div style="padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; gap: 1rem; flex-wrap: wrap;">
+    <a href="{% url 'backoffice:event_list' %}" 
+       style="padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600; 
+              {% if not current_status %}background: rgba(14,165,233,0.15); color: #0ea5e9; border: 1px solid rgba(14,165,233,0.3);{% else %}color: var(--text-soft); border: 1px solid transparent;{% endif %}">
+      Todos
+    </a>
+    {% for status_val, status_name in all_statuses %}
+      <a href="{% url 'backoffice:event_list' %}?status={{ status_val }}" 
+         style="padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: 600;
+                {% if current_status == status_val %}background: rgba(14,165,233,0.15); color: #0ea5e9; border: 1px solid rgba(14,165,233,0.3);{% else %}color: var(--text-soft); border: 1px solid transparent;{% endif %}">
+        {{ status_name }}
+      </a>
+    {% endfor %}
+  </div>
+
+  <!-- TABLA DE EVENTOS -->
+  <table style="width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr>
+        <th style="text-align: left; padding: 1rem 1.5rem; color: var(--text-mute); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border);">Evento</th>
+        <th style="text-align: left; padding: 1rem 1.5rem; color: var(--text-mute); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border);">Deporte</th>
+        <th style="text-align: left; padding: 1rem 1.5rem; color: var(--text-mute); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border);">Fecha de Inicio</th>
+        <th style="text-align: center; padding: 1rem 1.5rem; color: var(--text-mute); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border);">Estado</th>
+        <th style="text-align: right; padding: 1rem 1.5rem; color: var(--text-mute); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border);">Acción</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for event in events %}
+      <tr style="border-bottom: 1px solid var(--border-soft); transition: background 0.2s;" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='transparent'">
+        <td style="padding: 1rem 1.5rem; font-weight: 600; font-size: 0.95rem;">
+          {{ event.name }}
+          <div style="font-size: 0.7rem; color: var(--text-mute); font-family: var(--font-mono); margin-top: 0.2rem;">ID: {{ event.id|stringformat:"s"|slice:":8" }}...</div>
+        </td>
+        <td style="padding: 1rem 1.5rem; color: var(--text-soft); font-size: 0.9rem;">
+          {{ event.get_sport_display }}
+        </td>
+        <td style="padding: 1rem 1.5rem; color: var(--text-soft); font-size: 0.9rem;">
+          {{ event.starts_at|date:"d M Y - H:i T" }}
+        </td>
+        <td style="padding: 1rem 1.5rem; text-align: center;">
+          <span style="display: inline-block; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;
+            {% if event.status == 'LIVE' %}background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3);
+            {% elif event.status == 'SCHEDULED' %}background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3);
+            {% elif event.status == 'FINISHED' %}background: rgba(76,175,80,0.15); color: #4caf50; border: 1px solid rgba(76,175,80,0.3);
+            {% elif event.status == 'SUSPENDED' %}background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3);
+            {% else %}background: rgba(148,163,184,0.15); color: #94a3b8; border: 1px solid rgba(148,163,184,0.3);{% endif %}">
+            {{ event.get_status_display }}
+          </span>
+        </td>
+        <td style="padding: 1rem 1.5rem; text-align: right;">
+          <a href="{% url 'backoffice:event_control' event.id %}" style="display: inline-block; padding: 0.4rem 1rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); text-decoration: none; border-radius: 6px; font-size: 0.8rem; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='var(--text-mute)';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--border)';">
+            Panel de Control →
+          </a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" style="padding: 3rem; text-align: center; color: var(--text-mute);">
+          No se encontraron eventos.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
