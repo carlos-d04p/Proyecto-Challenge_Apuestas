@@ -42,6 +42,26 @@ class Bet(models.Model):
     def __str__(self):
         return f"{self.id} - {self.user} - {self.status}"
 
+    @property
+    def current_odds(self):
+        if self.status != self.Status.PLACED:
+            return self.total_odds
+        current_odds = Decimal("1.0000")
+        for sel in self.selections.all():
+            current_odds *= sel.selection.odds
+        return current_odds
+
+    @property
+    def current_cashout_value(self):
+        if self.status != self.Status.PLACED:
+            return None
+        current = self.current_odds
+        house_factor = Decimal("0.90")
+        if current == Decimal("0.0000"):
+            return Decimal("0.0000")
+        payout = (self.stake * (self.total_odds / current) * house_factor).quantize(Decimal("0.0001"))
+        return payout
+
 
 class BetSelection(models.Model):
     class Result(models.TextChoices):

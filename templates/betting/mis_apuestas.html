@@ -77,7 +77,7 @@
                                 </span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                <span class="betslip-sel-odds" style="font-weight: 700; color: var(--primary);">{{ line.odds_at_placement|floatformat:'2u' }}</span>
+                                <span class="betslip-sel-odds sel-odds-display" data-bet-id="{{ bet.id }}" data-selection-id="{{ line.selection.id }}" data-current-odds="{{ line.selection.odds|stringformat:'f' }}" style="font-weight: 700; color: var(--primary);">{{ line.odds_at_placement|floatformat:'2u' }}</span>
                             </div>
                         </div>
                         {% endfor %}
@@ -107,10 +107,10 @@
         <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">
             <form method="POST" action="{% url 'betting:ejecutar_cashout' bet.id %}">
                 {% csrf_token %}
-                <input type="hidden" name="current_odds" value="1.8500">
-                <button type="submit" class="filter-btn active"
-                    style="width: 100%; border-radius: 8px; font-weight: 600; background: #b45309; border-color: #b45309;">
-                    💰 Solicitar Cash-Out (Simulado @1.85)
+                <input type="hidden" name="current_odds" id="cashout-odds-{{ bet.id }}" value="{{ bet.current_odds|stringformat:'f' }}">
+                <button type="submit" class="filter-btn active cashout-btn" data-bet-id="{{ bet.id }}" data-stake="{{ bet.stake|stringformat:'f' }}" data-total-odds="{{ bet.total_odds|stringformat:'f' }}"
+                    style="width: 100%; border-radius: 8px; font-weight: 600; background: #b45309; border-color: #b45309; transition: all 0.3s ease;">
+                    💰 Solicitar Cash-Out (<span id="cashout-val-{{ bet.id }}">{{ bet.current_cashout_value|floatformat:'2u' }}</span> Fichas)
                 </button>
             </form>
         </div>
@@ -135,4 +135,62 @@
         Si tienes problemas con el juego, busca ayuda: 0800-00-000.
     </p>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+    const lobbySocket = new WebSocket(
+        wsScheme + '://' + window.location.host + '/ws/realtime/lobby/'
+    );
+
+    lobbySocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'odds_update') {
+            const selId = data.selection_id;
+            const newOdds = parseFloat(data.odds);
+            
+            // Encuentra todos los elementos visuales de esta selección
+            const displays = document.querySelectorAll(`.sel-odds-display[data-selection-id="${selId}"]`);
+            displays.forEach(el => {
+                // Actualiza el current_odds en el atributo data
+                el.setAttribute('data-current-odds', newOdds);
+                
+                const betId = el.getAttribute('data-bet-id');
+                recalculateCashout(betId);
+            });
+        }
+    };
+
+    function recalculateCashout(betId) {
+        const btn = document.querySelector(`.cashout-btn[data-bet-id="${betId}"]`);
+        if (!btn) return;
+
+        const stake = parseFloat(btn.getAttribute('data-stake'));
+        const totalOddsPlaced = parseFloat(btn.getAttribute('data-total-odds'));
+        
+        // Multiplicar las odds actuales de todas las selecciones de esta apuesta
+        const selectionDisplays = document.querySelectorAll(`.sel-odds-display[data-bet-id="${betId}"]`);
+        let currentTotalOdds = 1.0;
+        selectionDisplays.forEach(el => {
+            currentTotalOdds *= parseFloat(el.getAttribute('data-current-odds') || 1.0);
+        });
+
+        const hiddenOddsInput = document.getElementById(`cashout-odds-${betId}`);
+        if (hiddenOddsInput) {
+            hiddenOddsInput.value = currentTotalOdds.toFixed(4);
+        }
+
+        const cashoutValSpan = document.getElementById(`cashout-val-${betId}`);
+        if (cashoutValSpan && currentTotalOdds > 0) {
+            // formula: stake * (total_odds / current_total_odds) * house_factor
+            const payout = (stake * (totalOddsPlaced / currentTotalOdds) * 0.90).toFixed(2);
+            cashoutValSpan.textContent = payout;
+            
+            // Animación para indicar que se actualizó
+            btn.style.transform = 'scale(1.02)';
+            setTimeout(() => { btn.style.transform = 'scale(1)'; }, 200);
+        }
+    }
+});
+</script>
 {% endblock %}
