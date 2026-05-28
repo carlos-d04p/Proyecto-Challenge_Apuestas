@@ -489,9 +489,9 @@
     transition: height 0.3s ease;
   }
 
-  .bar-won { background-color: var(--accent-primary); }
-  .bar-lost { background-color: var(--accent-danger); }
-  .bar-cashout { background-color: var(--accent-blue); }
+  .bar-won { background-color: var(--accent); }
+  .bar-lost { background-color: var(--danger); }
+  .bar-cashout { background-color: var(--info); }
 
   .chart-label {
     font-size: 0.7rem;
@@ -730,9 +730,9 @@
       <div class="panel-header">
         <h3 class="panel-title"><i data-lucide="bar-chart-3"></i> Resumen de Apuestas</h3>
         <div style="display: flex; gap: 0.75rem; font-size: 0.75rem; color: var(--text-soft);">
-          <span style="display: flex; align-items: center; gap: 0.25rem;"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-primary);"></span> Ganadas ({{ chart_data.won }})</span>
-          <span style="display: flex; align-items: center; gap: 0.25rem;"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-danger);"></span> Perdidas ({{ chart_data.lost }})</span>
-          <span style="display: flex; align-items: center; gap: 0.25rem;"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-blue);"></span> Cash-Outs ({{ chart_data.cashout }})</span>
+          <span style="display: flex; align-items: center; gap: 0.25rem;"><span style="width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--accent);"></span> Ganadas ({{ chart_data.won }})</span>
+          <span style="display: flex; align-items: center; gap: 0.25rem;"><span style="width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--danger);"></span> Perdidas ({{ chart_data.lost }})</span>
+          <span style="display: flex; align-items: center; gap: 0.25rem;"><span style="width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--info);"></span> Cash-Outs ({{ chart_data.cashout }})</span>
         </div>
       </div>
       <div class="panel-body">
