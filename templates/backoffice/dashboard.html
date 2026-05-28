@@ -263,7 +263,7 @@
       <div>
         <span class="kpi-title">Apuestas Totales</span>
         <div class="kpi-value">{{ total_bets_count|default:"12,540" }}</div>
-        <div class="kpi-sub">Monto: S/ {{ total_wagered|floatformat:2 }}</div>
+        <div class="kpi-sub">Monto: {{ total_wagered|floatformat:2 }} Fichas</div>
       </div>
       <div class="kpi-icon-container">
         <i data-lucide="activity" style="color: var(--accent-blue); width: 42px; height: 42px;"></i>
@@ -274,8 +274,8 @@
     <div class="kpi-card">
       <div>
         <span class="kpi-title">Ganancia del Casino</span>
-        <div class="kpi-value" style="color: #fff;">S/ {{ house_margin|floatformat:2 }}</div>
-        <div class="kpi-sub">Premios pagados: S/ {{ total_payout|floatformat:2 }}</div>
+        <div class="kpi-value" style="color: #fff;">{{ house_margin|floatformat:2 }} Fichas</div>
+        <div class="kpi-sub">Premios pagados: {{ total_payout|floatformat:2 }} Fichas</div>
       </div>
       <div class="kpi-icon-container">
         <i data-lucide="banknote" style="color: var(--accent-primary); width: 42px; height: 42px;"></i>
@@ -286,8 +286,8 @@
     <div class="kpi-card">
       <div>
         <span class="kpi-title">Retiros Totales</span>
-        <div class="kpi-value">S/ {{ total_withdrawals|floatformat:2 }}</div>
-        <div class="kpi-sub">Depósitos: S/ {{ total_deposits|floatformat:2 }}</div>
+        <div class="kpi-value">{{ total_withdrawals|floatformat:2 }} Fichas</div>
+        <div class="kpi-sub">Depósitos: {{ total_deposits|floatformat:2 }} Fichas</div>
       </div>
       <div class="kpi-icon-container">
         <i data-lucide="arrow-up-right" style="color: var(--accent-danger); width: 42px; height: 42px;"></i>
@@ -387,7 +387,7 @@
               <i data-lucide="sliders" style="color: var(--accent-warning); width: 18px; height: 18px;"></i>
               Límites Activos
             </span>
-            <strong style="color: var(--accent-primary);">S/ 2,000 diario promedio</strong>
+            <strong style="color: var(--accent-primary);">2,000 Fichas diario promedio</strong>
           </div>
           <div style="display: flex; align-items: center; justify-content: space-between;">
             <span style="color: var(--text-soft); display: flex; align-items: center; gap: 0.4rem;">
@@ -566,7 +566,7 @@
                 </span>
               </td>
               <td>
-                Diario: S/ {{ p.daily_deposit_limit|default:"Sin límite" }}
+                Diario: {{ p.daily_deposit_limit|default:"Sin límite" }} Fichas
               </td>
               <td>
                 <a href="/admin/accounts/perfilkyc/{{ p.id }}/change/" target="_blank" class="btn-admin btn-admin-secondary" style="text-decoration: none; display: inline-block;">Modificar</a>

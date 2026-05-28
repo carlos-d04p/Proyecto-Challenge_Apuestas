@@ -8,6 +8,7 @@ The `urlpatterns` list routes URLs to views. For more information please see:
 from django.contrib import admin
 from django.urls import path, include
 from apps.betting import views as betting_views
+from apps.wallet.views import WalletPageView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -18,6 +19,7 @@ urlpatterns = [
     path('api/markets/', include(('apps.markets.urls', 'markets'), namespace='markets_api')),
     path('markets/', include(('apps.markets.urls', 'markets'), namespace='markets')),
     path('betting/', include(('apps.betting.urls', 'betting'), namespace='betting')),
+    path('wallet/', WalletPageView.as_view(), name='wallet-dashboard'),
     path('', betting_views.dashboard, name='dashboard'),
 ]
 

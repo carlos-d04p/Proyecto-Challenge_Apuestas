@@ -151,4 +151,4 @@ def dashboard(request):
         "user_balance": 1145.00, # 1000 - 100 + 245
     }
     
-    return render(request, "base.html", context)
+    return render(request, "betting/dashboard.html", context)
