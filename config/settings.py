@@ -34,22 +34,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
-    'rest_framework_simplejwt',
-    'django_filters',
-    'channels',
+    
+    # Aplicaciones del Proyecto Casino (FairBet Lab)
     'apps.accounts',
-    'apps.wallet',
-    'apps.payments',
-    'apps.markets',
-    'apps.betting',
-    'apps.realtime',
-    'apps.compliance',
     'apps.backoffice',
+    'apps.betting',
+    'apps.compliance',
+    'apps.markets',
+    'apps.payments',
+    'apps.realtime',
+    'apps.wallet',
 ]
-
-AUTH_USER_MODEL = 'accounts.CustomUser'
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -62,6 +57,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'config.urls'
+
+AUTH_USER_MODEL = 'accounts.CustomUser'
 
 
 REST_FRAMEWORK = {
