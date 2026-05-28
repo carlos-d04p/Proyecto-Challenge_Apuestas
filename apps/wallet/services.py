@@ -103,6 +103,9 @@ def withdraw_simulated(user, amount, created_by, idempotency_key=None):
         if existing_transaction is not None:
             return existing_transaction
 
+        from apps.wallet.bonus_services import validate_bonus_withdrawal
+
+        validate_bonus_withdrawal(locked_user, amount)
         _ensure_sufficient_balance(
             owner=locked_user,
             account=LedgerAccount.USER_WALLET,
