@@ -4,6 +4,18 @@ from rest_framework.test import APIClient
 from apps.markets.models import Event, Market, Selection
 from django.utils import timezone
 from datetime import timedelta
+import copy
+from django.template import context
+
+# Patch Django's BaseContext.__copy__ to support Python 3.14
+def _base_context_copy(self):
+    cls = self.__class__
+    duplicate = cls.__new__(cls)
+    duplicate.__dict__.update(self.__dict__)
+    duplicate.dicts = self.dicts[:]
+    return duplicate
+
+context.BaseContext.__copy__ = _base_context_copy
 
 
 @pytest.fixture
@@ -42,49 +54,49 @@ def selections(db, market):
 
 class TestEventList:
     def test_listar_eventos(self, api_client, event):
-        url = reverse("event-list")
+        url = reverse("markets_api:event-list")
         response = api_client.get(url)
         assert response.status_code == 200
-        assert len(response.data) == 1
-        assert response.data[0]["name"] == "Real Madrid vs Barcelona"
+        assert len(response.data["results"]) == 1
+        assert response.data["results"][0]["name"] == "Real Madrid vs Barcelona"
 
     def test_filtrar_por_deporte(self, api_client, event):
-        url = reverse("event-list") + "?sport=Fútbol"
+        url = reverse("markets_api:event-list") + "?sport=Fútbol"
         response = api_client.get(url)
         assert response.status_code == 200
-        assert len(response.data) == 1
+        assert len(response.data["results"]) == 1
 
     def test_filtrar_por_estado(self, api_client, event):
-        url = reverse("event-list") + "?status=SCHEDULED"
+        url = reverse("markets_api:event-list") + "?status=SCHEDULED"
         response = api_client.get(url)
         assert response.status_code == 200
-        assert len(response.data) == 1
+        assert len(response.data["results"]) == 1
 
     def test_buscar_por_nombre(self, api_client, event):
-        url = reverse("event-list") + "?search=Madrid"
+        url = reverse("markets_api:event-list") + "?search=Madrid"
         response = api_client.get(url)
         assert response.status_code == 200
-        assert len(response.data) == 1
+        assert len(response.data["results"]) == 1
 
 
 class TestEventDetail:
     def test_detalle_evento(self, api_client, event):
-        url = reverse("event-detail", kwargs={"pk": event.pk})
+        url = reverse("markets_api:event-detail", kwargs={"pk": event.pk})
         response = api_client.get(url)
         assert response.status_code == 200
         assert response.data["id"] == str(event.id)
         assert response.data["sport"] == "Fútbol"
 
-    def test_evento_inexistente(self, api_client):
+    def test_evento_inexistente(self, api_client, db):
         import uuid
-        url = reverse("event-detail", kwargs={"pk": uuid.uuid4()})
+        url = reverse("markets_api:event-detail", kwargs={"pk": uuid.uuid4()})
         response = api_client.get(url)
         assert response.status_code == 404
 
 
 class TestEventMarkets:
     def test_mercados_de_evento(self, api_client, event, market, selections):
-        url = reverse("event-markets", kwargs={"pk": event.pk})
+        url = reverse("markets_api:event-markets", kwargs={"pk": event.pk})
         response = api_client.get(url)
         assert response.status_code == 200
         assert len(response.data) == 1
@@ -95,13 +107,13 @@ class TestEventMarkets:
 
 class TestMarketSelections:
     def test_selecciones_de_mercado(self, api_client, market, selections):
-        url = reverse("market-selections", kwargs={"pk": market.pk})
+        url = reverse("markets_api:market-selections", kwargs={"pk": market.pk})
         response = api_client.get(url)
         assert response.status_code == 200
         assert len(response.data) == 3
 
     def test_odds_son_decimal(self, api_client, market, selections):
-        url = reverse("market-selections", kwargs={"pk": market.pk})
+        url = reverse("markets_api:market-selections", kwargs={"pk": market.pk})
         response = api_client.get(url)
         assert response.status_code == 200
         for sel in response.data:

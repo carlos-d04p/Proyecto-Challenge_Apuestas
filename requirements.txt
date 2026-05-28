@@ -1,11 +1,16 @@
 # Stack Obligatorio
 Django>=5.0,<5.1
 djangorestframework
+djangorestframework-simplejwt
 django-filter
 channels
+channels-redis
 celery
 redis
 psycopg2-binary
+
+# Autenticación JWT
+djangorestframework-simplejwt
 
 # Servidor ASGI para Channels
 daphne
