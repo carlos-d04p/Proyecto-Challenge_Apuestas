@@ -137,6 +137,14 @@
         return states[status] || states.inactive;
     }
 
+    function formatBonusAmount(value) {
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue)) {
+            return "0.00";
+        }
+        return numericValue.toFixed(2);
+    }
+
     function setBonusListState(text, status) {
         if (!bonusListState) {
             return;
@@ -164,7 +172,7 @@
         );
         bonusList.innerHTML = bonuses.map((bonus) => {
             const meta = getBonusStatusMeta(bonus.status);
-            const reason = bonus.reason || "No retirable hasta completar 5 apuestas validas.";
+            const reason = bonus.reason || "No retirable hasta completar 5 apuestas válidas.";
             const progress = `${bonus.completed_bets_count || 0}/${bonus.required_bets_count || 5} apuestas`;
             return `
                 <article class="wallet-bonus-card">
@@ -177,7 +185,7 @@
                     </div>
                     <div class="wallet-bonus-amount">
                         <span>Monto</span>
-                        <b>${escapeHtml(bonus.amount || "0.0000")}</b>
+                        <b>${escapeHtml(formatBonusAmount(bonus.amount))}</b>
                     </div>
                     <p class="wallet-bonus-progress">Liberacion: ${escapeHtml(progress)}</p>
                     <p class="wallet-muted">${escapeHtml(reason)}</p>

@@ -199,10 +199,11 @@ h2 {
 
 .wallet-promo {
     display: grid;
-    grid-template-columns: minmax(0, 1.4fr) minmax(240px, 0.65fr);
+    grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.1fr);
+    align-items: stretch;
     gap: 16px;
     margin-top: 16px;
-    padding: 20px;
+    padding: 16px;
     border: 1px solid rgba(80, 148, 219, 0.28);
     border-radius: 8px;
     background:
@@ -213,12 +214,21 @@ h2 {
 
 .wallet-promo-main {
     display: grid;
-    gap: 18px;
+    align-content: start;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid rgba(32, 211, 238, 0.18);
+    border-radius: 8px;
+    background: rgba(5, 14, 26, 0.28);
+}
+
+.wallet-promo-copy .wallet-muted {
+    margin-top: 8px;
 }
 
 .wallet-promo-form {
     display: grid;
-    gap: 10px;
+    gap: 8px;
 }
 
 .wallet-promo-form label {
@@ -229,7 +239,7 @@ h2 {
 .wallet-promo-controls {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 170px;
-    gap: 12px;
+    gap: 10px;
 }
 
 .wallet-promo-controls input {
@@ -278,9 +288,15 @@ h2 {
     background: rgba(5, 14, 26, 0.36);
 }
 
+.wallet-bonus-panel {
+    display: flex;
+    min-height: 100%;
+    flex-direction: column;
+}
+
 .wallet-bonus-heading {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 12px;
 }
@@ -349,21 +365,22 @@ h2 {
 }
 
 .wallet-bonus-note {
-    margin: 12px 0 0;
+    margin: 8px 0 0;
     color: #fff5bf;
+    font-size: 0.9rem;
     line-height: 1.45;
 }
 
 .wallet-bonus-list {
     display: grid;
-    gap: 12px;
-    margin-top: 14px;
+    gap: 8px;
+    margin-top: 12px;
 }
 
 .wallet-bonus-card {
     display: grid;
-    gap: 10px;
-    padding: 14px;
+    gap: 8px;
+    padding: 12px;
     border: 1px solid rgba(80, 148, 219, 0.22);
     border-radius: 8px;
     background: rgba(11, 28, 51, 0.72);
@@ -371,7 +388,7 @@ h2 {
 
 .wallet-bonus-card-head {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 12px;
 }
@@ -395,6 +412,19 @@ h2 {
     font-size: 0.78rem;
 }
 
+.wallet-bonus-card .wallet-bonus-amount {
+    margin-top: 0;
+    padding: 8px 10px;
+}
+
+.wallet-bonus-card .wallet-bonus-amount span {
+    font-size: 0.82rem;
+}
+
+.wallet-bonus-card .wallet-bonus-amount b {
+    font-size: 1.08rem;
+}
+
 .wallet-bonus-progress {
     margin: 0;
     color: #fde68a;
@@ -402,12 +432,16 @@ h2 {
     line-height: 1.4;
 }
 
+.wallet-bonus-card .wallet-muted {
+    margin-top: 0;
+    font-size: 0.84rem;
+}
+
 .wallet-promo-statuses {
     display: flex;
     flex-wrap: wrap;
-    grid-column: 1 / -1;
     gap: 8px;
-    padding-top: 2px;
+    padding-top: 0;
 }
 
 .wallet-status-chip {
@@ -904,15 +938,23 @@ h2 {
 }
 
 .wallet-form,
-.wallet-form-detailed,
-.wallet-promo-form {
+.wallet-form-detailed {
     gap: 14px;
+}
+
+.wallet-promo-form {
+    gap: 8px;
 }
 
 .wallet-form input,
 .wallet-form select,
 .wallet-promo-controls input {
     min-height: 52px;
+}
+
+.wallet-promo-controls input,
+.wallet-promo .wallet-button {
+    min-height: 48px;
 }
 
 .wallet-promo-controls {
@@ -931,9 +973,12 @@ h2 {
 
     .wallet-card,
     .wallet-summary-card,
-    .wallet-promo,
     .wallet-history {
         padding: 22px;
+    }
+
+    .wallet-promo {
+        padding: 18px;
     }
 }
 

@@ -47,7 +47,7 @@
 
     <section class="wallet-promo" aria-labelledby="wallet-promo-title">
         <div class="wallet-promo-main">
-            <div>
+            <div class="wallet-promo-copy">
                 <p class="wallet-kicker">Bonos</p>
                 <h2 id="wallet-promo-title">Codigo promocional</h2>
                 <p class="wallet-muted">Ingresa un codigo para validar bonos educativos disponibles para tu cuenta.</p>
@@ -60,6 +60,12 @@
                 </div>
                 <p class="wallet-promo-state" data-promo-state>Listo para validar codigos promocionales.</p>
             </form>
+            <div class="wallet-promo-statuses" aria-label="Estados de bonos promocionales">
+                <span class="wallet-status-chip wallet-status-chip-success">Bono disponible</span>
+                <span class="wallet-status-chip wallet-status-chip-success">Bono aplicado</span>
+                <span class="wallet-status-chip wallet-status-chip-warning">Bono ya utilizado</span>
+                <span class="wallet-status-chip">Bono no disponible</span>
+            </div>
         </div>
 
         <div class="wallet-bonus-panel" aria-label="Bonos promocionales">
@@ -71,13 +77,6 @@
             <div class="wallet-bonus-list" data-bonus-list>
                 <p class="wallet-muted">Cargando bonos disponibles...</p>
             </div>
-        </div>
-
-        <div class="wallet-promo-statuses" aria-label="Estados de bonos promocionales">
-            <span class="wallet-status-chip wallet-status-chip-success">Bono disponible</span>
-            <span class="wallet-status-chip wallet-status-chip-success">Bono aplicado</span>
-            <span class="wallet-status-chip wallet-status-chip-warning">Bono ya utilizado</span>
-            <span class="wallet-status-chip">Bono no disponible</span>
         </div>
     </section>
 
