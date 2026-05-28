@@ -55,6 +55,8 @@ def deposit_simulated(user, amount, created_by, idempotency_key=None):
         if existing_transaction is not None:
             return existing_transaction
 
+        _check_deposit_limits(locked_user, amount)
+
         transaction = Transaction.objects.create(
             kind=TransactionKind.DEPOSIT,
             created_by=created_by,
@@ -576,6 +578,120 @@ def _emit_wallet_audit_event(*, event_type, transaction, user, amount):
             "timestamp": transaction.created_at.isoformat(),
         },
     )
+
+
+def _check_deposit_limits(user, amount):
+    try:
+        kyc = user.perfil_kyc
+    except AttributeError:
+        return
+    except Exception:
+        return
+
+    if not kyc:
+        return
+
+    from django.utils import timezone
+    from datetime import timedelta
+    from django.db.models import Sum
+    from apps.compliance.models import SuspiciousActivity
+    from apps.compliance.services import append_audit_event
+
+    now = timezone.now()
+
+    def get_deposited_since(dt):
+        deposits = Transaction.objects.filter(
+            created_by=user,
+            kind=TransactionKind.DEPOSIT,
+            created_at__gte=dt
+        )
+        return LedgerEntry.objects.filter(
+            transaction__in=deposits,
+            account=LedgerAccount.USER_WALLET,
+            direction=LedgerDirection.CREDIT
+        ).aggregate(total=Sum('amount'))['total'] or Decimal("0.0000")
+
+    # 1. Limite Diario
+    if kyc.daily_deposit_limit is not None:
+        daily_total = get_deposited_since(now - timedelta(days=1))
+        if daily_total + amount > kyc.daily_deposit_limit:
+            evidence = {
+                "monto_intento": str(amount),
+                "limite_diario": str(kyc.daily_deposit_limit),
+                "depositado_24h": str(daily_total),
+            }
+            activity = SuspiciousActivity.objects.create(
+                user=user,
+                reason=SuspiciousActivity.Reason.LIMIT_EXCEEDED,
+                evidence=evidence,
+                status=SuspiciousActivity.Status.PENDIENTE
+            )
+            append_audit_event(
+                event_type="SUSPICIOUS_ACTIVITY_DETECTED",
+                payload={
+                    "activity_id": activity.id,
+                    "reason": activity.reason,
+                    "user_id": str(user.id),
+                    "username": user.username,
+                    "evidence": evidence
+                }
+            )
+            raise ValueError(f"Excede el limite de deposito diario ({kyc.daily_deposit_limit}).")
+
+    # 2. Limite Semanal
+    if kyc.weekly_deposit_limit is not None:
+        weekly_total = get_deposited_since(now - timedelta(days=7))
+        if weekly_total + amount > kyc.weekly_deposit_limit:
+            evidence = {
+                "monto_intento": str(amount),
+                "limite_semanal": str(kyc.weekly_deposit_limit),
+                "depositado_7d": str(weekly_total),
+            }
+            activity = SuspiciousActivity.objects.create(
+                user=user,
+                reason=SuspiciousActivity.Reason.LIMIT_EXCEEDED,
+                evidence=evidence,
+                status=SuspiciousActivity.Status.PENDIENTE
+            )
+            append_audit_event(
+                event_type="SUSPICIOUS_ACTIVITY_DETECTED",
+                payload={
+                    "activity_id": activity.id,
+                    "reason": activity.reason,
+                    "user_id": str(user.id),
+                    "username": user.username,
+                    "evidence": evidence
+                }
+            )
+            raise ValueError(f"Excede el limite de deposito semanal ({kyc.weekly_deposit_limit}).")
+
+    # 3. Limite Mensual
+    if kyc.monthly_deposit_limit is not None:
+        monthly_total = get_deposited_since(now - timedelta(days=30))
+        if monthly_total + amount > kyc.monthly_deposit_limit:
+            evidence = {
+                "monto_intento": str(amount),
+                "limite_mensual": str(kyc.monthly_deposit_limit),
+                "depositado_30d": str(monthly_total),
+            }
+            activity = SuspiciousActivity.objects.create(
+                user=user,
+                reason=SuspiciousActivity.Reason.LIMIT_EXCEEDED,
+                evidence=evidence,
+                status=SuspiciousActivity.Status.PENDIENTE
+            )
+            append_audit_event(
+                event_type="SUSPICIOUS_ACTIVITY_DETECTED",
+                payload={
+                    "activity_id": activity.id,
+                    "reason": activity.reason,
+                    "user_id": str(user.id),
+                    "username": user.username,
+                    "evidence": evidence
+                }
+            )
+            raise ValueError(f"Excede el limite de deposito mensual ({kyc.monthly_deposit_limit}).")
+
 
 
 __all__ = [
