@@ -35,6 +35,21 @@ services:
       - db
       - mailpit
 
+  beat:
+    build: .
+    command: celery -A config beat -l info --schedule=/tmp/celerybeat-schedule
+    volumes:
+      - .:/app
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+      - db
+      - celery
+
   db:
     image: postgres:15
     environment:
@@ -56,7 +71,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "6380:6379"
 
 volumes:
   postgres_data:

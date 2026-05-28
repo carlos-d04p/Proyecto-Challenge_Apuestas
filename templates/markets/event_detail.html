@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load l10n %}
+{% load l10n tz %}
 {% block title %}{{ event.name }} — FairBet Lab{% endblock %}
 
 {% block content %}
@@ -47,7 +47,7 @@
     align-items: center;
   }
 
-  .selection-btn:hover {
+  .selection-btn:hover:not(.locked) {
     border-color: var(--primary);
     background: rgba(59, 130, 246, 0.1);
   }
@@ -55,11 +55,17 @@
   .selection-btn.locked {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-
-  .selection-btn.locked:hover {
     border-color: var(--border);
     background: var(--surface);
+  }
+  
+  /* Animación para el cambio de cuota */
+  .flash-update {
+    animation: flashColor 0.8s ease-out;
+  }
+  @keyframes flashColor {
+    0% { background-color: rgba(255, 235, 59, 0.6); }
+    100% { background-color: var(--surface); }
   }
 </style>
 
@@ -73,7 +79,6 @@
 </div>
 {% endif %}
 
-<!-- Cabecera del evento -->
 <div class="event-hero">
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
     <span class="sport-label">
@@ -95,11 +100,55 @@
 
   <h1>{{ event.name }}</h1>
   <p class="meta">
-    🕐 {{ event.starts_at|date:"l j \d\e F \d\e Y · H:i" }}
+    🕐 {{ event.starts_at|localtime|date:"l j \d\e F \d\e Y · H:i" }}
   </p>
+
+  {% if event.status == 'LIVE' or event.status == 'FINISHED' or event.status == 'SUSPENDED' %}
+  <div class="scoreboard" id="scoreboard">
+    <div class="sb-side">
+      <div class="sb-label">Local</div>
+      <div class="sb-score" id="sb-home">{{ event.home_score }}</div>
+    </div>
+    <div class="sb-center">
+      <div class="sb-minute" id="sb-minute">--'</div>
+      <div class="sb-status">{{ event.get_status_display }}</div>
+    </div>
+    <div class="sb-side">
+      <div class="sb-label">Visitante</div>
+      <div class="sb-score" id="sb-away">{{ event.away_score }}</div>
+    </div>
+  </div>
+  <div class="sb-toast" id="sb-toast"></div>
+  <style>
+    .scoreboard {
+      display: grid; grid-template-columns: 1fr auto 1fr;
+      gap: 1rem; align-items: center;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      border: 1px solid #334155; border-radius: 14px;
+      padding: 1rem 1.5rem; margin: 1rem 0;
+      box-shadow: 0 6px 18px rgba(0,0,0,.25);
+    }
+    .sb-side { text-align: center; }
+    .sb-label { font-size: .8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: .08em; }
+    .sb-score {
+      font-size: 3rem; font-weight: 800; color: #e2e8f0; line-height: 1;
+      transition: transform .3s, color .3s;
+    }
+    .sb-score.bump { transform: scale(1.4); color: #34d399; }
+    .sb-center { text-align: center; }
+    .sb-minute { font-size: 1.4rem; font-weight: 700; color: #f59e0b; font-variant-numeric: tabular-nums; }
+    .sb-status { font-size: .75rem; color: #94a3b8; margin-top: .15rem; }
+    .sb-toast {
+      position: fixed; top: 1.5rem; left: 50%; transform: translateX(-50%) translateY(-150%);
+      background: #10b981; color: #052e1c; padding: .8rem 1.4rem;
+      border-radius: 10px; font-weight: 700; box-shadow: 0 8px 24px rgba(0,0,0,.35);
+      z-index: 9999; transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+    }
+    .sb-toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+  {% endif %}
 </div>
 
-<!-- Mercados disponibles -->
 {% for market in markets %}
 {% if market.is_active %}
 <div class="market-section">
@@ -121,19 +170,23 @@
   </div>
 
   <div class="selections-grid">
-    {% for sel in market.selections.all %}
+    {% for sel in market.sorted_selections %}
     {% if sel.is_active %}
     {% localize off %}
     {% if event.status == 'SCHEDULED' %}
     <button type="button" class="selection-btn"
+      data-market-id="{{ market.id }}" 
+      data-selection-id="{{ sel.id }}"
       onclick="addToBetSlip('{{ sel.id }}', '{{ sel.name|escapejs }}', '{{ sel.odds }}', '{{ event.id }}', '{{ event.name|escapejs }}')">
       <span style="font-size: 0.8rem; color: var(--text-soft);">{{ sel.name }}</span>
-      <span style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds|floatformat:'2u' }}</span>
+      <span class="odds-value" style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds|floatformat:'2u' }}</span>
     </button>
     {% else %}
-    <div class="selection-btn locked" title="Bloqueado (In-Play/Cerrado)">
+    <div class="selection-btn locked" title="Bloqueado (In-Play/Cerrado)"
+      data-market-id="{{ market.id }}" 
+      data-selection-id="{{ sel.id }}">
       <span style="font-size: 0.8rem; color: var(--text-soft);">{{ sel.name }}</span>
-      <span style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds|floatformat:'2u' }}</span>
+      <span class="odds-value" style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds|floatformat:'2u' }}</span>
     </div>
     {% endif %}
     {% endlocalize %}
@@ -149,4 +202,141 @@
 </div>
 {% endfor %}
 
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const eventId = "{{ event.id }}";
+    if (!eventId) return;
+
+    // Conectar al canal WebSocket específico para este evento (RB-RT-02)
+    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const socket = new WebSocket(protocol + window.location.host + '/ws/realtime/match/' + eventId + '/');
+
+    // RB-RT-05: Función para bloqueo visual instantáneo de TODO el evento
+    function lockEntireEvent(message) {
+        // Deshabilitar todos los botones de selección
+        document.querySelectorAll('.selection-btn').forEach(btn => {
+            if (btn.tagName === 'BUTTON') {
+                btn.disabled = true;
+                btn.onclick = null;
+            }
+            btn.classList.add('locked');
+            btn.title = message;
+        });
+
+        // Mostrar banner de estado si no existe
+        if (!document.getElementById('event-lock-banner')) {
+            const banner = document.createElement('div');
+            banner.id = 'event-lock-banner';
+            banner.style.cssText = 'background:linear-gradient(135deg,#ff5252,#b71c1c);color:#fff;padding:1rem 1.5rem;border-radius:10px;margin-bottom:1.5rem;font-weight:700;font-size:1rem;text-align:center;animation:fadeIn 0.3s ease;';
+            banner.textContent = message;
+            const hero = document.querySelector('.event-hero');
+            if (hero) hero.after(banner);
+        }
+
+        // Actualizar badge de estado
+        const badge = document.querySelector('.badge');
+        if (badge) {
+            badge.className = 'badge suspended';
+            badge.textContent = 'Suspendido';
+        }
+    }
+
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        const action = data.type || data.action; // RB-RT-03: Usa 'type' del nuevo formato
+
+        // ═══ ACCIONES A NIVEL DE EVENTO ═══
+
+        // RB-RT-04 + RB-RT-05: Suspensión instantánea del evento completo
+        if (action === 'EVENT_SUSPENDED' || action === 'EVENT_CANCELLED' || action === 'EVENT_FINISHED') {
+            lockEntireEvent(data.message || '🔒 Evento no disponible');
+        }
+
+        // Evento pasa a EN VIVO (informativo)
+        else if (action === 'EVENT_LIVE') {
+            const badge = document.querySelector('.badge');
+            if (badge) {
+                badge.className = 'badge live';
+                badge.textContent = 'En Vivo';
+            }
+            // Remover banner de bloqueo si existía
+            const banner = document.getElementById('event-lock-banner');
+            if (banner) banner.remove();
+        }
+
+        // Marcador: tick periódico con minuto/goles
+        else if (action === 'SCORE_UPDATE' || action === 'GOAL') {
+            const home = document.getElementById('sb-home');
+            const away = document.getElementById('sb-away');
+            const minute = document.getElementById('sb-minute');
+            if (home && typeof data.home_score === 'number') {
+                if (parseInt(home.textContent, 10) !== data.home_score) {
+                    home.textContent = data.home_score;
+                    home.classList.add('bump');
+                    setTimeout(() => home.classList.remove('bump'), 600);
+                } else {
+                    home.textContent = data.home_score;
+                }
+            }
+            if (away && typeof data.away_score === 'number') {
+                if (parseInt(away.textContent, 10) !== data.away_score) {
+                    away.textContent = data.away_score;
+                    away.classList.add('bump');
+                    setTimeout(() => away.classList.remove('bump'), 600);
+                } else {
+                    away.textContent = data.away_score;
+                }
+            }
+            if (minute && typeof data.minute === 'number') {
+                minute.textContent = data.minute + "'";
+            }
+            if (action === 'GOAL') {
+                const toast = document.getElementById('sb-toast');
+                if (toast) {
+                    toast.textContent = data.message || '⚽ ¡GOL!';
+                    toast.classList.add('show');
+                    setTimeout(() => toast.classList.remove('show'), 2400);
+                }
+            }
+        }
+
+        // ═══ ACCIONES A NIVEL DE MERCADO ═══
+
+        // Suspensión de un mercado individual
+        else if (action === 'MARKET_SUSPEND' || action === 'SUSPEND') {
+            const marketButtons = document.querySelectorAll(`[data-market-id="${data.market_id}"]`);
+            marketButtons.forEach(btn => {
+                if (btn.tagName === 'BUTTON') {
+                    btn.disabled = true;
+                    btn.onclick = null;
+                }
+                btn.classList.add('locked');
+                btn.title = "🔒 Mercado Suspendido";
+            });
+        }
+
+        // Actualización de cuota en tiempo real
+        else if (action === 'ODDS_UPDATE') {
+            const selectionBtn = document.querySelector(`[data-selection-id="${data.selection_id}"]`);
+
+            if (selectionBtn) {
+                const oddsSpan = selectionBtn.querySelector('.odds-value');
+                if (oddsSpan) {
+                    oddsSpan.innerText = parseFloat(data.odds).toFixed(2);
+                }
+
+                // Animación visual flash
+                selectionBtn.classList.add('flash-update');
+                setTimeout(() => {
+                    selectionBtn.classList.remove('flash-update');
+                }, 800);
+            }
+        }
+    };
+
+    socket.onclose = function(e) {
+        console.warn('Se perdió la conexión en vivo. Actualiza la página para reconectar al partido.');
+    };
+});
+</script>
 {% endblock %}

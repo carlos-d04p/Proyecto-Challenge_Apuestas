@@ -43,7 +43,8 @@ class IdempotencyMixin:
     def _compute_hash(self, body: bytes) -> str:
         return hashlib.sha256(body).hexdigest()
 
-    def _get_idempotency_key(self, request) -> str | None:
+    from typing import Optional
+    def _get_idempotency_key(self, request) -> Optional[str]:
         return request.META.get(self.IDEMPOTENCY_HEADER)
 
     def _check_idempotency(self, request):
