@@ -15,7 +15,6 @@ class WSAction(models.TextChoices):
     MARKET_REOPEN = "MARKET_REOPEN", "Mercado reabierto"
 
     # Evento
-    EVENT_CREATED = "EVENT_CREATED", "Evento creado"
     EVENT_LIVE = "EVENT_LIVE", "Evento en vivo"
     EVENT_SUSPENDED = "EVENT_SUSPENDED", "Evento suspendido"
     EVENT_FINISHED = "EVENT_FINISHED", "Evento finalizado"

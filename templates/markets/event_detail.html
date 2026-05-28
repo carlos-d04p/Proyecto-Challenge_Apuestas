@@ -82,11 +82,11 @@
 <div class="event-hero">
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
     <span class="sport-label">
-      {% if event.sport == 'Fútbol' %}⚽
-      {% elif event.sport == 'Baloncesto' %}🏀
-      {% elif event.sport == 'Tenis' %}🎾
-      {% elif event.sport == 'Vóley' %}🏐
-      {% else %}🏆{% endif %}
+      {% if event.sport == 'Fútbol' %}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="13" height="13"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 6.88 2.75L15 9l-3-1-3 1-3.88-4.25A10 10 0 0 1 12 2zM2 12c0-1.1.18-2.15.5-3.13L6 12l-1.5 4.5A9.97 9.97 0 0 1 2 12zm10 10a9.97 9.97 0 0 1-5.63-1.74L8 16h8l1.63 4.26A9.97 9.97 0 0 1 12 22zm9.5-6.5L20 12l3.5-3.13c.32.98.5 2.03.5 3.13a9.97 9.97 0 0 1-2.5 6.5z"/></svg>
+      {% elif event.sport == 'Baloncesto' %}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="13" height="13"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93C7 7 8 9.5 8 12s-1 5-3.07 7.07M19.07 4.93C17 7 16 9.5 16 12s1 5 3.07 7.07M2 12h20M12 2v20"/></svg>
+      {% elif event.sport == 'Tenis' %}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="13" height="13"><circle cx="12" cy="12" r="10"/><path d="M2 12c3.5 0 6-4.5 6-10M22 12c-3.5 0-6-4.5-6-10M2 12c3.5 0 6 4.5 6 10M22 12c-3.5 0-6 4.5-6 10"/></svg>
+      {% elif event.sport == 'Vóley' %}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="13" height="13"><circle cx="12" cy="12" r="10"/><path d="M12 2C7 7 7 17 12 22M12 2c5 5 5 15 0 20M2 12h20"/></svg>
+      {% else %}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="13" height="13"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>{% endif %}
       {{ event.sport }}
     </span>
     <span class="badge {{ event.status|lower }}">
@@ -99,8 +99,9 @@
   </div>
 
   <h1>{{ event.name }}</h1>
-  <p class="meta">
-    🕐 {{ event.starts_at|localtime|date:"l j \d\e F \d\e Y · H:i" }}
+  <p class="meta" style="display:flex;align-items:center;gap:0.35rem;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="13" height="13"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clip-rule="evenodd"/></svg>
+    {{ event.starts_at|localtime|date:"l j \d\e F \d\e Y · H:i" }}
   </p>
 
   {% if event.status == 'LIVE' or event.status == 'FINISHED' or event.status == 'SUSPENDED' %}
@@ -160,11 +161,11 @@
       {% elif market.kind == 'HCAP' %}Hándicap asiático
       {% else %}{{ market.name }}{% endif %}
     </span>
-    <span class="market-icon">
-      {% if market.kind == '1X2' %}🏆
-      {% elif market.kind == 'OU' %}⚡
-      {% elif market.kind == 'BTTS' %}🎯
-      {% elif market.kind == 'HCAP' %}⚖️
+    <span class="market-icon" style="color:var(--electric);">
+      {% if market.kind == '1X2' %}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+      {% elif market.kind == 'OU' %}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      {% elif market.kind == 'BTTS' %}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      {% elif market.kind == 'HCAP' %}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 3v18"/><path d="M3 12h18"/><path d="M12 8a4 4 0 1 0 0 8"/></svg>
       {% endif %}
     </span>
   </div>
@@ -177,7 +178,7 @@
     <button type="button" class="selection-btn"
       data-market-id="{{ market.id }}" 
       data-selection-id="{{ sel.id }}"
-      onclick="addToBetSlip('{{ sel.id }}', '{{ sel.name|escapejs }}', '{{ sel.odds }}', '{{ event.id }}', '{{ event.name|escapejs }}', '{% if market.kind == '1X2' %}Resultado del partido{% elif market.kind == 'OU' %}Goles totales Más/Menos{% elif market.kind == 'BTTS' %}Ambos equipos anotan{% elif market.kind == 'HCAP' %}Hándicap asiático{% else %}{{ market.name|escapejs }}{% endif %}')">
+      onclick="addToBetSlip('{{ sel.id }}', '{{ sel.name|escapejs }}', '{{ sel.odds }}', '{{ event.id }}', '{{ event.name|escapejs }}')">
       <span style="font-size: 0.8rem; color: var(--text-soft);">{{ sel.name }}</span>
       <span class="odds-value" style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds|floatformat:'2u' }}</span>
     </button>
@@ -197,7 +198,7 @@
 {% endif %}
 {% empty %}
 <div class="empty">
-  <div class="empty-icon">📋</div>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40" style="color:var(--border2);margin-bottom:.5rem"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/></svg>
   <p>No hay mercados disponibles para este evento.</p>
 </div>
 {% endfor %}

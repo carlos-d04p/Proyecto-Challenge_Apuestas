@@ -6,60 +6,77 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}FairBet Lab{% endblock %}</title>
   <meta name="description" content="Simulador educativo de apuestas deportivas con moneda virtual. Ley 31557.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
   <link rel="stylesheet" href="{% static 'css/main.css' %}">
   {% block extra_head %}{% endblock %}
   <script src="{% static 'js/betslip.js' %}"></script>
 </head>
 <body>
 
-  <!-- Banner de juego responsable (obligatorio Ley 31557) -->
+  <!-- Banner juego responsable (Ley 31557) -->
   <div class="rg-banner">
-    <strong>⚠ Juego responsable:</strong>
-    Esta plataforma es solo para fines educativos · Si tienes problemas con el juego, busca ayuda ·
-    <strong>0800-00-000</strong>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="14" height="14" style="flex-shrink:0;margin-top:1px"><path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>
+    <span><strong>Juego responsable:</strong> Plataforma educativa · Solo mayores de 18 años · Línea de ayuda <strong>0800-00-000</strong></span>
   </div>
 
   <header class="navbar">
     <a href="{% url 'markets:event_list' %}" class="logo">
-      ⚡ Fair<span class="logo-dot">Bet</span> Lab
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      Fair<span class="logo-accent">Bet</span>
     </a>
     <nav>
-      <a href="{% url 'markets:event_list' %}">Eventos</a>
-      <a href="{% url 'markets:event_list' %}?status=LIVE">🔴 En Vivo</a>
-      <a href="/api/markets/events/" target="_blank">API</a>
+      <a href="{% url 'markets:event_list' %}" class="nav-link">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="15" height="15"><path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2z" clip-rule="evenodd"/></svg>
+        Eventos
+      </a>
+      <a href="{% url 'markets:event_list' %}?status=LIVE" class="nav-link nav-live">
+        <span class="live-dot"></span>
+        En Vivo
+      </a>
       {% if user.is_authenticated %}
         {% if user.is_staff %}
-          {# Staff: navbar de inspección, sin funciones de cliente final #}
-          <span style="color:#475569; font-size:.9rem;">·</span>
-          <span style="color:#94a3b8; font-size:.85rem;">Inspeccionando como staff</span>
-          <a href="{% url 'backoffice:dashboard' %}"
-             style="background:#10b981; color:#052e1c; padding:.4rem .9rem; border-radius:6px; font-weight:700;">
-            ← Volver al panel
+          <span class="nav-divider">·</span>
+          <span class="nav-staff-tag">Staff</span>
+          <a href="{% url 'backoffice:dashboard' %}" class="nav-link nav-backoffice">
+            Panel Operador
           </a>
         {% else %}
-          <a href="{% url 'wallet-dashboard' %}" class="{% block wallet_nav_class %}{% endblock %}">💰 Billetera</a>
-          <a href="{% url 'betting:mis_apuestas' %}">🎫 Mis Apuestas</a>
-          <a href="{% url 'accounts_web:perfil' %}">👤 Mi Perfil</a>
-          <a href="{% url 'accounts_web:logout' %}">Salir</a>
+          <a href="{% url 'wallet-dashboard' %}" class="nav-link {% block wallet_nav_class %}{% endblock %}">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="15" height="15"><path d="M1 4.25a3.733 3.733 0 012.305-3.44 3.733 3.733 0 011.445-.31h10.5A3.75 3.75 0 0119 4.25V5h.25a.75.75 0 010 1.5H19v2.75h.25a.75.75 0 010 1.5H19V15a3.75 3.75 0 01-3.75 3.75H4.75A3.75 3.75 0 011 15V4.25zm3.75-2.25A2.25 2.25 0 002.5 4.25V5h15v-.75a2.25 2.25 0 00-2.25-2.25H4.75zm12.75 5H2.5v8a2.25 2.25 0 002.25 2.25h10.5A2.25 2.25 0 0017.5 15V7zm-6.5 4a1 1 0 100 2h3a1 1 0 100-2h-3z"/></svg>
+            Billetera
+          </a>
+          <a href="{% url 'betting:mis_apuestas' %}" class="nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="15" height="15"><path fill-rule="evenodd" d="M4.25 2A2.25 2.25 0 002 4.25v11.5A2.25 2.25 0 004.25 18h11.5A2.25 2.25 0 0018 15.75V4.25A2.25 2.25 0 0015.75 2H4.25zm4.03 6.28a.75.75 0 00-1.06-1.06L6 8.44l-.22-.22a.75.75 0 00-1.06 1.06l.75.75a.75.75 0 001.06 0l1.75-1.75zm4.97-.03a.75.75 0 000 1.5h2a.75.75 0 000-1.5h-2zm-4.97 4a.75.75 0 00-1.06-1.06L6 12.44l-.22-.22a.75.75 0 10-1.06 1.06l.75.75a.75.75 0 001.06 0l1.75-1.75zm4.97-.03a.75.75 0 000 1.5h2a.75.75 0 000-1.5h-2z" clip-rule="evenodd"/></svg>
+            Mis Apuestas
+          </a>
+          <a href="{% url 'accounts_web:perfil' %}" class="nav-link">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="15" height="15"><path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z"/></svg>
+            Mi Perfil
+          </a>
+          <a href="{% url 'accounts_web:logout' %}" class="nav-link nav-logout">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="15" height="15"><path fill-rule="evenodd" d="M3 4.25A2.25 2.25 0 015.25 2h5.5A2.25 2.25 0 0113 4.25v2a.75.75 0 01-1.5 0v-2a.75.75 0 00-.75-.75h-5.5a.75.75 0 00-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 00.75-.75v-2a.75.75 0 011.5 0v2A2.25 2.25 0 0110.75 18h-5.5A2.25 2.25 0 013 15.75V4.25zm13.03 5.22a.75.75 0 010 1.06l-2.5 2.5a.75.75 0 01-1.06-1.06l1.22-1.22H7.5a.75.75 0 010-1.5h6.19l-1.22-1.22a.75.75 0 011.06-1.06l2.5 2.5z" clip-rule="evenodd"/></svg>
+            Salir
+          </a>
         {% endif %}
       {% else %}
-        <a href="{% url 'accounts_web:login' %}">Iniciar sesión</a>
-        <a href="{% url 'accounts_web:registro' %}" class="btn-nav">Registrarse</a>
+        <a href="{% url 'accounts_web:login' %}" class="nav-link">Ingresar</a>
+        <a href="{% url 'accounts_web:registro' %}" class="nav-btn">Crear cuenta</a>
       {% endif %}
     </nav>
   </header>
 
   <main>
     {% block content %}{% endblock %}
-    
-    <!-- Contenedor del Boleto de Apuestas -->
     <div id="bet-slip-container"></div>
   </main>
 
-  <footer>
-    <strong>FairBet Lab</strong> — Simulador educativo · DS 005-2023-MINCETUR · Ley 31557<br>
-    <em>Plataforma educativa con moneda virtual. No constituye una casa de apuestas.</em><br>
-    Las apuestas pueden generar dependencia. Juega con responsabilidad.
+  <footer class="site-footer">
+    <div class="footer-brand">FairBet Lab</div>
+    <div class="footer-legal">
+      Simulador educativo · DS 005-2023-MINCETUR · Ley 31557<br>
+      Plataforma con moneda virtual. No constituye una casa de apuestas real.
+    </div>
   </footer>
 
 </body>

@@ -160,18 +160,7 @@ def broadcast_event_status_change(sender, instance, created, **kwargs):
     Si el evento pasa a SUSPENDED/FINISHED/CANCELLED también desactiva sus mercados.
     """
     if created:
-        _broadcast(
-            f"event_{instance.id}",
-            {
-                "type": "event_message",
-                "action": WSAction.EVENT_CREATED.value,
-                "event_id": str(instance.id),
-                "message": "Nuevos eventos disponibles",
-                "timestamp": _now_iso(),
-            },
-        )
         return
-
     previous_status = getattr(instance, "_previous_status", None)
     if previous_status == instance.status:
         return

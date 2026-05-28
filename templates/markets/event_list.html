@@ -24,7 +24,8 @@
 
   <a href="?status=SCHEDULED"
      class="filter-btn {% if status_filter == 'SCHEDULED' %}active{% endif %}">
-    ⏰ Programados
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="13" height="13"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clip-rule="evenodd"/></svg>
+    Programados
     <span class="count">{{ counts.scheduled }}</span>
   </a>
 
@@ -43,11 +44,11 @@
 
         <div class="card-top">
           <span class="sport-label">
-            {% if event.sport == 'Fútbol' %}⚽
-            {% elif event.sport == 'Baloncesto' %}🏀
-            {% elif event.sport == 'Tenis' %}🎾
-            {% elif event.sport == 'Vóley' %}🏐
-            {% else %}🏆{% endif %}
+            {% if event.sport == 'Fútbol' %}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="13" height="13"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 6.88 2.75L15 9l-3-1-3 1-3.88-4.25A10 10 0 0 1 12 2zM2 12c0-1.1.18-2.15.5-3.13L6 12l-1.5 4.5A9.97 9.97 0 0 1 2 12zm10 10a9.97 9.97 0 0 1-5.63-1.74L8 16h8l1.63 4.26A9.97 9.97 0 0 1 12 22zm9.5-6.5L20 12l3.5-3.13c.32.98.5 2.03.5 3.13a9.97 9.97 0 0 1-2.5 6.5z"/></svg>
+            {% elif event.sport == 'Baloncesto' %}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="13" height="13"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93C7 7 8 9.5 8 12s-1 5-3.07 7.07M19.07 4.93C17 7 16 9.5 16 12s1 5 3.07 7.07M2 12h20M12 2v20"/></svg>
+            {% elif event.sport == 'Tenis' %}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="13" height="13"><circle cx="12" cy="12" r="10"/><path d="M2 12c3.5 0 6-4.5 6-10M22 12c-3.5 0-6-4.5-6-10M2 12c3.5 0 6 4.5 6 10M22 12c-3.5 0-6 4.5-6 10"/></svg>
+            {% elif event.sport == 'Vóley' %}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="13" height="13"><circle cx="12" cy="12" r="10"/><path d="M12 2C7 7 7 17 12 22M12 2c5 5 5 15 0 20M2 12h20"/></svg>
+            {% else %}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="13" height="13"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>{% endif %}
             {{ event.sport }}
           </span>
           <span class="badge {{ event.status|lower }}" data-badge>
@@ -61,7 +62,8 @@
 
         <div class="event-name">{{ event.name }}</div>
         <div class="event-time">
-          🕐 {{ event.starts_at|localtime|date:"d/m/Y · H:i" }}
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="12" height="12"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clip-rule="evenodd"/></svg>
+          {{ event.starts_at|localtime|date:"d/m/Y · H:i" }}
         </div>
 
         {% if event.status == 'LIVE' or event.status == 'FINISHED' or event.status == 'SUSPENDED' %}
@@ -78,9 +80,9 @@
           {% if market.kind == '1X2' and market.is_active %}
             <div class="odds-label">Resultado Final</div>
             <div class="odds-row" data-market-id="{{ market.id }}">
-              {% for sel in market.sorted_selections %}
+              {% for sel in market.selections.all %}
                 {% if sel.is_active %}
-                  <div class="odds-btn" data-selection-id="{{ sel.id }}" onclick="event.preventDefault(); event.stopPropagation(); addToBetSlip('{{ sel.id }}', '{{ sel.name|escapejs }}', '{{ sel.odds }}', '{{ event.id }}', '{{ event.name|escapejs }}', 'Resultado del partido')">
+                  <div class="odds-btn" data-selection-id="{{ sel.id }}">
                     <span class="sel-name">{{ sel.name }}</span>
                     <span class="sel-odds">{{ sel.odds|floatformat:'2u' }}</span>
                   </div>
@@ -97,7 +99,7 @@
 
 {% else %}
   <div class="empty">
-    <div class="empty-icon">📭</div>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40" style="color:#1e2f4a;margin-bottom:.75rem"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3h10.5M6.75 3a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 006.75 21h10.5a2.25 2.25 0 002.25-2.25V5.25A2.25 2.25 0 0017.25 3M9 9h6M9 12h6M9 15h4"/></svg>
     <p>No hay eventos disponibles con ese filtro.</p>
   </div>
 {% endif %}
@@ -166,7 +168,7 @@
 
   socket.onmessage = function (e) {
     const data = JSON.parse(e.data);
-    const action = data.type || data.action;
+    const action = data.type;
     const eventId = data.event_id;
     const card = eventId
       ? document.querySelector(`.event-card[data-event-id="${eventId}"]`)
@@ -212,32 +214,21 @@
       }
     }
 
-    else if (action === 'EVENT_CREATED' || action === 'EVENT_LIVE' || action === 'EVENT_FINISHED'
+    else if (action === 'EVENT_LIVE' || action === 'EVENT_FINISHED'
           || action === 'EVENT_SUSPENDED' || action === 'EVENT_CANCELLED') {
+      if (!card) return;
+      const badge = card.querySelector('[data-badge]');
+      if (!badge) return;
+      const map = {
+        EVENT_LIVE:      { cls: 'live',      txt: 'En Vivo' },
+        EVENT_FINISHED:  { cls: 'finished',  txt: 'Finalizado' },
+        EVENT_SUSPENDED: { cls: 'suspended', txt: 'Suspendido' },
+        EVENT_CANCELLED: { cls: 'cancelled', txt: 'Cancelado' },
+      };
+      const info = map[action];
+      badge.className = 'badge ' + info.cls;
+      badge.textContent = info.txt;
       if (data.message) showToast(data.message);
-
-      if (!card) {
-        if (action === 'EVENT_CREATED' || action === 'EVENT_LIVE') {
-          setTimeout(() => window.location.reload(), 2000);
-        }
-        return;
-      }
-
-      if (action !== 'EVENT_CREATED') {
-        const badge = card.querySelector('[data-badge]');
-        if (!badge) return;
-        const map = {
-          EVENT_LIVE:      { cls: 'live',      txt: 'En Vivo' },
-          EVENT_FINISHED:  { cls: 'finished',  txt: 'Finalizado' },
-          EVENT_SUSPENDED: { cls: 'suspended', txt: 'Suspendido' },
-          EVENT_CANCELLED: { cls: 'cancelled', txt: 'Cancelado' },
-        };
-        const info = map[action];
-        if (info) {
-          badge.className = 'badge ' + info.cls;
-          badge.textContent = info.txt;
-        }
-      }
     }
   };
 

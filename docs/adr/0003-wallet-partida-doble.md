@@ -1,4 +1,4 @@
-# ADR-0001: Wallet con partida doble y saldo derivado
+# ADR-0003: Wallet con partida doble y saldo derivado
 
 ## Contexto
 
@@ -69,4 +69,5 @@ El saldo del usuario no se almacenara en columnas como `balance`, `saldo` o `cur
 ## Fecha y autor
 
 - **Fecha:** 27 de mayo de 2026
-- **Autor:** Equipo FairBet Lab
+- **Autor:** Carlos Cancino
+

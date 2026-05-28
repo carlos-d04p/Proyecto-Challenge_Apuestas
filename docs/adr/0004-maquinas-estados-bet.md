@@ -1,4 +1,4 @@
-# ADR-0002: Máquina de estados para el ciclo de vida de una apuesta
+# ADR-0004: Máquina de estados para el ciclo de vida de una apuesta
 
 ## Contexto
 Necesitamos controlar de manera estricta las transiciones de estado de una apuesta (PENDING, PLACED, WON, LOST, VOID, CASHED_OUT) para evitar que un boleto sea liquidado dos veces o modificado una vez cerrado.

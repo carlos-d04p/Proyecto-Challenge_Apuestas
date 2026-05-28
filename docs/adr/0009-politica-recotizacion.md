@@ -1,4 +1,4 @@
-# ADR-0005: Política de Re-cotización en Cuotas de Apuesta
+# ADR-0009: Política de Re-cotización en Cuotas de Apuesta
 
 ## Contexto
 Las cuotas cambian constantemente en tiempo real (especialmente in-play). Debemos asegurar que el usuario juegue bajo el valor exacto que visualizó y aceptó en su interfaz.
@@ -24,4 +24,4 @@ Se implementa la **Opción 2** levantando un error `ValidationError` si `selecti
 
 ## Fecha y Autor
 * **Fecha:** 27 de Mayo de 2026
-* **Autor:** Carlos Cancino
+* **Autor:** Arnold Quiroz

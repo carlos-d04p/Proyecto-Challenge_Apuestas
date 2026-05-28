@@ -7,6 +7,7 @@ The `urlpatterns` list routes URLs to views. For more information please see:
 
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import RedirectView
 from apps.betting import views as betting_views
 from apps.wallet.views import WalletPageView
 from django.views.generic import RedirectView
