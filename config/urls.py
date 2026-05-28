@@ -18,9 +18,15 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
 
+
+from django.contrib import admin
+from django.urls import path, include
+from django.views.generic import RedirectView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', RedirectView.as_view(url='/eventos/', permanent=False)),
     path('eventos/', include('apps.markets.urls', namespace='markets')),
     path('api/markets/', include('apps.markets.urls', namespace='markets_api')),
+    path('apuestas/', include('apps.betting.urls', namespace='betting')),
 ]
