@@ -12,7 +12,17 @@ from apps.wallet.selectors import (
     get_wallet_balance,
     get_wallet_movements,
 )
-from apps.wallet.serializers import WalletAmountSerializer
+from apps.wallet.bonus_services import (
+    BonusAlreadyRedeemed,
+    BonusError,
+    BonusInactive,
+    BonusNotEligible,
+    BonusNotFound,
+    get_available_bonuses,
+    get_bonus_balance,
+    redeem_bonus_code,
+)
+from apps.wallet.serializers import BonusRedeemSerializer, WalletAmountSerializer
 from apps.wallet.services import deposit_simulated, withdraw_simulated
 from core.idempotency import IdempotencyConflict
 
@@ -69,6 +79,49 @@ class WalletHistoryView(APIView):
                 ]
             }
         )
+
+
+class WalletBonusesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response(
+            {
+                "bonus_balance": format_money(get_bonus_balance(request.user)),
+                "bonuses": get_available_bonuses(request.user),
+            }
+        )
+
+
+class WalletBonusRedeemView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = BonusRedeemSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            result = redeem_bonus_code(
+                user=request.user,
+                code=serializer.validated_data["code"],
+            )
+        except BonusAlreadyRedeemed as exc:
+            return Response(
+                {"detail": str(exc), "code": exc.code},
+                status=status.HTTP_409_CONFLICT,
+            )
+        except (BonusNotFound, BonusInactive, BonusNotEligible) as exc:
+            return Response(
+                {"detail": str(exc), "code": exc.code},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except BonusError as exc:
+            return Response(
+                {"detail": str(exc), "code": exc.code},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(result, status=status.HTTP_201_CREATED)
 
 
 class WalletDepositView(APIView):

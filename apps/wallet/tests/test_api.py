@@ -297,3 +297,36 @@ def test_wallet_withdraw_endpoint_rejects_insufficient_balance():
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert Transaction.objects.count() == 0
     assert get_wallet_balance(user) == Decimal("0.0000")
+
+
+@pytest.mark.django_db
+def test_wallet_bonuses_endpoint_lists_promotional_campaigns():
+    user = create_user("api-bonuses")
+    client = authenticated_client(user)
+
+    response = client.get("/api/wallet/bonuses/")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["bonus_balance"] == "0.0000"
+    assert {bonus["code"] for bonus in response.data["bonuses"]} == {
+        "BIENVENIDA",
+        "PRIMERA_RECARGA",
+        "JUEGO_RESPONSABLE",
+    }
+
+
+@pytest.mark.django_db
+def test_wallet_bonus_redeem_endpoint_applies_welcome_bonus():
+    user = create_user("api-bonus-redeem")
+    client = authenticated_client(user)
+
+    response = client.post(
+        "/api/wallet/bonuses/redeem/",
+        {"code": "BIENVENIDA"},
+        format="json",
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.data["status"] == "applied"
+    assert response.data["amount"] == "50.0000"
+    assert response.data["bonus_balance"] == "50.0000"

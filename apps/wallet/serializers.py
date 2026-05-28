@@ -12,3 +12,12 @@ class MoneyAmountField(serializers.DecimalField):
 
 class WalletAmountSerializer(serializers.Serializer):
     amount = MoneyAmountField(max_digits=18, decimal_places=4)
+
+
+class BonusRedeemSerializer(serializers.Serializer):
+    code = serializers.RegexField(
+        regex=r"^[A-Za-z0-9_-]{3,32}$",
+        max_length=32,
+        trim_whitespace=True,
+        error_messages={"invalid": "Codigo promocional invalido."},
+    )

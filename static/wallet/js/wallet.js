@@ -20,6 +20,8 @@
     const withdrawPanel = app.querySelector("[data-withdraw-panel]");
     const promoForm = app.querySelector("[data-promo-form]");
     const promoState = app.querySelector("[data-promo-state]");
+    const bonusList = app.querySelector("[data-bonus-list]");
+    const bonusListState = app.querySelector("[data-bonus-list-state]");
     const welcomeBonusStatus = app.querySelector("[data-welcome-bonus-status]");
     const welcomeBonusAmount = app.querySelector("[data-welcome-bonus-amount]");
     const welcomeBonusHelp = app.querySelector("[data-welcome-bonus-help]");
@@ -122,6 +124,66 @@
         welcomeBonusStatus.classList.add(state.className);
         welcomeBonusAmount.textContent = amount || "0.0000";
         welcomeBonusHelp.textContent = state.help;
+    }
+
+    function getBonusStatusMeta(status) {
+        const states = {
+            available: { label: "Bono disponible", className: "is-available" },
+            applied: { label: "Bono aplicado", className: "is-applied" },
+            already_used: { label: "Bono ya utilizado", className: "is-used" },
+            not_eligible: { label: "Usuario no elegible", className: "is-unavailable" },
+            inactive: { label: "Bono no disponible", className: "is-unavailable" },
+        };
+        return states[status] || states.inactive;
+    }
+
+    function setBonusListState(text, status) {
+        if (!bonusListState) {
+            return;
+        }
+        const meta = getBonusStatusMeta(status);
+        bonusListState.textContent = text;
+        bonusListState.classList.remove("is-available", "is-applied", "is-used", "is-unavailable");
+        bonusListState.classList.add(meta.className);
+    }
+
+    function renderBonuses(bonuses) {
+        if (!bonusList) {
+            return;
+        }
+        if (!bonuses.length) {
+            bonusList.innerHTML = '<p class="wallet-muted">Sin bonos activos.</p>';
+            setBonusListState("Sin bonos activos", "inactive");
+            return;
+        }
+
+        const availableCount = bonuses.filter((bonus) => bonus.status === "available").length;
+        setBonusListState(
+            availableCount ? `${availableCount} bono(s) disponible(s)` : "Sin bonos disponibles",
+            availableCount ? "available" : "inactive",
+        );
+        bonusList.innerHTML = bonuses.map((bonus) => {
+            const meta = getBonusStatusMeta(bonus.status);
+            const reason = bonus.reason || "No retirable hasta completar 5 apuestas validas.";
+            const progress = `${bonus.completed_bets_count || 0}/${bonus.required_bets_count || 5} apuestas`;
+            return `
+                <article class="wallet-bonus-card">
+                    <div class="wallet-bonus-card-head">
+                        <div>
+                            <strong>${escapeHtml(bonus.name)}</strong>
+                            <code>${escapeHtml(bonus.code)}</code>
+                        </div>
+                        <span class="wallet-bonus-state ${meta.className}">${meta.label}</span>
+                    </div>
+                    <div class="wallet-bonus-amount">
+                        <span>Monto</span>
+                        <b>${escapeHtml(bonus.amount || "0.0000")}</b>
+                    </div>
+                    <p class="wallet-bonus-progress">Liberacion: ${escapeHtml(progress)}</p>
+                    <p class="wallet-muted">${escapeHtml(reason)}</p>
+                </article>
+            `;
+        }).join("");
     }
 
     function validateAmount(value) {
@@ -267,6 +329,23 @@
         }
     }
 
+    async function refreshBonuses() {
+        if (!bonusList) {
+            return;
+        }
+        setBonusListState("Cargando bonos", "inactive");
+        bonusList.innerHTML = '<p class="wallet-muted">Cargando bonos disponibles...</p>';
+        const response = await fetch("/api/wallet/bonuses/", {
+            headers: { "Accept": "application/json" },
+            credentials: "same-origin",
+        });
+        const data = await parseResponse(response);
+        if (bonusNode) {
+            bonusNode.textContent = data.bonus_balance || bonusNode.textContent || "0.0000";
+        }
+        renderBonuses(data.bonuses || []);
+    }
+
     function formatDate(value) {
         const date = new Date(value);
         if (Number.isNaN(date.getTime())) {
@@ -300,7 +379,7 @@
         const matchers = {
             deposit: () => type === "Recarga simulada",
             withdrawal: () => type === "Retiro simulado",
-            bonus: () => type === "Bono" || account === "BONUS",
+            bonus: () => type === "Bono" || type === "Bono promocional" || account === "BONUS",
             internal_transfer: () => type === "Transferencia interna",
             pending_bets: () => type === "Fichas pendientes en apuestas" || account === "PENDING_BETS",
         };
@@ -348,7 +427,9 @@
         historyNode.innerHTML = movements.map((movement) => {
             const isDebit = movement.amount.startsWith("-");
             const amountClass = isDebit ? "is-debit" : "is-credit";
-            const reference = movement.reference ? `TX-${movement.reference}` : "-";
+            const reference = movement.reference
+                ? (movement.operation_type === "Bono promocional" ? movement.reference : `TX-${movement.reference}`)
+                : "-";
             return `
                 <tr>
                     <td>${formatDate(movement.date)}</td>
@@ -398,7 +479,7 @@
     }
 
     async function submitPromoCode(code) {
-        const endpoint = promoForm.dataset.promoEndpoint;
+        const endpoint = promoForm.dataset.promoEndpoint || "/api/wallet/bonuses/redeem/";
         if (!endpoint) {
             setPromoState("Bono no disponible. La validacion de codigos aun no esta habilitada.", "warning");
             setWelcomeBonusState("unavailable", welcomeBonusAmount ? welcomeBonusAmount.textContent : "0.0000");
@@ -420,9 +501,11 @@
         const status = data.status || "applied";
 
         if (status === "applied") {
-            setPromoState("Codigo aplicado. El bono se reflejara cuando el backend confirme la operacion.", "success");
+            setPromoState(data.message || "Bono aplicado.", "success");
             setWelcomeBonusState("applied", data.amount || "0.0000");
             await refreshBalance();
+            await refreshBonuses();
+            await refreshHistory();
             return;
         }
         if (status === "already_used") {
@@ -465,6 +548,7 @@
                 button.textContent = buttonText;
                 await submitOperation(kind, amount);
                 const balance = await refreshBalance();
+                await refreshBonuses();
                 await refreshHistory();
                 const label = kind === "deposit" ? "Recarga simulada" : "Retiro simulado";
                 const successText = `${label} completado. Saldo: ${balance}.`;
@@ -498,6 +582,7 @@
                 button.disabled = true;
                 setPromoState("Validando codigo...", "warning");
                 await submitPromoCode(code);
+                input.value = "";
             } catch (error) {
                 setPromoState(getFriendlyError(error), "error");
             } finally {
@@ -568,6 +653,10 @@
         const friendlyError = getFriendlyError(error);
         setMessage(friendlyError, "error");
         setInlineState(balanceStateNode, "No se pudo cargar saldo.", "error");
+    });
+    refreshBonuses().catch((error) => {
+        setPromoState(getFriendlyError(error), "error");
+        setBonusListState("No se pudo cargar bonos", "inactive");
     });
     refreshHistory().catch((error) => {
         setMessage(getFriendlyError(error), "error");

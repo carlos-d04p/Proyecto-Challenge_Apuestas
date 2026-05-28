@@ -8,6 +8,7 @@ from apps.wallet.models import LedgerAccount, LedgerDirection, LedgerEntry
 
 ZERO_MONEY = Decimal("0.0000")
 MONEY_QUANT = Decimal("0.0001")
+BONUS_TRANSACTION_DESCRIPTION_PREFIX = "BONUS_PROMO:"
 
 
 def get_account_balance(user, account):
@@ -60,6 +61,8 @@ TRANSACTION_LABELS = {
 
 def get_operation_label(entry):
     kind = entry.transaction.kind
+    if _is_bonus_promo_entry(entry):
+        return "Bono promocional"
     if kind == "INTERNAL_TRANSFER":
         if entry.account == LedgerAccount.PENDING_BETS:
             return "Fichas pendientes en apuestas"
@@ -71,6 +74,29 @@ def get_operation_label(entry):
     if kind == "BET_LOSS":
         return "Ajuste"
     return TRANSACTION_LABELS.get(kind, kind.replace("_", " ").title())
+
+
+def _is_bonus_promo_entry(entry):
+    return (
+        entry.account == LedgerAccount.BONUS
+        and entry.transaction.description.startswith(BONUS_TRANSACTION_DESCRIPTION_PREFIX)
+    )
+
+
+def _get_reference(entry):
+    if _is_bonus_promo_entry(entry):
+        return entry.transaction.description.replace(
+            BONUS_TRANSACTION_DESCRIPTION_PREFIX,
+            "",
+            1,
+        )
+    return str(entry.transaction_id)[:8]
+
+
+def _get_status(entry):
+    if _is_bonus_promo_entry(entry):
+        return "Aplicado"
+    return "Completado"
 
 
 def get_wallet_movements(user, limit=25):
@@ -99,9 +125,9 @@ def get_wallet_movements(user, limit=25):
                 "account": entry.account,
                 "account_label": ACCOUNT_LABELS.get(entry.account, entry.account),
                 "amount": signed_amount.quantize(MONEY_QUANT),
-                "status": "Completado",
+                "status": _get_status(entry),
                 "transaction_id": str(entry.transaction_id),
-                "reference": str(entry.transaction_id)[:8],
+                "reference": _get_reference(entry),
             }
         )
     return movements

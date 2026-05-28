@@ -50,9 +50,9 @@
             <div>
                 <p class="wallet-kicker">Bonos</p>
                 <h2 id="wallet-promo-title">Codigo promocional</h2>
-                <p class="wallet-muted">Ingresa un codigo para validar bonos educativos cuando el servicio este disponible.</p>
+                <p class="wallet-muted">Ingresa un codigo para validar bonos educativos disponibles para tu cuenta.</p>
             </div>
-            <form class="wallet-promo-form" data-promo-form novalidate>
+            <form class="wallet-promo-form" data-promo-form data-promo-endpoint="/api/wallet/bonuses/redeem/" novalidate>
                 <label for="promo-code">Codigo</label>
                 <div class="wallet-promo-controls">
                     <input id="promo-code" name="promo_code" type="text" autocomplete="off" placeholder="BIENVENIDA" maxlength="32">
@@ -62,21 +62,18 @@
             </form>
         </div>
 
-        <div class="wallet-welcome-bonus" aria-label="Estado del bono de bienvenida">
+        <div class="wallet-bonus-panel" aria-label="Bonos promocionales">
             <div class="wallet-bonus-heading">
-                <span class="wallet-label">Bono de bienvenida</span>
-                <span class="wallet-bonus-state" data-welcome-bonus-status>Sin bonos activos</span>
-            </div>
-            <strong>BIENVENIDA</strong>
-            <div class="wallet-bonus-amount">
-                <span>Monto del bono</span>
-                <b data-welcome-bonus-amount>0.0000</b>
+                <span class="wallet-label">Bonos promocionales</span>
+                <span class="wallet-bonus-state is-unavailable" data-bonus-list-state>Cargando bonos</span>
             </div>
             <p class="wallet-bonus-note">Los bonos son fichas virtuales educativas sin valor monetario real.</p>
-            <p class="wallet-muted" data-welcome-bonus-help>No hay bonos activos para aplicar en este momento.</p>
+            <div class="wallet-bonus-list" data-bonus-list>
+                <p class="wallet-muted">Cargando bonos disponibles...</p>
+            </div>
         </div>
 
-        <div class="wallet-promo-statuses" aria-label="Estados del bono de bienvenida">
+        <div class="wallet-promo-statuses" aria-label="Estados de bonos promocionales">
             <span class="wallet-status-chip wallet-status-chip-success">Bono disponible</span>
             <span class="wallet-status-chip wallet-status-chip-success">Bono aplicado</span>
             <span class="wallet-status-chip wallet-status-chip-warning">Bono ya utilizado</span>

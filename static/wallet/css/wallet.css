@@ -270,7 +270,8 @@ h2 {
     color: #fde68a;
 }
 
-.wallet-welcome-bonus {
+.wallet-welcome-bonus,
+.wallet-bonus-panel {
     padding: 16px;
     border: 1px solid rgba(32, 211, 238, 0.24);
     border-radius: 8px;
@@ -351,6 +352,54 @@ h2 {
     margin: 12px 0 0;
     color: #fff5bf;
     line-height: 1.45;
+}
+
+.wallet-bonus-list {
+    display: grid;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.wallet-bonus-card {
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid rgba(80, 148, 219, 0.22);
+    border-radius: 8px;
+    background: rgba(11, 28, 51, 0.72);
+}
+
+.wallet-bonus-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.wallet-bonus-card strong {
+    display: block;
+    color: #ffffff;
+    font-size: 1rem;
+}
+
+.wallet-bonus-card code {
+    display: inline-flex;
+    width: fit-content;
+    margin-top: 7px;
+    padding: 4px 7px;
+    border: 1px solid rgba(32, 211, 238, 0.22);
+    border-radius: 8px;
+    background: rgba(32, 211, 238, 0.07);
+    color: #b8ecf6;
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: 0.78rem;
+}
+
+.wallet-bonus-progress {
+    margin: 0;
+    color: #fde68a;
+    font-size: 0.88rem;
+    line-height: 1.4;
 }
 
 .wallet-promo-statuses {
