@@ -381,26 +381,35 @@
   /* Tablas administrativas personalizadas */
   .admin-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     font-size: 0.85rem;
   }
 
   .admin-table th {
     text-align: left;
-    padding: 0.75rem;
+    padding: 1rem;
     color: var(--text-soft);
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 2px solid var(--border-color);
     font-size: 0.75rem;
+    font-weight: 700;
     text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: rgba(0,0,0,0.2);
   }
 
   .admin-table td {
-    padding: 0.75rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    vertical-align: middle;
+  }
+
+  .admin-table tbody tr {
+    transition: all 0.2s;
   }
 
   .admin-table tbody tr:hover {
-    background-color: rgba(255, 255, 255, 0.01);
+    background-color: rgba(255, 255, 255, 0.03);
   }
 
   /* Simulación del Gráfico de Apuestas */
@@ -748,7 +757,7 @@
             <tr>
               <td><strong>#{{ log.sequence }}</strong></td>
               <td><span class="alert-badge badge-medium">{{ log.event_type }}</span></td>
-              <td><div class="payload-box" style="font-family: monospace; font-size: 0.75rem; max-width: 300px; overflow-x: auto;">{{ log.payload_canonical }}</div></td>
+              <td><pre class="payload-box" style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); padding: 0.75rem; border-radius: 8px; color: #60a5fa; font-family: monospace; font-size: 0.75rem; max-width: 380px; overflow-x: auto; margin: 0;">{{ log.payload_canonical }}</pre></td>
               <td><span style="font-family: monospace; font-size: 0.72rem;">{{ log.previous_hash|slice:":12" }}...</span></td>
               <td><span style="font-family: monospace; font-size: 0.72rem; color: var(--accent-warning);">{{ log.hash|slice:":12" }}...</span></td>
               <td style="white-space: nowrap;">{{ log.created_at|date:"d/m/Y H:i:s" }}</td>
@@ -819,19 +828,41 @@
         <tbody>
           {% for p in usuarios_kyc %}
             <tr>
-              <td><strong>{{ p.user.username }}</strong></td>
-              <td>{{ p.user.email|default:"-" }}</td>
-              <td>{{ p.dni }}</td>
               <td>
-                <span class="alert-badge {% if p.status == 'VERIFIED' %}badge-high{% else %}badge-medium{% endif %}" style="background-color: rgba(16, 185, 129, 0.15); color: var(--accent-primary);">
-                  {{ p.get_status_display }}
-                </span>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                  <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent-primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;">
+                    {{ p.user.username|slice:":1"|upper }}
+                  </div>
+                  <div>
+                    <div style="font-weight: 700; color: #fff;">{{ p.user.username }}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-soft);">Registrado recientemente</div>
+                  </div>
+                </div>
+              </td>
+              <td><span style="color: var(--text-soft);"><i data-lucide="mail" style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i>{{ p.user.email|default:"Sin email" }}</span></td>
+              <td><code style="background: rgba(0,0,0,0.2); padding: 0.2rem 0.5rem; border-radius: 4px; color: var(--accent-blue);">{{ p.dni }}</code></td>
+              <td>
+                {% if p.status == 'VERIFIED' %}
+                  <span class="alert-badge" style="background-color: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">
+                    {{ p.get_status_display }}
+                  </span>
+                {% elif p.status == 'PENDING' %}
+                  <span class="alert-badge" style="background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3);">
+                    {{ p.get_status_display }}
+                  </span>
+                {% else %}
+                  <span class="alert-badge badge-high" style="border: 1px solid rgba(239, 68, 68, 0.3);">
+                    {{ p.get_status_display }}
+                  </span>
+                {% endif %}
               </td>
               <td>
-                Diario: {{ p.daily_deposit_limit|default:"Sin límite" }} Fichas
+                <span style="font-weight: 600; color: #fff;">{{ p.daily_deposit_limit|default:"∞" }}</span> <span style="color: var(--text-soft); font-size: 0.75rem;">Fichas diarias</span>
               </td>
               <td>
-                <a href="/admin/accounts/perfilkyc/{{ p.id }}/change/" target="_blank" class="btn-admin btn-admin-secondary" style="text-decoration: none; display: inline-block;">Modificar</a>
+                <a href="/admin/accounts/perfilkyc/{{ p.id }}/change/" target="_blank" class="btn-admin" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; padding: 0.4rem 0.8rem; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s; font-size: 0.75rem; font-weight: 600;">
+                  <i data-lucide="settings" style="width: 14px; height: 14px;"></i> Gestionar
+                </a>
               </td>
             </tr>
           {% endfor %}
@@ -866,7 +897,7 @@
   </div>
 </div>
 <script>
-function switchAdminTab(tabId) {
+  function switchAdminTab(tabId) {
     // Ocultar todas las secciones de pestaña
     document.querySelectorAll('.admin-section').forEach(sec => {
       sec.style.display = 'none';
@@ -885,6 +916,19 @@ function switchAdminTab(tabId) {
     });
     if (activeLink) activeLink.classList.add('active');
   }
+
+  // Format JSON payloads in audit logs
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.payload-box').forEach(el => {
+      try {
+        const obj = JSON.parse(el.textContent);
+        el.textContent = JSON.stringify(obj, null, 2);
+      } catch(e) {
+        // If not valid JSON, leave it as is
+      }
+    });
+  });
+
 
 (function () {
   const betsBody = document.getElementById('bets-tbody');
