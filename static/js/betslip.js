@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 
-                <form id="betslip-form" action="/apuestas/apostar/" method="POST">
+                <form id="betslip-form" action="/betting/apostar/" method="POST">
                     <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
                     <input type="hidden" name="bet_type" value="${betTypeValue}">
                     <input type="hidden" name="expected_odds" value="${totalOdds.toFixed(4)}">

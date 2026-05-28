@@ -11,7 +11,7 @@ class LedgerEntryInline(admin.TabularInline):
         return False
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        return request.user.is_superuser
 
 
 @admin.register(Transaction)
@@ -30,7 +30,7 @@ class TransactionAdmin(admin.ModelAdmin):
         return False
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        return request.user.is_superuser
 
 
 @admin.register(LedgerEntry)
@@ -48,7 +48,7 @@ class LedgerEntryAdmin(admin.ModelAdmin):
         return False
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        return request.user.is_superuser
 
 
 @admin.register(WalletIdempotencyRecord)
@@ -66,5 +66,5 @@ class WalletIdempotencyRecordAdmin(admin.ModelAdmin):
         return False
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        return request.user.is_superuser
 
