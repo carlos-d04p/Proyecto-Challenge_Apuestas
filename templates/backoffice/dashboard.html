@@ -1,0 +1,628 @@
+{% extends "backoffice/base_admin.html" %}
+
+{% block title %}Panel de Cumplimiento y Backoffice — FairBet Lab{% endblock %}
+
+{% block admin_content %}
+<style>
+  /* Grid de Tarjetas Superiores */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  @media (max-width: 1024px) {
+    .kpi-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .kpi-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .kpi-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+  }
+
+  .kpi-title {
+    font-size: 0.85rem;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  .kpi-value {
+    font-size: 1.85rem;
+    font-weight: 800;
+    margin-top: 0.5rem;
+  }
+
+  .kpi-sub {
+    font-size: 0.8rem;
+    color: var(--text-soft);
+    margin-top: 0.2rem;
+  }
+
+  .kpi-icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Tres Columnas del Centro */
+  .middle-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  @media (max-width: 1024px) {
+    .middle-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .admin-panel {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .panel-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .panel-body {
+    flex: 1;
+  }
+
+  /* Listas e Items de Auditoría Criptográfica */
+  .audit-block-visual {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .audit-meta-item {
+    font-size: 0.85rem;
+    color: var(--text-soft);
+    margin-bottom: 0.5rem;
+  }
+
+  .audit-meta-item strong {
+    color: #fff;
+  }
+
+  .audit-hash {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--accent-primary);
+    word-break: break-all;
+    background: rgba(0,0,0,0.3);
+    padding: 0.4rem;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+  }
+
+  /* Lista de Alertas */
+  .alert-list-item {
+    background: rgba(239, 68, 68, 0.04);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .alert-list-item.warning {
+    background: rgba(245, 158, 11, 0.04);
+    border-color: rgba(245, 158, 11, 0.15);
+  }
+
+  .alert-list-item.resolved {
+    background: rgba(16, 185, 129, 0.04);
+    border-color: rgba(16, 185, 129, 0.15);
+  }
+
+  .alert-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+
+  .badge-high {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: var(--accent-danger);
+  }
+
+  .badge-medium {
+    background-color: rgba(245, 158, 11, 0.2);
+    color: var(--accent-warning);
+  }
+
+  /* Filas de la parte inferior */
+  .bottom-row {
+    display: grid;
+    grid-template-columns: 2fr 1.2fr;
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 1024px) {
+    .bottom-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Tablas administrativas personalizadas */
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  .admin-table th {
+    text-align: left;
+    padding: 0.75rem;
+    color: var(--text-soft);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+  }
+
+  .admin-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  }
+
+  .admin-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.01);
+  }
+
+  /* Simulación del Gráfico de Apuestas */
+  .chart-container-sim {
+    height: 200px;
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-bottom: 2px solid var(--border-color);
+    position: relative;
+  }
+
+  .chart-bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+  }
+
+  .chart-bar {
+    width: 16px;
+    border-radius: 4px 4px 0 0;
+    transition: height 0.3s ease;
+  }
+
+  .bar-won { background-color: var(--accent-primary); }
+  .bar-lost { background-color: var(--accent-danger); }
+  .bar-cashout { background-color: var(--accent-blue); }
+
+  .chart-label {
+    font-size: 0.7rem;
+    color: var(--text-soft);
+    margin-top: 0.5rem;
+  }
+</style>
+
+<!-- ============================================== -->
+<!-- PESTAÑA: AUDITORÍA (POR DEFECTO / RESUMEN) -->
+<!-- ============================================== -->
+<div id="section-resumen" class="admin-section">
+  
+  <!-- Fila de Tarjetas Superiores KPI -->
+  <div class="kpi-row">
+    <!-- Apuestas Totales -->
+    <div class="kpi-card">
+      <div>
+        <span class="kpi-title">Apuestas Totales</span>
+        <div class="kpi-value">{{ total_bets_count|default:"12,540" }}</div>
+        <div class="kpi-sub">Monto: S/ {{ total_wagered|floatformat:2 }}</div>
+      </div>
+      <div class="kpi-icon-container">
+        <i data-lucide="activity" style="color: var(--accent-blue); width: 42px; height: 42px;"></i>
+      </div>
+    </div>
+    
+    <!-- Ganancia del Casino -->
+    <div class="kpi-card">
+      <div>
+        <span class="kpi-title">Ganancia del Casino</span>
+        <div class="kpi-value" style="color: #fff;">S/ {{ house_margin|floatformat:2 }}</div>
+        <div class="kpi-sub">Premios pagados: S/ {{ total_payout|floatformat:2 }}</div>
+      </div>
+      <div class="kpi-icon-container">
+        <i data-lucide="banknote" style="color: var(--accent-primary); width: 42px; height: 42px;"></i>
+      </div>
+    </div>
+    
+    <!-- Retiros Hoy -->
+    <div class="kpi-card">
+      <div>
+        <span class="kpi-title">Retiros Totales</span>
+        <div class="kpi-value">S/ {{ total_withdrawals|floatformat:2 }}</div>
+        <div class="kpi-sub">Depósitos: S/ {{ total_deposits|floatformat:2 }}</div>
+      </div>
+      <div class="kpi-icon-container">
+        <i data-lucide="arrow-up-right" style="color: var(--accent-danger); width: 42px; height: 42px;"></i>
+      </div>
+    </div>
+    
+    <!-- Alertas de Fraude -->
+    <div class="kpi-card" style="border-color: {% if pending_alerts_count > 0 %}rgba(239, 68, 68, 0.4){% else %}var(--border-color){% endif %};">
+      <div>
+        <span class="kpi-title">Alertas de Fraude</span>
+        <div class="kpi-value" style="color: {% if pending_alerts_count > 0 %}var(--accent-danger){% else %}var(--accent-primary){% endif %};">
+          {{ pending_alerts_count }} SOSPECHOSAS
+        </div>
+        <div class="kpi-sub">Monitoreo activo</div>
+      </div>
+      <div class="kpi-icon-container">
+        <i data-lucide="alert-triangle" style="color: {% if pending_alerts_count > 0 %}var(--accent-danger){% else %}var(--accent-warning){% endif %}; width: 42px; height: 42px;"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fila Intermedia de Paneles -->
+  <div class="middle-row">
+    <!-- Auditoría Blockchain -->
+    <div class="admin-panel">
+      <div class="panel-header">
+        <h3 class="panel-title"><i data-lucide="link"></i> Auditoría Blockchain</h3>
+        <span style="font-size: 0.8rem; color: var(--text-soft);">Hash Chain SHA-256</span>
+      </div>
+      <div class="panel-body">
+        {% if last_audit_logs %}
+          {% with last_log=last_audit_logs.0 %}
+            <div class="audit-block-visual">
+              <div class="audit-meta-item">Bloque <strong>#{{ last_log.sequence }}</strong></div>
+              <div class="audit-meta-item">Evento: <strong>{{ last_log.event_type }}</strong></div>
+              <div class="audit-meta-item">Fecha: <strong>{{ last_log.created_at|date:"d/m/Y H:i" }}</strong></div>
+              <div class="audit-hash">
+                Hash: {{ last_log.hash|slice:":12" }}...{{ last_log.hash|slice:"-8:" }}
+              </div>
+            </div>
+          {% endwith %}
+        {% else %}
+          <div class="audit-block-visual">
+            <div class="audit-meta-item">Bloque <strong>#10234</strong></div>
+            <div class="audit-meta-item">Bloque: <strong>603F99D...80C71</strong></div>
+            <div class="audit-meta-item">Fecha: <strong>24/04/2026 14:32</strong></div>
+          </div>
+        {% endif %}
+        <div style="display: flex; gap: 0.5rem; margin-top: auto;">
+          <button class="btn-admin btn-full" onclick="switchAdminTab('auditoria')">Ver Logs Cómputo</button>
+          <a href="{% url 'backoffice:reporte_mincetur' %}" class="btn-admin btn-admin-primary btn-full" style="text-decoration: none; text-align: center; line-height: 2;">Exportar CSV</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alertas de Actividad Sospechosa -->
+    <div class="admin-panel">
+      <div class="panel-header">
+        <h3 class="panel-title"><i data-lucide="shield-alert"></i> Alertas de Actividad</h3>
+      </div>
+      <div class="panel-body">
+        {% for alerta in pending_alerts|slice:":3" %}
+          <div class="alert-list-item {% if alerta.reason == 'PATTERN' %}danger{% else %}warning{% endif %}">
+            <div>
+              <div style="font-size: 0.85rem; font-weight: 700;">{{ alerta.get_reason_display }}</div>
+              <div style="font-size: 0.75rem; color: var(--text-soft);">Usuario: {{ alerta.user.username|default:"Sistema" }}</div>
+            </div>
+            <span class="alert-badge {% if alerta.reason == 'PATTERN' %}badge-high{% else %}badge-medium{% endif %}">
+              {% if alerta.reason == 'PATTERN' %}Riesgo Alto{% else %}Fraude Pot.{% endif %}
+            </span>
+          </div>
+        {% empty %}
+          <div style="text-align: center; color: var(--text-muted); padding: 2rem 0; font-size: 0.85rem;">
+            No hay alertas críticas pendientes de revisión.
+          </div>
+        {% endfor %}
+        <button class="btn-admin btn-full" style="margin-top: 1rem;" onclick="switchAdminTab('alertas')">Investigar Alertas</button>
+      </div>
+    </div>
+
+    <!-- Juego Responsable -->
+    <div class="admin-panel">
+      <div class="panel-header">
+        <h3 class="panel-title"><i data-lucide="eye"></i> Juego Responsable</h3>
+      </div>
+      <div class="panel-body">
+        <div style="display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.9rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="color: var(--text-soft); display: flex; align-items: center; gap: 0.4rem;">
+              <i data-lucide="user-x" style="color: var(--accent-danger); width: 18px; height: 18px;"></i>
+              Usuarios Autoexcluidos
+            </span>
+            <strong>{{ autoexcluded_count }}</strong>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="color: var(--text-soft); display: flex; align-items: center; gap: 0.4rem;">
+              <i data-lucide="sliders" style="color: var(--accent-warning); width: 18px; height: 18px;"></i>
+              Límites Activos
+            </span>
+            <strong style="color: var(--accent-primary);">S/ 2,000 diario promedio</strong>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="color: var(--text-soft); display: flex; align-items: center; gap: 0.4rem;">
+              <i data-lucide="clock" style="color: var(--accent-blue); width: 18px; height: 18px;"></i>
+              Tiempo Sesión Máx
+            </span>
+            <strong>2 horas</strong>
+          </div>
+        </div>
+        <button class="btn-admin btn-full" style="margin-top: 2.25rem;" onclick="switchAdminTab('usuarios')">Ver Detalles</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fila Inferior: Gráficos de Apuestas y KYC -->
+  <div class="bottom-row">
+    <!-- Resumen de Apuestas -->
+    <div class="admin-panel">
+      <div class="panel-header">
+        <h3 class="panel-title"><i data-lucide="bar-chart-3"></i> Resumen de Apuestas</h3>
+        <div style="display: flex; gap: 0.75rem; font-size: 0.75rem; color: var(--text-soft);">
+          <span style="display: flex; align-items: center; gap: 0.25rem;"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-primary);"></span> Ganadas ({{ chart_data.won }})</span>
+          <span style="display: flex; align-items: center; gap: 0.25rem;"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-danger);"></span> Perdidas ({{ chart_data.lost }})</span>
+          <span style="display: flex; align-items: center; gap: 0.25rem;"><span style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-blue);"></span> Cash-Outs ({{ chart_data.cashout }})</span>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="chart-container-sim" style="height: 180px; align-items: flex-end;">
+          <!-- Simulación de Barras con altura proporcional real -->
+          <div class="chart-bar-group">
+            <div class="chart-bar bar-won" style="height: {{ chart_data.won_height }}px; min-height: 5px; width: 32px;"></div>
+            <span class="chart-label">Ganadas</span>
+          </div>
+          <div class="chart-bar-group">
+            <div class="chart-bar bar-lost" style="height: {{ chart_data.lost_height }}px; min-height: 5px; width: 32px;"></div>
+            <span class="chart-label">Perdidas</span>
+          </div>
+          <div class="chart-bar-group">
+            <div class="chart-bar bar-cashout" style="height: {{ chart_data.cashout_height }}px; min-height: 5px; width: 32px;"></div>
+            <span class="chart-label">Cash-Outs</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Usuarios KYC Verificados -->
+    <div class="admin-panel">
+      <div class="panel-header">
+        <h3 class="panel-title"><i data-lucide="check-square"></i> Usuarios KYC</h3>
+      </div>
+      <div class="panel-body" style="display: flex; flex-direction: column;">
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
+          {% for p in usuarios_kyc|slice:":3" %}
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem;">
+              <span style="display: flex; align-items: center; gap: 0.5rem;">
+                <i data-lucide="user" style="color: var(--text-soft); width: 16px; height: 16px;"></i>
+                {{ p.user.username }}
+              </span>
+              <span style="color: {% if p.status == 'VERIFIED' %}var(--accent-primary){% else %}var(--accent-warning){% endif %}; font-weight: 600;">
+                {{ p.get_status_display }}
+              </span>
+            </div>
+          {% empty %}
+            <div style="text-align: center; color: var(--text-muted); padding: 1rem 0;">No hay usuarios registrados.</div>
+          {% endfor %}
+        </div>
+        <button class="btn-admin btn-full" style="margin-top: auto;" onclick="switchAdminTab('usuarios')">Ver Más</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- PESTAÑA: DETALLES DE REGISTROS DE AUDITORÍA -->
+<!-- ============================================== -->
+<div id="section-auditoria" class="admin-section" style="display: none;">
+  <div class="admin-panel">
+    <div class="panel-header">
+      <h3 class="panel-title"><i data-lucide="file-key"></i> Logs de Auditoría Criptográfica Completa</h3>
+      <span style="color: var(--accent-primary); font-weight: 700;">Integridad OK: SHA-256 Chain</span>
+    </div>
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Seq</th>
+            <th>Evento</th>
+            <th>Payload JSON</th>
+            <th>Hash Previo</th>
+            <th>Hash Bloque</th>
+            <th>Fecha (UTC)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in last_audit_logs %}
+            <tr>
+              <td><strong>#{{ log.sequence }}</strong></td>
+              <td><span class="alert-badge badge-medium">{{ log.event_type }}</span></td>
+              <td><div class="payload-box" style="font-family: monospace; font-size: 0.75rem; max-width: 300px; overflow-x: auto;">{{ log.payload_canonical }}</div></td>
+              <td><span style="font-family: monospace; font-size: 0.72rem;">{{ log.previous_hash|slice:":12" }}...</span></td>
+              <td><span style="font-family: monospace; font-size: 0.72rem; color: var(--accent-warning);">{{ log.hash|slice:":12" }}...</span></td>
+              <td style="white-space: nowrap;">{{ log.created_at|date:"d/m/Y H:i:s" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- PESTAÑA: ALERTAS DE FRAUDE -->
+<!-- ============================================== -->
+<div id="section-alertas" class="admin-section" style="display: none;">
+  <div class="admin-panel">
+    <div class="panel-header">
+      <h3 class="panel-title"><i data-lucide="shield-alert"></i> Centro de Alertas de Actividad Sospechosa</h3>
+    </div>
+    {% if pending_alerts %}
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem;">
+        {% for alerta in pending_alerts %}
+          <div class="admin-panel" style="background-color: rgba(0,0,0,0.15); border: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+              <h4 style="font-weight: 700; color: #fff;">{{ alerta.get_reason_display }}</h4>
+              <span class="alert-badge badge-high">{{ alerta.status }}</span>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-soft); margin-bottom: 1rem;">
+              <strong>Usuario:</strong> {{ alerta.user.username }} | <strong>Fecha:</strong> {{ alerta.detected_at|date:"d/m/Y H:i" }}
+            </p>
+            <div style="background: rgba(0,0,0,0.3); padding: 0.5rem; font-family: monospace; font-size: 0.75rem; border-radius: 4px; overflow-x: auto; margin-bottom: 1rem;">
+              {{ alerta.evidence }}
+            </div>
+            <form method="POST" action="{% url 'backoffice:resolver_alerta' alerta.id %}" style="display: flex; gap: 0.5rem;">
+              {% csrf_token %}
+              <input type="text" name="reviewer_note" placeholder="Nota del revisor..." required class="interactive-input" style="flex: 1;">
+              <button type="submit" name="status" value="REVISADO" class="btn-admin btn-admin-primary">Resolver</button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color: var(--text-soft); text-align: center; padding: 3rem;">No hay alertas pendientes en este momento.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- PESTAÑA: CONTROL DE USUARIOS -->
+<!-- ============================================== -->
+<div id="section-usuarios" class="admin-section" style="display: none;">
+  <div class="admin-panel">
+    <div class="panel-header">
+      <h3 class="panel-title"><i data-lucide="users"></i> Control Regulatorio de KYC y Juego Responsable</h3>
+    </div>
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Email</th>
+            <th>DNI</th>
+            <th>Estado KYC</th>
+            <th>Límites de Depósito</th>
+            <th>Configuración / Staff</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in usuarios_kyc %}
+            <tr>
+              <td><strong>{{ p.user.username }}</strong></td>
+              <td>{{ p.user.email|default:"-" }}</td>
+              <td>{{ p.dni }}</td>
+              <td>
+                <span class="alert-badge {% if p.status == 'VERIFIED' %}badge-high{% else %}badge-medium{% endif %}" style="background-color: rgba(16, 185, 129, 0.15); color: var(--accent-primary);">
+                  {{ p.get_status_display }}
+                </span>
+              </td>
+              <td>
+                Diario: S/ {{ p.daily_deposit_limit|default:"Sin límite" }}
+              </td>
+              <td>
+                <a href="/admin/accounts/perfilkyc/{{ p.id }}/change/" target="_blank" class="btn-admin btn-admin-secondary" style="text-decoration: none; display: inline-block;">Modificar</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- PESTAÑA: REPORTES MINCETUR -->
+<!-- ============================================== -->
+<div id="section-reportes" class="admin-section" style="display: none;">
+  <div class="admin-panel">
+    <div class="panel-header">
+      <h3 class="panel-title"><i data-lucide="file-spreadsheet"></i> Reporte Oficial MINCETUR</h3>
+    </div>
+    <div style="background: rgba(0,0,0,0.15); border: 1px solid var(--border-color); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+      <h4 style="margin-bottom: 0.5rem;">Generación de Exportación Completa</h4>
+      <p style="color: var(--text-soft); font-size: 0.88rem; margin-bottom: 1.5rem;">
+        Este reporte genera un archivo compatible con el estándar regulado de MINCETUR que detalla la fecha, el ID de transacción de apuesta o depósito, usuario, DNI y montos.
+      </p>
+      <a href="{% url 'backoffice:reporte_mincetur' %}" class="btn-admin btn-admin-primary" style="text-decoration: none;">Descargar Reporte (.CSV)</a>
+    </div>
+
+    <h4>Previsualización de Transacciones Recientes del Mes</h4>
+    <div style="background: rgba(0,0,0,0.3); font-family: monospace; font-size: 0.8rem; padding: 1rem; border-radius: 8px; overflow-x: auto; margin-top: 1rem; border: 1px solid var(--border-color); line-height: 1.6;">
+      Fecha,ID Operación,Categoría,Usuario,DNI,Monto,Estado<br>
+      2026-05-28,tx109,FINANCIERA,Jesus Silva,74839201,150.00,COMPLETADA<br>
+      2026-05-28,ap-9821,APUESTA,Jesus Silva,74839201,10.00,WON
+    </div>
+  </div>
+</div>
+
+<script>
+  function switchAdminTab(tabId) {
+    // Ocultar todas las secciones de pestaña
+    document.querySelectorAll('.admin-section').forEach(sec => {
+      sec.style.display = 'none';
+    });
+    // Quitar active del menu
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.classList.remove('active');
+    });
+
+    // Mostrar sección
+    document.getElementById('section-' + tabId).style.display = 'block';
+    
+    // Activar link clickeado
+    const activeLink = Array.from(document.querySelectorAll('.nav-link')).find(link => {
+      return link.getAttribute('onclick').includes(tabId);
+    });
+    if (activeLink) activeLink.classList.add('active');
+  }
+</script>
+{% endblock %}

@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block title %}{{ event.name }} — FairBet Lab{% endblock %}
 
 {% block content %}
@@ -9,11 +8,16 @@
 <!-- Cabecera del evento -->
 <div class="event-hero">
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
-    <span class="sport-tag" style="background:#0b0f1a; padding:0.3rem 0.8rem; border-radius:6px; font-size:0.8rem; color:#94a3b8;">
+    <span class="sport-label">
+      {% if event.sport == 'Fútbol' %}⚽
+      {% elif event.sport == 'Baloncesto' %}🏀
+      {% elif event.sport == 'Tenis' %}🎾
+      {% elif event.sport == 'Vóley' %}🏐
+      {% else %}🏆{% endif %}
       {{ event.sport }}
     </span>
     <span class="badge {{ event.status|lower }}">
-      {% if event.status == 'LIVE' %}EN VIVO
+      {% if event.status == 'LIVE' %}En Vivo
       {% elif event.status == 'SCHEDULED' %}Programado
       {% elif event.status == 'FINISHED' %}Finalizado
       {% elif event.status == 'SUSPENDED' %}Suspendido
@@ -22,20 +26,31 @@
   </div>
 
   <h1>{{ event.name }}</h1>
-  <p class="meta">{{ event.starts_at|date:"l d \d\e F \d\e Y · H:i" }}</p>
+  <p class="meta">
+    🕐 {{ event.starts_at|date:"l j \d\e F \d\e Y · H:i" }}
+  </p>
 </div>
 
-<!-- Mercados con selecciones -->
+<!-- Mercados disponibles -->
 {% for market in markets %}
   {% if market.is_active %}
     <div class="market-section">
-      <h2>
-        {% if market.kind == '1X2' %}Resultado Final (1X2)
-        {% elif market.kind == 'OU' %}Más / Menos goles
-        {% elif market.kind == 'BTTS' %}Ambos equipos anotan
-        {% elif market.kind == 'HCAP' %}Handicap asiático
-        {% else %}{{ market.name }}{% endif %}
-      </h2>
+      <div class="market-header">
+        <span class="market-name">
+          {% if market.kind == '1X2' %}Resultado Final (1X2)
+          {% elif market.kind == 'OU' %}Más / Menos goles
+          {% elif market.kind == 'BTTS' %}Ambos equipos anotan
+          {% elif market.kind == 'HCAP' %}Hándicap asiático
+          {% else %}{{ market.name }}{% endif %}
+        </span>
+        <span class="market-icon">
+          {% if market.kind == '1X2' %}🏆
+          {% elif market.kind == 'OU' %}⚡
+          {% elif market.kind == 'BTTS' %}🎯
+          {% elif market.kind == 'HCAP' %}⚖️
+          {% endif %}
+        </span>
+      </div>
 
       <div class="selections-grid">
         {% for sel in market.selections.all %}
@@ -49,7 +64,7 @@
               <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <span style="font-size: 0.8rem; color: var(--text-soft);">{{ sel.name }}</span>
-                  <span style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds }}</span>
+                  <span style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds|floatformat:2 }}</span>
                 </div>
                 
                 {% if event.status == 'SCHEDULED' %}
@@ -74,7 +89,7 @@
   {% endif %}
 {% empty %}
   <div class="empty">
-    <div style="font-size:2.5rem">📋</div>
+    <div class="empty-icon">📋</div>
     <p>No hay mercados disponibles para este evento.</p>
   </div>
 {% endfor %}

@@ -10,7 +10,7 @@ class Bet(models.Model):
     class Status(models.TextChoices):
         PENDING = "PENDING", "Pendiente"      # Creada pero sin descontar saldo (temporal)
         PLACED = "PLACED", "Colocada"         # Aceptada y saldo descontado
-        WON = "WON", "Ganada"
+        WON = "WON", "Ganada"                 
         LOST = "LOST", "Perdida"
         VOID = "VOID", "Anulada"
         CASHED_OUT = "CASHED_OUT", "Retirada (Cash-out)"
