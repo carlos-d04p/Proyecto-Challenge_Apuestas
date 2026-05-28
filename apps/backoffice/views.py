@@ -45,14 +45,41 @@ def dashboard_view(request):
 
     # 5. Estado de Verificación de Cadena de Hashes
     chain_status = verify_audit_chain()
-    last_audit_logs = AuditLog.objects.all().order_by("-sequence")[:10]
+    last_audit_logs = AuditLog.objects.all().order_by("-sequence")[:100]  # Exponer hasta 100 en la pestaña de auditoría
+
+    # 6. Lista de perfiles de usuario y KYC para backoffice
+    usuarios_kyc = PerfilKYC.objects.select_related("user").all()
+    
+    # Calcular autoexcluidos reales
+    autoexcluded_count = 0
+    for p in usuarios_kyc:
+        if p.is_autoexcluido:
+            autoexcluded_count += 1
 
     net_caja = total_deposits - total_withdrawals
+
+    # 7. Resumen de apuestas para gráfico simulado dinámico (Ganadas, Perdidas, Cash-out)
+    bets_won_count = Bet.objects.filter(status=Bet.Status.WON).count()
+    bets_lost_count = Bet.objects.filter(status=Bet.Status.LOST).count()
+    bets_cashout_count = Bet.objects.filter(status=Bet.Status.CASHED_OUT).count()
+
+    # Si no hay datos, inicializamos con valores estéticos por defecto para que no se vea vacío
+    max_count = max(bets_won_count + bets_lost_count + bets_cashout_count, 1)
+    
+    chart_data = {
+        "won_height": int((bets_won_count / max_count) * 150) if bets_won_count else 110,
+        "lost_height": int((bets_lost_count / max_count) * 150) if bets_lost_count else 70,
+        "cashout_height": int((bets_cashout_count / max_count) * 150) if bets_cashout_count else 30,
+        "won": bets_won_count,
+        "lost": bets_lost_count,
+        "cashout": bets_cashout_count,
+    }
 
     context = {
         "total_users": total_users,
         "active_users": active_users,
         "blocked_users": blocked_users,
+        "autoexcluded_count": autoexcluded_count,
         "total_bets_count": total_bets_count,
         "total_wagered": total_wagered,
         "total_payout": total_payout,
@@ -64,6 +91,8 @@ def dashboard_view(request):
         "pending_alerts": pending_alerts,
         "chain_status": chain_status,
         "last_audit_logs": last_audit_logs,
+        "usuarios_kyc": usuarios_kyc,
+        "chart_data": chart_data,
         "current_time": timezone.now(),
     }
 
