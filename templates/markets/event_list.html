@@ -71,7 +71,7 @@
             <div class="odds-row">
               {% for sel in market.selections.all %}
                 {% if sel.is_active %}
-                  <div class="odds-btn">
+                  <div class="odds-btn" onclick="event.preventDefault(); event.stopPropagation(); addToBetSlip('{{ sel.id }}', '{{ sel.name|escapejs }}', '{{ sel.odds }}', '{{ event.id }}', '{{ event.name|escapejs }}', 'Resultado del partido')">
                     <span class="sel-name">{{ sel.name }}</span>
                     <span class="sel-odds">{{ sel.odds|floatformat:'2u' }}</span>
                   </div>

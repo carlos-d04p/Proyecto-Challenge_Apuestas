@@ -108,10 +108,10 @@ def place_acca_bet(user, selection_ids, stake, expected_odds, idempotency_key=No
         if len(selections) != len(selection_ids):
             raise ValidationError("Una o más selecciones no existen.")
 
-        event_ids = [sel.market.event_id for sel in selections]
-        if len(event_ids) != len(set(event_ids)):
+        market_ids = [sel.market_id for sel in selections]
+        if len(market_ids) != len(set(market_ids)):
             raise ValidationError(
-                "No se pueden combinar selecciones del mismo evento (exclusión mutua)."
+                "No se pueden combinar selecciones del mismo mercado (exclusión mutua)."
             )
 
         total_odds = Decimal("1.0000")
