@@ -10,18 +10,28 @@
 </head>
 <body>
 
+  <!-- Banner de juego responsable (obligatorio Ley 31557) -->
+  <div class="rg-banner">
+    <strong>⚠ Juego responsable:</strong>
+    Esta plataforma es solo para fines educativos · Si tienes problemas con el juego, busca ayuda ·
+    <strong>0800-00-000</strong>
+  </div>
+
   <header class="navbar">
     <a href="{% url 'markets:event_list' %}" class="logo">
-      ⚽ Fair<span>Bet</span> Lab
+      ⚡ Fair<span class="logo-dot">Bet</span> Lab
     </a>
     <nav>
       <a href="{% url 'markets:event_list' %}">Eventos</a>
-      <a href="{% url 'markets:event_list' %}?status=LIVE">En Vivo</a>
+      <a href="{% url 'markets:event_list' %}?status=LIVE">🔴 En Vivo</a>
       <a href="/api/markets/events/" target="_blank">API</a>
       {% if user.is_authenticated %}
         <a href="{% url 'wallet-dashboard' %}">💰 Billetera</a>
         <a href="{% url 'betting:mis_apuestas' %}">🎫 Mis Apuestas</a>
         <a href="{% url 'accounts_web:perfil' %}">👤 Mi Perfil</a>
+        {% if user.is_staff %}
+          <a href="/admin/" target="_blank">Admin</a>
+        {% endif %}
         <a href="{% url 'accounts_web:logout' %}">Salir</a>
       {% else %}
         <a href="{% url 'accounts_web:login' %}">Iniciar sesión</a>
@@ -36,7 +46,8 @@
 
   <footer>
     <strong>FairBet Lab</strong> — Simulador educativo · DS 005-2023-MINCETUR · Ley 31557<br>
-    <em>Plataforma educativa con moneda virtual. No constituye una casa de apuestas.</em>
+    <em>Plataforma educativa con moneda virtual. No constituye una casa de apuestas.</em><br>
+    Las apuestas pueden generar dependencia. Juega con responsabilidad.
   </footer>
 
 </body>

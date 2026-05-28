@@ -15,9 +15,17 @@ class Event(models.Model):
         SUSPENDED = "SUSPENDED", "Suspendido"
         CANCELLED = "CANCELLED", "Cancelado"
 
+    class Sport(models.TextChoices):
+        FOOTBALL = "Fútbol", "Fútbol"
+        BASKETBALL = "Baloncesto", "Baloncesto"
+        TENNIS = "Tenis", "Tenis"
+        VOLLEYBALL = "Vóley", "Vóley"
+        BASEBALL = "Béisbol", "Béisbol"
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=300)
-    sport = models.CharField(max_length=50)
+    sport = models.CharField(max_length=50, choices=Sport.choices, default=Sport.FOOTBALL)
+
     starts_at = models.DateTimeField()
     status = models.CharField(
         max_length=20,

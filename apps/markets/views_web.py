@@ -14,10 +14,20 @@ def event_list(request):
     if status_filter:
         qs = qs.filter(status=status_filter)
 
+    all_events = Event.objects.all()
+    counts = {
+        "total":     all_events.count(),
+        "live":      all_events.filter(status="LIVE").count(),
+        "scheduled": all_events.filter(status="SCHEDULED").count(),
+        "finished":  all_events.filter(status="FINISHED").count(),
+    }
+
     return render(request, "markets/event_list.html", {
         "events": qs,
         "status_filter": status_filter,
+        "counts": counts,
     })
+
 
 
 def event_detail(request, pk):
