@@ -23,8 +23,6 @@
     const welcomeBonusStatus = app.querySelector("[data-welcome-bonus-status]");
     const welcomeBonusAmount = app.querySelector("[data-welcome-bonus-amount]");
     const welcomeBonusHelp = app.querySelector("[data-welcome-bonus-help]");
-    const internalTransferForm = app.querySelector("[data-internal-transfer-form]");
-    const internalTransferMessage = app.querySelector("[data-internal-transfer-message]");
     let historyMovements = [];
     let activeHistoryType = "all";
     let activeHistoryDays = null;
@@ -124,17 +122,6 @@
         welcomeBonusStatus.classList.add(state.className);
         welcomeBonusAmount.textContent = amount || "0.0000";
         welcomeBonusHelp.textContent = state.help;
-    }
-
-    function setInternalTransferMessage(text, type) {
-        if (!internalTransferMessage) {
-            return;
-        }
-        internalTransferMessage.textContent = text;
-        internalTransferMessage.classList.remove("is-success", "is-warning");
-        if (type) {
-            internalTransferMessage.classList.add(`is-${type}`);
-        }
     }
 
     function validateAmount(value) {
@@ -244,23 +231,6 @@
 
     function keepOnlyDigits(input) {
         input.value = input.value.replace(/\D/g, "");
-    }
-
-    function validateInternalTransferPreview(form) {
-        const route = form.querySelector("select[name='transfer_route']").value;
-        const amountInput = form.querySelector("input[name='transfer_amount']");
-        const allowedRoutes = [
-            "USER_WALLET:PENDING_BETS",
-            "PENDING_BETS:USER_WALLET",
-            "BONUS:USER_WALLET",
-        ];
-
-        if (!allowedRoutes.includes(route)) {
-            throw new Error("Selecciona una ruta interna permitida.");
-        }
-        const amount = validateAmount(amountInput.value);
-        const [source, target] = route.split(":");
-        return { amount, source, target };
     }
 
     async function parseResponse(response) {
@@ -532,21 +502,6 @@
                 setPromoState(getFriendlyError(error), "error");
             } finally {
                 button.disabled = false;
-            }
-        });
-    }
-
-    if (internalTransferForm) {
-        internalTransferForm.addEventListener("submit", (event) => {
-            event.preventDefault();
-            try {
-                const preview = validateInternalTransferPreview(internalTransferForm);
-                setInternalTransferMessage(
-                    `Flujo preparado: ${preview.source} -> ${preview.target} por ${preview.amount} fichas virtuales. Requiere endpoint seguro de backend para ejecutarse.`,
-                    "success",
-                );
-            } catch (error) {
-                setInternalTransferMessage(error.message, "warning");
             }
         });
     }

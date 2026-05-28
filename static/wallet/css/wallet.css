@@ -197,119 +197,6 @@ h2 {
     margin-top: 18px;
 }
 
-.wallet-internal-transfer {
-    margin-top: 16px;
-    padding: 20px;
-    border: 1px solid rgba(80, 148, 219, 0.28);
-    border-radius: 8px;
-    background:
-        linear-gradient(135deg, rgba(32, 211, 238, 0.08), rgba(47, 128, 237, 0.1)),
-        rgba(11, 28, 51, 0.92);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.24);
-}
-
-.wallet-transfer-heading {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 18px;
-}
-
-.wallet-transfer-state {
-    display: inline-flex;
-    align-items: center;
-    min-height: 30px;
-    padding: 0 10px;
-    border: 1px solid rgba(250, 204, 21, 0.34);
-    border-radius: 8px;
-    background: rgba(250, 204, 21, 0.08);
-    color: #fde68a;
-    font-size: 0.8rem;
-    font-weight: 800;
-    white-space: nowrap;
-}
-
-.wallet-transfer-routes {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-    margin-top: 16px;
-}
-
-.wallet-transfer-route {
-    padding: 14px;
-    border: 1px solid rgba(32, 211, 238, 0.22);
-    border-radius: 8px;
-    background: rgba(5, 14, 26, 0.36);
-}
-
-.wallet-transfer-route span,
-.wallet-transfer-route b {
-    display: inline-block;
-    color: #ffffff;
-    font-size: 0.9rem;
-    font-weight: 900;
-}
-
-.wallet-transfer-route b {
-    margin: 0 6px;
-    color: var(--cyan);
-}
-
-.wallet-transfer-route p {
-    margin: 10px 0 0;
-    color: var(--muted);
-    font-size: 0.9rem;
-    line-height: 1.4;
-}
-
-.wallet-transfer-form {
-    display: grid;
-    grid-template-columns: minmax(0, 1.2fr) minmax(180px, 0.7fr) 190px;
-    gap: 12px;
-    margin-top: 16px;
-    align-items: end;
-}
-
-.wallet-transfer-form label {
-    color: var(--muted);
-    font-size: 0.92rem;
-}
-
-.wallet-transfer-form input,
-.wallet-transfer-form select {
-    width: 100%;
-    min-height: 50px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: rgba(5, 14, 26, 0.85);
-    color: var(--text);
-    font: inherit;
-    font-size: 1rem;
-    padding: 0 14px;
-    outline: none;
-}
-
-.wallet-transfer-form input:focus,
-.wallet-transfer-form select:focus {
-    border-color: var(--cyan);
-    box-shadow: 0 0 0 3px rgba(32, 211, 238, 0.16);
-}
-
-.wallet-transfer-message {
-    margin: 12px 0 0;
-    color: var(--muted);
-    line-height: 1.45;
-}
-
-.wallet-transfer-message.is-warning {
-    color: #fde68a;
-}
-
-.wallet-transfer-message.is-success {
-    color: #bbf7d0;
-}
-
 .wallet-promo {
     display: grid;
     grid-template-columns: minmax(0, 1.4fr) minmax(240px, 0.65fr);
@@ -840,8 +727,6 @@ h2 {
     .wallet-header,
     .wallet-summary,
     .wallet-promo,
-    .wallet-transfer-routes,
-    .wallet-transfer-form,
     .wallet-actions-grid {
         grid-template-columns: 1fr;
     }
@@ -860,9 +745,6 @@ h2 {
         flex-direction: column;
     }
 
-    .wallet-transfer-heading {
-        flex-direction: column;
-    }
 }
 
 @media (max-width: 640px) {
@@ -913,7 +795,6 @@ h2 {
 
 .wallet-summary,
 .wallet-promo,
-.wallet-internal-transfer,
 .wallet-actions,
 .wallet-message-panel,
 .wallet-history {
@@ -927,7 +808,6 @@ h2 {
 .wallet-summary-card,
 .wallet-card,
 .wallet-promo,
-.wallet-internal-transfer,
 .wallet-message-panel,
 .wallet-history {
     border-color: rgba(98, 161, 232, 0.34);
@@ -976,25 +856,18 @@ h2 {
 
 .wallet-form,
 .wallet-form-detailed,
-.wallet-promo-form,
-.wallet-transfer-form {
+.wallet-promo-form {
     gap: 14px;
 }
 
 .wallet-form input,
 .wallet-form select,
-.wallet-promo-controls input,
-.wallet-transfer-form input,
-.wallet-transfer-form select {
+.wallet-promo-controls input {
     min-height: 52px;
 }
 
 .wallet-promo-controls {
     grid-template-columns: minmax(0, 1fr) minmax(160px, 190px);
-}
-
-.wallet-transfer-form {
-    grid-template-columns: minmax(260px, 1.25fr) minmax(180px, 0.75fr) minmax(180px, 0.55fr);
 }
 
 .wallet-history-table th,
@@ -1010,7 +883,6 @@ h2 {
     .wallet-card,
     .wallet-summary-card,
     .wallet-promo,
-    .wallet-internal-transfer,
     .wallet-history {
         padding: 22px;
     }
@@ -1043,9 +915,6 @@ h2 {
         grid-template-columns: 1fr;
     }
 
-    .wallet-transfer-routes {
-        grid-template-columns: 1fr;
-    }
 }
 
 @media (max-width: 760px) {
@@ -1064,7 +933,6 @@ h2 {
 
     .wallet-summary,
     .wallet-actions-grid,
-    .wallet-transfer-form,
     .wallet-promo-controls {
         grid-template-columns: 1fr;
     }
@@ -1072,7 +940,6 @@ h2 {
     .wallet-summary-card,
     .wallet-card,
     .wallet-promo,
-    .wallet-internal-transfer,
     .wallet-message-panel,
     .wallet-history {
         padding: 16px;
@@ -1087,8 +954,7 @@ h2 {
     .wallet-summary-primary,
     .wallet-card-header,
     .wallet-section-title,
-    .wallet-history-header,
-    .wallet-transfer-heading {
+    .wallet-history-header {
         align-items: stretch;
         flex-direction: column;
     }
@@ -1134,8 +1000,7 @@ h2 {
     .wallet-lead,
     .wallet-muted,
     .wallet-disclaimer,
-    .wallet-card-copy,
-    .wallet-transfer-route p {
+    .wallet-card-copy {
         font-size: 0.9rem;
     }
 
