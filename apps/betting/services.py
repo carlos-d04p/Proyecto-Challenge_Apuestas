@@ -5,6 +5,13 @@ from django.utils import timezone
 from datetime import timedelta
 from apps.betting.models import Bet, BetSelection
 from apps.markets.models import Selection, Event
+from apps.wallet.services import (
+    record_bet_placement,
+    record_bet_settlement_won,
+    record_bet_settlement_lost,
+    record_bet_settlement_void,
+    record_bet_cashout,
+)
 
 MAX_PAYOUT = Decimal("20000.0000")
 MIN_STAKE = Decimal("10.0000")
@@ -70,6 +77,10 @@ def place_simple_bet(user, selection_id, stake, expected_odds, idempotency_key=N
 
         bet.status = Bet.Status.PLACED
         bet.save(update_fields=["status"])
+        
+        # Integración con Wallet
+        record_bet_placement(user, stake, bet.id)
+        
         return bet
 
 
@@ -137,6 +148,10 @@ def place_acca_bet(user, selection_ids, stake, expected_odds, idempotency_key=No
 
         bet.status = Bet.Status.PLACED
         bet.save(update_fields=["status"])
+        
+        # Integración con Wallet
+        record_bet_placement(user, stake, bet.id)
+        
         return bet
 
 
@@ -164,6 +179,15 @@ def settle_bet(bet, final_status):
 
         bet_lock.status = final_status
         bet_lock.save(update_fields=["status", "payout", "updated_at"])
+        
+        # Integración con Wallet
+        if final_status == Bet.Status.WON:
+            record_bet_settlement_won(bet_lock.user, bet_lock.stake, bet_lock.payout, bet_lock.id)
+        elif final_status == Bet.Status.LOST:
+            record_bet_settlement_lost(bet_lock.user, bet_lock.stake, bet_lock.id)
+        elif final_status == Bet.Status.VOID:
+            record_bet_settlement_void(bet_lock.user, bet_lock.stake, bet_lock.id)
+            
         return bet_lock
 
 
@@ -213,6 +237,15 @@ def settle_acca_bet(bet, selection_results: dict):
         bet_lock.payout = payout
         bet_lock.status = final_status
         bet_lock.save(update_fields=["status", "payout", "total_odds", "updated_at"])
+        
+        # Integración con Wallet
+        if final_status == Bet.Status.WON:
+            record_bet_settlement_won(bet_lock.user, bet_lock.stake, bet_lock.payout, bet_lock.id)
+        elif final_status == Bet.Status.LOST:
+            record_bet_settlement_lost(bet_lock.user, bet_lock.stake, bet_lock.id)
+        # Note: ACCA bets do not settle as entirely VOID in this logic, they either win or lose.
+        # If all selections were void, it would evaluate as WON with odds 1.0.
+        
         return bet_lock
 
 
@@ -252,4 +285,8 @@ def cash_out_bet(bet, current_odds, house_factor=HOUSE_FACTOR):
         bet_lock.payout = payout
         bet_lock.status = Bet.Status.CASHED_OUT
         bet_lock.save(update_fields=["status", "payout", "updated_at"])
+        
+        # Integración con Wallet
+        record_bet_cashout(bet_lock.user, bet_lock.stake, bet_lock.payout, bet_lock.id)
+        
         return bet_lock

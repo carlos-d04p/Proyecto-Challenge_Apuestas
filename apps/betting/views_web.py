@@ -61,8 +61,16 @@ def colocar_apuesta(request):
             )
             messages.success(request, "¡Apuesta simple colocada con éxito!")
 
-    except (ValidationError, ValueError) as e:
+    except ValidationError as e:
         messages.error(request, f"Error: {getattr(e, 'message', str(e))}")
+    except ValueError as e:
+        # Check if the ValueError is due to insufficient balance
+        from apps.wallet.selectors import get_wallet_balance
+        if str(e) == "Saldo insuficiente.":
+            balance = get_wallet_balance(request.user)
+            messages.error(request, f"Saldo insuficiente. Tu balance actual es: {balance:.2f} fichas.")
+        else:
+            messages.error(request, f"Error: {str(e)}")
     except InvalidOperation:
         messages.error(request, "La cuota o el monto tienen un formato inválido.")
     except IntegrityError:
