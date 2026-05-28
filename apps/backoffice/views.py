@@ -249,7 +249,7 @@ def dashboard_view(request):
     # Datos de cumplimiento
     usuarios_kyc = PerfilKYC.objects.select_related("user").order_by("user__username")
     pending_alerts = SuspiciousActivity.objects.filter(
-        status="PENDING"
+        status=SuspiciousActivity.Status.PENDIENTE
     ).select_related("user").order_by("-detected_at")[:50]
     audit_logs = AuditLog.objects.order_by("-created_at")[:100]
     try:
@@ -257,15 +257,32 @@ def dashboard_view(request):
     except Exception:
         audit_chain_ok = False
 
+    autoexcluded_count = sum(1 for p in usuarios_kyc if p.is_autoexcluido)
+
+    bets_won_count = Bet.objects.filter(status=Bet.Status.WON).count()
+    bets_lost_count = Bet.objects.filter(status=Bet.Status.LOST).count()
+    bets_cashout_count = Bet.objects.filter(status=Bet.Status.CASHED_OUT).count()
+    max_count = max(bets_won_count + bets_lost_count + bets_cashout_count, 1)
+    
+    chart_data = {
+        "won_height": int((bets_won_count / max_count) * 150) if bets_won_count else 110,
+        "lost_height": int((bets_lost_count / max_count) * 150) if bets_lost_count else 70,
+        "cashout_height": int((bets_cashout_count / max_count) * 150) if bets_cashout_count else 30,
+        "won": bets_won_count,
+        "lost": bets_lost_count,
+        "cashout": bets_cashout_count,
+    }
+
     context = {
         "kpis": kpis,
         "top_bettors": list(top_bettors),
         "live_events": live_events,
-        # Cumplimiento
         "usuarios_kyc": usuarios_kyc,
         "pending_alerts": pending_alerts,
         "audit_logs": audit_logs,
         "audit_chain_ok": audit_chain_ok,
+        "autoexcluded_count": autoexcluded_count,
+        "chart_data": chart_data,
     }
     return render(request, "backoffice/dashboard.html", context)
 
