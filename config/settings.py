@@ -168,3 +168,8 @@ CACHES = {
         "LOCATION": os.environ.get("REDIS_URL", "redis://localhost:6379/1"),
     }
 }
+
+# Email Configuration (Mailpit)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '127.0.0.1')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 1025))

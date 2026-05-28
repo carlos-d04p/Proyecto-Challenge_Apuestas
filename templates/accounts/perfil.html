@@ -86,7 +86,11 @@
 
       {% if perfil.status == 'PENDING' %}
       <div class="kyc-notice">
-        <p>⏳ Tu cuenta está pendiente de verificación. Un administrador revisará tu DNI para activar tu perfil.</p>
+        {% if not perfil.user.is_email_verified %}
+          <p>📧 <strong>¡Verifica tu email!</strong> Revisa tu bandeja de entrada local en <a href="http://localhost:8025" target="_blank" style="color: blue; text-decoration: underline;">http://localhost:8025</a> y haz clic en el enlace de verificación para continuar.</p>
+        {% else %}
+          <p>⏳ <strong>Verificando DNI...</strong> Estamos validando tus datos con RENIEC (Simulación de 5 segundos).</p>
+        {% endif %}
       </div>
       {% endif %}
 

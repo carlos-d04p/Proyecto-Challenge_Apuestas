@@ -1,9 +1,10 @@
 import time
 from celery import shared_task
 from django.utils import timezone
+from django.core.mail import send_mail
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-from .models import PerfilKYC
+from .models import PerfilKYC, CustomUser
 
 @shared_task
 def verificar_kyc_async(user_id):
@@ -42,14 +43,23 @@ def verificar_kyc_async(user_id):
 @shared_task
 def enviar_email_verificacion_async(user_id, token, base_url):
     """
-    Simula el envío de un email asíncrono para verificar la cuenta.
-    En un entorno real usaría django.core.mail.send_mail.
+    Envía un email asíncrono para verificar la cuenta usando Mailpit.
     """
-    link = f"{base_url}/accounts/verify-email/{token}/"
-    print("\n" + "="*50)
-    print("SIMULADOR DE EMAIL DE FAIRBET LAB")
-    print(f"Para: Usuario ID {user_id}")
-    print(f"Asunto: Verifica tu cuenta")
-    print(f"Por favor haz clic en el siguiente enlace para activar tu cuenta:\n{link}")
-    print("="*50 + "\n")
-    return f"Email simulado enviado a usuario {user_id}"
+    try:
+        user = CustomUser.objects.get(id=user_id)
+        email_destino = user.email if user.email else "usuario@test.com"
+        
+        link = f"{base_url}/accounts/verify-email/{token}/"
+        asunto = "FairBet Lab - Verifica tu cuenta"
+        mensaje = f"Hola {user.username},\n\nPor favor haz clic en el siguiente enlace para activar tu cuenta e iniciar el proceso de verificación KYC:\n\n{link}\n\nGracias,\nEquipo FairBet Lab."
+        
+        send_mail(
+            subject=asunto,
+            message=mensaje,
+            from_email="no-reply@fairbetlab.com",
+            recipient_list=[email_destino],
+            fail_silently=False,
+        )
+        return f"Email real enviado a {email_destino} para usuario {user_id}"
+    except CustomUser.DoesNotExist:
+        return f"Error: Usuario {user_id} no existe."

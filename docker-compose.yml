@@ -11,9 +11,12 @@ services:
       - .env
     ports:
       - "8000:8000"
+    environment:
+      - EMAIL_HOST=mailpit
     depends_on:
       - db
       - redis
+      - mailpit
 
   celery:
     build: .
@@ -22,9 +25,12 @@ services:
       - .:/app
     env_file:
       - .env
+    environment:
+      - EMAIL_HOST=mailpit
     depends_on:
       - redis
       - db
+      - mailpit
 
   db:
     image: postgres:15
@@ -36,6 +42,13 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      
+  mailpit:
+    image: axllent/mailpit
+    container_name: mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
 
   redis:
     image: redis:7-alpine
