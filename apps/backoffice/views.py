@@ -279,7 +279,7 @@ def dashboard_view(request):
         "live_events": live_events,
         "usuarios_kyc": usuarios_kyc,
         "pending_alerts": pending_alerts,
-        "audit_logs": audit_logs,
+        "last_audit_logs": audit_logs,
         "audit_chain_ok": audit_chain_ok,
         "autoexcluded_count": autoexcluded_count,
         "chart_data": chart_data,
