@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Apuestas — FairBet Lab{% endblock %}
+
+{% block content %}
+<style>
+    .alert-box {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+    }
+    .alert-success {
+        background: #1e2a1e;
+        border: 1px solid var(--green);
+        color: var(--green);
+    }
+    .alert-error, .alert-danger, .alert-warning {
+        background: #3f0d0d;
+        border: 1px solid var(--live);
+        color: var(--text);
+    }
+
+    /* Clases personalizadas para mapear la máquina de estados de Bet */
+    .badge.pending { background: #2d2000; color: var(--yellow); border: 1px solid #854d0e; }
+    .badge.placed { background: #1e3a5f; color: #60a5fa; border: 1px solid #2563eb; }
+    .badge.won { background: #1e2a1e; color: var(--green); border: 1px solid var(--green); }
+    .badge.lost { background: #3f0d0d; color: var(--live); border: 1px solid var(--live); }
+    .badge.void { background: #1f1f1f; color: #6b7280; border: 1px solid #374151; }
+    .badge.cashed_out { background: #2e1f47; color: #a78bfa; border: 1px solid #6d28d9; }
+
+    /* Modificadores de color para el texto del Payout */
+    .payout-won { color: var(--green); font-weight: 700; }
+    .payout-lost { color: var(--live); font-weight: 700; }
+    .payout-pending { color: var(--text); font-weight: 700; }
+</style>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h1 class="page-title" style="margin-bottom: 0;">Mi Historial de Apuestas</h1>
+    <a href="{% url 'markets:event_list' %}" class="filter-btn">Volver al Catálogo</a>
+</div>
+
+{% if messages %}
+<div style="margin-bottom: 1.5rem;">
+    {% for message in messages %}
+    <div class="alert-box alert-{{ message.tags }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if apuestas %}
+<div class="event-grid">
+    {% for bet in apuestas %}
+    <div class="event-card" style="cursor: default;">
+        <div class="card-header">
+            <span class="sport-tag">{{ bet.get_bet_type_display }}</span>
+            <span class="badge {{ bet.status|lower }}">
+                {{ bet.get_status_display }}
+            </span>
+        </div>
+
+        <div style="margin: 0.5rem 0 1rem 0;">
+            {% for line in bet.selections.all %}
+            <div style="font-size: 0.9rem; font-weight: 500; margin-bottom: 0.25rem;">
+                ⚽ {{ line.selection.market.event.name }}
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-soft); display: flex; justify-content: space-between;">
+                <span>{{ line.selection.market.name }} — <strong>{{ line.selection.name }}</strong></span>
+                <span style="color: var(--primary); font-weight: 600;">@{{ line.odds_at_placement }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div style="border-top: 1px solid var(--border); padding-top: 0.75rem; font-size: 0.85rem; color: var(--text-soft);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                <span>Monto Apostado (Stake):</span>
+                <span style="color: var(--text); font-weight: 600;">{{ bet.stake }} Fichas</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                <span>Cuota Total Ticket:</span>
+                <span style="color: var(--text); font-weight: 600;">{{ bet.total_odds }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.95rem; padding-top: 0.25rem;">
+                <span>Retorno Calculado:</span>
+                <span class="{% if bet.status == 'WON' %}payout-won{% elif bet.status == 'LOST' %}payout-lost{% else %}payout-pending{% endif %}">
+                    {% if bet.payout is not None %}{{ bet.payout }} Fichas{% else %}Pendiente{% endif %}
+                </span>
+            </div>
+        </div>
+
+        {% if bet.status == 'PLACED' %}
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">
+            <form method="POST" action="{% url 'betting:ejecutar_cashout' bet.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="current_odds" value="1.8500">
+                <button type="submit" class="filter-btn active"
+                    style="width: 100%; border-radius: 8px; font-weight: 600; background: #b45309; border-color: #b45309;">
+                    💰 Solicitar Cash-Out (Simulado @1.85)
+                </button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty">
+    <div style="font-size: 3rem">🎟️</div>
+    <p>Aún no has colocado boletos de apuesta en este sprint.</p>
+</div>
+{% endif %}
+
+<div style="margin-top: 3rem; background: var(--surface); border: 1px solid var(--border); padding: 1.5rem; border-radius: 12px; text-align: center;">
+    <h3 style="color: var(--yellow); font-size: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+        ⚠️ CONTROL DE JUEGO RESPONSABLE (LEY N° 31557)
+    </h3>
+    <p style="font-size: 0.85rem; color: var(--text-soft); max-width: 700px; margin: 0 auto; line-height: 1.5;">
+        Recuerda que esta es una plataforma estrictamente educativa basada en moneda virtual sin valor monetario
+        real[cite: 6, 7]. Jugar en exceso puede causar ludopatía. Configura tus límites de depósito diario y
+        autoexclusión desde tu panel de usuario para mantener una experiencia segura[cite: 40, 41].
+    </p>
+</div>
+{% endblock %}

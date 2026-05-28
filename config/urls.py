@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', RedirectView.as_view(url='/eventos/', permanent=False)),
@@ -27,4 +28,6 @@ urlpatterns = [
     # Cuentas y autenticación
     path('api/accounts/', include('apps.accounts.urls', namespace='accounts')),
     path('accounts/', include('apps.accounts.urls_web', namespace='accounts_web')),
+    # Apuestas
+    path('apuestas/', include('apps.betting.urls', namespace='betting')),
 ]

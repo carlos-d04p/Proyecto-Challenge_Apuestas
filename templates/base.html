@@ -19,6 +19,7 @@
       <a href="{% url 'markets:event_list' %}?status=LIVE">En Vivo</a>
       <a href="/api/markets/events/" target="_blank">API</a>
       {% if user.is_authenticated %}
+        <a href="{% url 'betting:mis_apuestas' %}">🎫 Mis Apuestas</a>
         <a href="{% url 'accounts_web:perfil' %}">👤 Mi Perfil</a>
         <a href="{% url 'accounts_web:logout' %}">Salir</a>
       {% else %}
