@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django_filters',
+    'django_filters.rest_framework.DjangoFilterBackend',
     'django.contrib.staticfiles',
     'rest_framework',
     'channels',
