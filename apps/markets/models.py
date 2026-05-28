@@ -79,12 +79,29 @@ class Market(models.Model):
     def sorted_selections(self):
         """Devuelve las selecciones ordenadas lógicamente (Local, Empate, Visitante)."""
         selections = list(self.selections.all())
+        
+        # Intentar extraer nombres de equipos del evento "Local vs Visitante" o "Local - Visitante"
+        event_name_lower = self.event.name.lower()
+        home_team = ""
+        away_team = ""
+        if " vs " in event_name_lower:
+            parts = event_name_lower.split(" vs ")
+            home_team = parts[0].strip()
+            away_team = parts[1].strip()
+        elif " - " in event_name_lower:
+            parts = event_name_lower.split(" - ")
+            home_team = parts[0].strip()
+            away_team = parts[1].strip()
+
         def sort_key(sel):
             name = sel.name.lower()
             if "local" in name: return 1
+            if home_team and home_team in name: return 1
             if "empate" in name or "draw" in name or name.strip() == "x": return 2
             if "visit" in name or "away" in name: return 3
+            if away_team and away_team in name: return 3
             return 4
+            
         return sorted(selections, key=sort_key)
 
 

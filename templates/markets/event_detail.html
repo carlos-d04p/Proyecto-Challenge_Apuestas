@@ -69,15 +69,7 @@
   }
 </style>
 
-{% if messages %}
-<div style="margin-bottom: 1.5rem;">
-  {% for message in messages %}
-  <div class="alert-box alert-{{ message.tags }}">
-    {{ message }}
-  </div>
-  {% endfor %}
-</div>
-{% endif %}
+
 
 {# ── Aviso de correo no verificado ──────────────────────────────────────── #}
 {% if user.is_authenticated and not user.is_email_verified %}
@@ -201,7 +193,7 @@
     {% for sel in market.sorted_selections %}
     {% if sel.is_active %}
     {% localize off %}
-    {% if event.status == 'SCHEDULED' and user.is_email_verified %}
+    {% if event.status in 'SCHEDULED,LIVE' and user.is_email_verified %}
     <button type="button" class="selection-btn"
       data-market-id="{{ market.id }}" 
       data-selection-id="{{ sel.id }}"
@@ -209,7 +201,7 @@
       <span style="font-size: 0.8rem; color: var(--text-soft);">{{ sel.name }}</span>
       <span class="odds-value" style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds|floatformat:'2u' }}</span>
     </button>
-    {% elif event.status == 'SCHEDULED' and not user.is_email_verified %}
+    {% elif event.status in 'SCHEDULED,LIVE' and not user.is_email_verified %}
     <div class="selection-btn locked" title="Verifica tu correo para apostar"
       data-market-id="{{ market.id }}" 
       data-selection-id="{{ sel.id }}">
