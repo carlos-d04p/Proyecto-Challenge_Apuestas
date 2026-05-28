@@ -47,7 +47,7 @@
     align-items: center;
   }
 
-  .selection-btn:hover {
+  .selection-btn:hover:not(.locked) {
     border-color: var(--primary);
     background: rgba(59, 130, 246, 0.1);
   }
@@ -55,11 +55,17 @@
   .selection-btn.locked {
     opacity: 0.5;
     cursor: not-allowed;
-  }
-
-  .selection-btn.locked:hover {
     border-color: var(--border);
     background: var(--surface);
+  }
+  
+  /* Animación para el cambio de cuota */
+  .flash-update {
+    animation: flashColor 0.8s ease-out;
+  }
+  @keyframes flashColor {
+    0% { background-color: rgba(255, 235, 59, 0.6); }
+    100% { background-color: var(--surface); }
   }
 </style>
 
@@ -73,7 +79,6 @@
 </div>
 {% endif %}
 
-<!-- Cabecera del evento -->
 <div class="event-hero">
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
     <span class="sport-label">
@@ -99,7 +104,6 @@
   </p>
 </div>
 
-<!-- Mercados disponibles -->
 {% for market in markets %}
 {% if market.is_active %}
 <div class="market-section">
@@ -126,14 +130,18 @@
     {% localize off %}
     {% if event.status == 'SCHEDULED' %}
     <button type="button" class="selection-btn"
+      data-market-id="{{ market.id }}" 
+      data-selection-id="{{ sel.id }}"
       onclick="addToBetSlip('{{ sel.id }}', '{{ sel.name|escapejs }}', '{{ sel.odds }}', '{{ event.id }}', '{{ event.name|escapejs }}')">
       <span style="font-size: 0.8rem; color: var(--text-soft);">{{ sel.name }}</span>
-      <span style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds|floatformat:'2u' }}</span>
+      <span class="odds-value" style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds|floatformat:'2u' }}</span>
     </button>
     {% else %}
-    <div class="selection-btn locked" title="Bloqueado (In-Play/Cerrado)">
+    <div class="selection-btn locked" title="Bloqueado (In-Play/Cerrado)"
+      data-market-id="{{ market.id }}" 
+      data-selection-id="{{ sel.id }}">
       <span style="font-size: 0.8rem; color: var(--text-soft);">{{ sel.name }}</span>
-      <span style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds|floatformat:'2u' }}</span>
+      <span class="odds-value" style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds|floatformat:'2u' }}</span>
     </div>
     {% endif %}
     {% endlocalize %}
@@ -149,4 +157,54 @@
 </div>
 {% endfor %}
 
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const eventId = "{{ event.id }}";
+    if (!eventId) return;
+
+    // Conectar al canal WebSocket específico para este evento
+    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const socket = new WebSocket(protocol + window.location.host + '/ws/realtime/match/' + eventId + '/');
+
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+
+        // REGLA: Si el mercado se suspende
+        if (data.action === 'SUSPEND') {
+            const marketButtons = document.querySelectorAll(`[data-market-id="${data.market_id}"]`);
+            
+            marketButtons.forEach(btn => {
+                if (btn.tagName === 'BUTTON') {
+                    btn.disabled = true; // Deshabilita clics
+                    btn.onclick = null; // Remueve la función de la betslip
+                }
+                btn.classList.add('locked');
+                btn.title = "🔒 Mercado Suspendido";
+            });
+        } 
+        // REGLA: Si se actualiza una cuota
+        else if (data.action === 'ODDS_UPDATE') {
+            const selectionBtn = document.querySelector(`[data-selection-id="${data.selection_id}"]`);
+            
+            if (selectionBtn) {
+                // Actualiza el número de la cuota en el HTML
+                const oddsSpan = selectionBtn.querySelector('.odds-value');
+                if (oddsSpan) {
+                    oddsSpan.innerText = parseFloat(data.odds).toFixed(2);
+                }
+
+                // Animación visual para llamar la atención del usuario
+                selectionBtn.classList.add('flash-update');
+                setTimeout(() => {
+                    selectionBtn.classList.remove('flash-update');
+                }, 800);
+            }
+        }
+    };
+
+    socket.onclose = function(e) {
+        console.warn('Se perdió la conexión en vivo. Actualiza la página para reconectar al partido.');
+    };
+});
+</script>
 {% endblock %}
