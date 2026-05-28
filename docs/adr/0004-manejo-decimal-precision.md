@@ -1,11 +1,28 @@
-# ADR 0004: Manejo de Decimal y Precisión
+# ADR 0004: Manejo de Tipos Decimal y Precisión para Datos Financieros
+
+## Estado
+Aceptado
 
 ## Contexto
-En un sistema financiero y de apuestas, el cálculo de las cuotas (odds) y los pagos (payouts) involucra multiplicaciones fraccionarias. El uso de tipos numéricos de punto flotante (`float`) introduce errores de redondeo inherentes a la representación binaria (ej. 0.1 + 0.2 = 0.30000000000000004), lo cual es inaceptable para el dinero de los usuarios y las ganancias de la casa de apuestas.
+Las apuestas y los cálculos de pagos, comisiones o cuotas (odds) involucran matemáticas financieras. Utilizar tipos de datos de punto flotante (`float`, `double`) puede introducir errores de redondeo que, acumulados a lo largo de miles de transacciones, provocan pérdidas o descuadres financieros.
 
 ## Decisión
-Se ha decidido estandarizar el uso del tipo de dato `Decimal` (proporcionado por la librería estándar `decimal` de Python) para **todos** los cálculos financieros, montos de transacciones y cuotas en la aplicación. La precisión de almacenamiento en PostgreSQL se fija en `Decimal(18, 4)`.
+Utilizar el tipo `Decimal` de la biblioteca estándar (o tipos equivalentes como `numeric`/`decimal` en la base de datos PostgreSQL) para todos los campos que representen dinero, cuotas, o balances, en las aplicaciones `wallet`, `betting` y `payments`.
+
+Se establece el estándar de almacenamiento:
+- **Dinero:** 4 decimales de precisión interna para evitar errores de arrastre en divisiones, aunque a nivel de presentación en la UI se redondee a 2 decimales (ej. `max_digits=12, decimal_places=4`).
+- **Cuotas (Odds):** 3 decimales de precisión (ej. `max_digits=8, decimal_places=3`).
+- **Contexto Decimal:** El redondeo por defecto será `ROUND_HALF_EVEN` (Banker's rounding).
 
 ## Consecuencias
-- **Positivas**: Evita por completo la pérdida de centavos debido a errores de redondeo de punto flotante. Cumple con los estándares contables y de auditoría.
-- **Negativas**: El rendimiento de las operaciones aritméticas con `Decimal` es ligeramente inferior al de `float` (aunque despreciable en este contexto). Requiere conversiones cuidadosas en las fronteras de la aplicación (ej. validadores DRF y serializadores JSON).
+### Positivas:
+- **Precisión matemática absoluta:** Se eliminan los errores de representación binaria de fracciones de coma flotante.
+- **Conformidad contable:** Operaciones financieras fiables.
+
+### Negativas:
+- **Mayor espacio de almacenamiento:** Los tipos numéricos exactos ocupan más espacio en base de datos.
+- **Rendimiento computacional:** Las operaciones con `Decimal` son ligeramente más lentas que con floats nativos (aunque marginal e imperceptible para los casos de uso del proyecto).
+
+## Fecha y Autor
+* **Fecha:** 27 de Mayo de 2026
+* **Autor:** Arnold Quiroz

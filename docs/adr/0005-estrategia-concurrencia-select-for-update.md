@@ -1,11 +1,29 @@
-# ADR 0005: Estrategia de Concurrencia (select_for_update)
+# ADR 0005: Estrategia de Concurrencia (Select for Update vs Optimista)
+
+## Estado
+Aceptado
 
 ## Contexto
-En escenarios de alta carga, un usuario podría emitir múltiples peticiones HTTP simultáneas para apostar o retirar dinero, excediendo su balance actual (Double-Spending). O bien, múltiples administradores podrían intentar liquidar el mismo evento simultáneamente.
+En eventos populares (ej. la final de la Champions League o un partido en vivo importante), miles de usuarios podrían intentar realizar apuestas simultáneas sobre los mismos mercados, o un mismo usuario podría intentar abusar del sistema lanzando múltiples peticiones concurrentes para agotar su balance antes de que se actualice.
 
 ## Decisión
-Implementamos bloqueos de base de datos pesimistas utilizando el método `select_for_update()` de Django (dentro de un bloque `transaction.atomic()`) en todas las operaciones que modifiquen el estado de la billetera o el estado de un evento deportivo. Descartamos la estrategia optimista (versioning) para evitar el retrabajo de código cliente al manejar excepciones `OptimisticLockError`.
+Se implementará un enfoque híbrido dependiendo del dominio:
+
+1. **Gestión de Saldos y Wallet (`select_for_update` / Pesimista):** 
+Para debitar dinero de la cuenta del usuario, se bloqueará la fila correspondiente del balance utilizando bloqueo a nivel de base de datos (`SELECT ... FOR UPDATE`). Esto previene el problema del "doble gasto" de forma absoluta.
+
+2. **Actualización de Cuotas y Mercados (Control de Concurrencia Optimista):**
+Dado que las cuotas (odds) cambian rápidamente en apuestas en vivo (`markets`), bloquear el mercado detendría todas las lecturas. En lugar de ello, utilizaremos bloqueo optimista basado en versiones (`version_id`). Si al confirmar una apuesta, la versión del mercado ha cambiado, la base de datos rechazará la transacción y se aplicará la política de re-cotización.
 
 ## Consecuencias
-- **Positivas**: Evita condiciones de carrera (Race Conditions) y garantiza absolutamente la consistencia de los balances.
-- **Negativas**: Mayor contención de bloqueos en la base de datos que puede resultar en `TimeoutErrors` o `Deadlocks` si las transacciones son muy largas, lo que obliga a mantener la lógica transaccional lo más concisa y rápida posible.
+### Positivas:
+- **Seguridad financiera:** Previene fallas de doble gasto garantizando consistencia fuerte en `wallet`.
+- **Rendimiento en mercados:** Permite altas tasas de lectura/escritura en cuotas sin bloqueos de DB costosos en `markets`.
+
+### Negativas:
+- **Deadlocks potenciales:** Riesgo de bloqueos cruzados en `select_for_update` si no se ordenan las sentencias consistentemente (siempre ordenar por ID de cuenta antes de bloquear).
+- **Complejidad UI:** Requiere manejar el flujo de "Error por cambio de cuota" en el frontend cuando falla el bloqueo optimista de la apuesta.
+
+## Fecha y Autor
+* **Fecha:** 27 de Mayo de 2026
+* **Autor:** Arnold Quiroz
