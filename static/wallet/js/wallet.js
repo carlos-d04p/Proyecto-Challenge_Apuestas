@@ -5,6 +5,8 @@
     }
 
     const balanceNode = app.querySelector("[data-wallet-balance]");
+    const pendingNode = app.querySelector("[data-wallet-pending]");
+    const bonusNode = app.querySelector("[data-wallet-bonus]");
     const messageNode = app.querySelector("[data-wallet-message]");
     const activityNode = app.querySelector("[data-wallet-activity]");
     const refreshButton = app.querySelector("[data-refresh-balance]");
@@ -65,6 +67,10 @@
             });
             const data = await parseResponse(response);
             balanceNode.textContent = data.balance;
+            if (data.accounts && pendingNode && bonusNode) {
+                pendingNode.textContent = data.accounts.PENDING_BETS || "0.0000";
+                bonusNode.textContent = data.accounts.BONUS || "0.0000";
+            }
             return data.balance;
         } finally {
             refreshButton.disabled = false;

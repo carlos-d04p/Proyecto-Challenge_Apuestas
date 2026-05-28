@@ -10,9 +10,9 @@ ZERO_MONEY = Decimal("0.0000")
 MONEY_QUANT = Decimal("0.0001")
 
 
-def get_wallet_balance(user):
+def get_account_balance(user, account):
     totals = LedgerEntry.objects.filter(
-        account=LedgerAccount.USER_WALLET,
+        account=account,
         account_owner=user,
     ).aggregate(
         credits=Coalesce(
@@ -28,3 +28,15 @@ def get_wallet_balance(user):
     )
 
     return (totals["credits"] - totals["debits"]).quantize(MONEY_QUANT)
+
+
+def get_wallet_balance(user):
+    return get_account_balance(user, LedgerAccount.USER_WALLET)
+
+
+def get_wallet_account_balances(user):
+    return {
+        "available": get_account_balance(user, LedgerAccount.USER_WALLET),
+        "pending_bets": get_account_balance(user, LedgerAccount.PENDING_BETS),
+        "bonus": get_account_balance(user, LedgerAccount.BONUS),
+    }

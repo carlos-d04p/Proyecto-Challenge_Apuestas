@@ -7,7 +7,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import TemplateView
 
-from apps.wallet.selectors import get_wallet_balance
+from apps.wallet.selectors import get_wallet_account_balances, get_wallet_balance
 from apps.wallet.serializers import WalletAmountSerializer
 from apps.wallet.services import deposit_simulated, withdraw_simulated
 from core.idempotency import IdempotencyConflict
@@ -30,8 +30,17 @@ class WalletBalanceView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        balance = get_wallet_balance(request.user)
-        return Response({"balance": format_money(balance)})
+        balances = get_wallet_account_balances(request.user)
+        return Response(
+            {
+                "balance": format_money(balances["available"]),
+                "accounts": {
+                    "USER_WALLET": format_money(balances["available"]),
+                    "PENDING_BETS": format_money(balances["pending_bets"]),
+                    "BONUS": format_money(balances["bonus"]),
+                },
+            }
+        )
 
 
 class WalletDepositView(APIView):

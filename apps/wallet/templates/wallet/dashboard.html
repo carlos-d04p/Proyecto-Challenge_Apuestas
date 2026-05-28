@@ -23,21 +23,24 @@
             <div>
                 <span class="wallet-label">Saldo disponible</span>
                 <div class="wallet-balance" data-wallet-balance>0.0000</div>
+                <span class="wallet-account-code">Cuenta logica: USER_WALLET</span>
                 <p class="wallet-muted">Fichas educativas listas para usar</p>
             </div>
             <button class="wallet-icon-button" type="button" data-refresh-balance aria-label="Actualizar saldo">Actualizar</button>
         </article>
 
         <article class="wallet-summary-card">
-            <span class="wallet-label">Tipo de cuenta</span>
-            <strong>Moneda virtual</strong>
-            <p class="wallet-muted">Sin dinero real ni pasarelas externas</p>
+            <span class="wallet-label">Fichas en apuestas pendientes</span>
+            <strong class="wallet-account-value" data-wallet-pending>0.0000</strong>
+            <span class="wallet-account-code">Cuenta logica: PENDING_BETS</span>
+            <p class="wallet-muted">Fichas reservadas por jugadas aun no resueltas.</p>
         </article>
 
         <article class="wallet-summary-card">
-            <span class="wallet-label">Operaciones</span>
-            <strong>Recarga y retiro</strong>
-            <p class="wallet-muted">Movimientos simulados con validacion del backend</p>
+            <span class="wallet-label">Bonos disponibles</span>
+            <strong class="wallet-account-value" data-wallet-bonus>0.0000</strong>
+            <span class="wallet-account-code">Cuenta logica: BONUS</span>
+            <p class="wallet-muted">Beneficios virtuales separados del saldo principal.</p>
         </article>
     </section>
 
