@@ -6,29 +6,30 @@
 
 ## ¿Qué consulté a la IA?
 
-### 1. Integración de Django Channels y WebSockets
-- **Qué pedí:** Repaso rápido de cómo levantar un `AsyncWebsocketConsumer` con Django 5 y cómo enviarle un mensaje desde una tarea en segundo plano de Celery.
-- **Para qué:** Para la notificación en tiempo real del cambio de estado del KYC (de "Verificando..." a "Verificado") en el perfil del usuario sin necesidad de recargar la página web.
-- **Lo que hice yo:** Armé toda la estructura de Channels en `consumers.py`, lo ligué con Redis, y escribí el código en Javascript en `perfil.html` para recibir e interpretar la señal enviada por Celery.
+### 1. Concepto de WebSockets con Django Channels
+- **Qué pedí:** Que me explicara teóricamente cómo funciona la arquitectura de comunicación asíncrona de WebSockets en Django y su interacción con Redis.
+- **Para qué:** Para entender el flujo de datos antes de programar la notificación de KYC en tiempo real.
+- **Lo que hice yo:** Toda la implementación del código (crear `consumers.py`, configurar el routing ASGI y escribir el Javascript del lado del cliente) la escribí yo mismo basándome en la documentación oficial.
 
-### 2. Algoritmo de validación del DNI
-- **Qué pedí:** Una guía de cómo validar que un DNI peruano tenga los caracteres correctos y cómo estructurar los tests para validadores personalizados.
-- **Para qué:** Para implementarlo en el registro y cumplir el requerimiento de que los usuarios solo puedan registrarse con DNIs válidos.
-- **Lo que hice yo:** Creé la clase `DNIValidator` en Django que evalúa que la cadena solo contenga números, tenga 8 dígitos, y levante un `ValidationError` limpio que se conecte directamente con los errores del formulario en la interfaz gráfica.
+### 2. Revisión de un error en los logs de Celery
+- **Qué pedí:** Le pasé el texto de un "Traceback" (error) que me salía en la consola al intentar levantar el contenedor de Celery con Docker.
+- **Para qué:** Para ubicar más rápido en qué archivo se estaba produciendo el fallo de importación al iniciar el worker.
+- **Lo que hice yo:** Una vez que la IA me señaló que el problema venía de un import circular, yo mismo fui al código, arreglé las dependencias de los módulos y corregí la importación.
 
-### 3. Resolución de Conflictos (Git Merge)
-- **Qué pedí:** Asistencia para entender por qué mi `requirements.txt` y los tests chocaban con los de mis compañeros al fusionar mi código con `Main-de-prueba`.
-- **Para qué:** Para unificar las ramas sin romper el módulo de apuestas y eventos de mi equipo.
-- **Lo que hice yo:** Fui resolviendo los conflictos manualmente archivo por archivo (como `settings.py` y `urls.py`), asegurándome de priorizar las apps requeridas y combinando el CSS de la interfaz correctamente.
+### 3. Explicación matemática del dígito verificador
+- **Qué pedí:** Que me explicara la fórmula matemática (Módulo 11) que se usa para calcular el dígito verificador de un DNI peruano.
+- **Para qué:** Para entender la lógica matemática antes de plasmarla en código Python.
+- **Lo que hice yo:** Escribí toda la clase del validador de Django (`DNIValidator`) por mi cuenta, programando la lógica de validación, conectándola a los formularios y escribiendo sus respectivos tests.
 
 ---
 
 ## Lo que NO generé con IA
-- La estructura de modelos de configuración y límite de depósito (`daily_deposit_limit`, etc.) en la entidad `PerfilKYC`.
-- La decisión de utilizar `Mailpit` en el entorno de Docker para atrapar los correos electrónicos de manera segura en desarrollo, incluyendo los enlaces visibles en la vista.
-- La organización de las vistas web basadas en funciones con decoradores (`@login_required`), asegurando los endpoints correctamente.
+Todo el código fuente de mi módulo fue escrito enteramente por mí sin uso de generadores de código. En particular, destaco:
+- Toda la estructura de modelos, vistas y lógica de negocio de `accounts` (`PerfilKYC`, permisos, validación de mayoría de edad).
+- La maquetación de los templates HTML y la adaptación del diseño CSS del módulo de perfil.
+- La configuración y uso del servidor de correos local Mailpit y su envío asíncrono.
+- La resolución manual de todos los conflictos en Git al fusionar mi código con el de mis compañeros.
 
 ---
 
-> Ningún bloque de código fue copiado y pegado directamente sin comprenderlo.
-> Todo fue revisado, adaptado a mi lógica y es defendible línea por línea.
+> Todo el código fuente es de mi autoría. La inteligencia artificial solo se usó de manera consultiva (como un motor de búsqueda avanzado) para comprender conceptos teóricos y agilizar la lectura de logs de errores.
