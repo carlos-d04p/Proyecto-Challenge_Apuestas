@@ -48,7 +48,30 @@ class Bet(models.Model):
             return self.total_odds
         current_odds = Decimal("1.0000")
         for sel in self.selections.all():
-            current_odds *= sel.selection.odds
+            selection = sel.selection
+            market = selection.market
+            event = market.event
+            name = selection.name.lower()
+            
+            # Evaluación in-play: si está matemáticamente perdida, la cuota cae a 0.
+            if market.kind == "OU":
+                try:
+                    # Extraer el límite, ej. "Menos de 2.5" -> 2.5
+                    limit_str = [word for word in name.split() if word.replace(".","").isdigit()][0]
+                    limit = float(limit_str)
+                    total_score = event.home_score + event.away_score
+                    
+                    if "menos" in name or "under" in name:
+                        if total_score > limit:
+                            return Decimal("0.0000")
+                except:
+                    pass
+            elif market.kind == "BTTS":
+                if ("no" in name) and (event.home_score > 0 and event.away_score > 0):
+                    return Decimal("0.0000")
+                    
+            current_odds *= selection.odds
+            
         return current_odds
 
     @property

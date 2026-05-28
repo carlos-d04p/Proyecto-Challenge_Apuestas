@@ -105,6 +105,12 @@
 
         {% if bet.status == 'PLACED' %}
         <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed var(--border);">
+            {% if bet.current_cashout_value == 0 %}
+                <button type="button" class="filter-btn" disabled
+                    style="width: 100%; border-radius: 8px; font-weight: 600; background: #334155; border-color: #334155; color: #94a3b8; cursor: not-allowed;">
+                    ❌ Perdida matemáticamente (Sin Cash-Out)
+                </button>
+            {% else %}
             <form method="POST" action="{% url 'betting:ejecutar_cashout' bet.id %}">
                 {% csrf_token %}
                 <input type="hidden" name="current_odds" id="cashout-odds-{{ bet.id }}" value="{{ bet.current_odds|stringformat:'f' }}">
@@ -113,6 +119,7 @@
                     💰 Solicitar Cash-Out (<span id="cashout-val-{{ bet.id }}">{{ bet.current_cashout_value|floatformat:'2u' }}</span> Fichas)
                 </button>
             </form>
+            {% endif %}
         </div>
         {% endif %}
     </div>
@@ -158,6 +165,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const betId = el.getAttribute('data-bet-id');
                 recalculateCashout(betId);
             });
+        } else if (data.type === 'event_message' || data.type === 'GOAL' || data.action === 'GOAL') {
+            // Un evento crítico como un gol ocurrió.
+            // Lo más seguro es recargar la vista para traer las evaluaciones matemáticas del backend.
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000); // Pequeño delay para dejar que la animación del gol termine si la hubiera
         }
     };
 
