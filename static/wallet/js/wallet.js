@@ -15,6 +15,8 @@
     const depositPanel = app.querySelector("[data-deposit-panel]");
     const openWithdrawButton = app.querySelector("[data-open-withdraw]");
     const withdrawPanel = app.querySelector("[data-withdraw-panel]");
+    const promoForm = app.querySelector("[data-promo-form]");
+    const promoState = app.querySelector("[data-promo-state]");
 
     function getCookie(name) {
         const value = `; ${document.cookie}`;
@@ -30,6 +32,14 @@
         messageNode.classList.remove("is-success", "is-error");
         if (type) {
             messageNode.classList.add(`is-${type}`);
+        }
+    }
+
+    function setPromoState(text, type) {
+        promoState.textContent = text;
+        promoState.classList.remove("is-success", "is-error", "is-warning");
+        if (type) {
+            promoState.classList.add(`is-${type}`);
         }
     }
 
@@ -195,6 +205,44 @@
         return parseResponse(response);
     }
 
+    async function submitPromoCode(code) {
+        const endpoint = promoForm.dataset.promoEndpoint;
+        if (!endpoint) {
+            setPromoState("Bono no disponible. La validacion de codigos aun no esta habilitada.", "warning");
+            return;
+        }
+
+        const response = await fetch(endpoint, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+                "Idempotency-Key": crypto.randomUUID(),
+            },
+            body: JSON.stringify({ code }),
+        });
+        const data = await parseResponse(response);
+        const status = data.status || "applied";
+
+        if (status === "applied") {
+            setPromoState("Codigo aplicado. El bono se reflejara cuando el backend confirme la operacion.", "success");
+            await refreshBalance();
+            return;
+        }
+        if (status === "already_used") {
+            setPromoState("Bono ya usado para esta cuenta.", "warning");
+            return;
+        }
+        if (status === "not_available") {
+            setPromoState("Bono no disponible para esta cuenta.", "warning");
+            return;
+        }
+
+        setPromoState("Codigo invalido.", "error");
+    }
+
     forms.forEach((form) => {
         form.addEventListener("submit", async (event) => {
             event.preventDefault();
@@ -224,6 +272,29 @@
             }
         });
     });
+
+    if (promoForm && promoState) {
+        promoForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const button = promoForm.querySelector("button");
+            const input = promoForm.querySelector("input[name='promo_code']");
+            const code = input.value.trim().toUpperCase();
+
+            if (!code || !/^[A-Z0-9_-]{3,32}$/.test(code)) {
+                setPromoState("Codigo invalido. Usa letras, numeros, guion o guion bajo.", "error");
+                return;
+            }
+
+            try {
+                button.disabled = true;
+                await submitPromoCode(code);
+            } catch (error) {
+                setPromoState(error.message, "error");
+            } finally {
+                button.disabled = false;
+            }
+        });
+    }
 
     if (openDepositButton && depositPanel) {
         openDepositButton.addEventListener("click", () => {

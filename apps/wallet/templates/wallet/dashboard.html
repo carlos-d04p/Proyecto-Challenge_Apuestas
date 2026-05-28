@@ -44,6 +44,37 @@
         </article>
     </section>
 
+    <section class="wallet-promo" aria-labelledby="wallet-promo-title">
+        <div class="wallet-promo-main">
+            <div>
+                <p class="wallet-kicker">Bonos</p>
+                <h2 id="wallet-promo-title">Codigo promocional</h2>
+                <p class="wallet-muted">Ingresa un codigo para validar bonos educativos cuando el servicio este disponible.</p>
+            </div>
+            <form class="wallet-promo-form" data-promo-form novalidate>
+                <label for="promo-code">Codigo</label>
+                <div class="wallet-promo-controls">
+                    <input id="promo-code" name="promo_code" type="text" autocomplete="off" placeholder="BIENVENIDA" maxlength="32">
+                    <button class="wallet-button wallet-button-primary" type="submit">Aplicar codigo</button>
+                </div>
+                <p class="wallet-promo-state" data-promo-state>Listo para validar codigos promocionales.</p>
+            </form>
+        </div>
+
+        <div class="wallet-welcome-bonus" aria-label="Ejemplo de bono de bienvenida">
+            <span class="wallet-label">Bono de bienvenida</span>
+            <strong>BIENVENIDA</strong>
+            <p class="wallet-muted">Ejemplo visual preparado para bonos virtuales. No acredita fichas desde el navegador.</p>
+        </div>
+
+        <div class="wallet-promo-statuses" aria-label="Estados de codigo promocional">
+            <span class="wallet-status-chip wallet-status-chip-success">Codigo aplicado</span>
+            <span class="wallet-status-chip wallet-status-chip-error">Codigo invalido</span>
+            <span class="wallet-status-chip wallet-status-chip-warning">Bono ya usado</span>
+            <span class="wallet-status-chip">Bono no disponible</span>
+        </div>
+    </section>
+
     <section class="wallet-actions" aria-label="Operaciones del wallet">
         <div class="wallet-section-title">
             <div>
