@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
+from django.db import IntegrityError, DataError
 from apps.betting.models import Bet
 from apps.betting.services import place_simple_bet, cash_out_bet
 
@@ -36,6 +37,11 @@ def colocar_apuesta(request):
         messages.success(request, "¡Apuesta colocada con éxito!")
     except (ValidationError, ValueError) as e:
         messages.error(request, f"Error al procesar la apuesta: {getattr(e, 'message', str(e))}")
+    except IntegrityError:
+        messages.info(request, "Esta apuesta ya fue procesada anteriormente (doble clic detectado).")
+    except DataError as e:
+        messages.error(request, f"Error de datos: {e}")
+
     
     # Redirige de vuelta al detalle del evento o al historial
     return redirect(request.META.get("HTTP_REFERER", "markets:event_list"))

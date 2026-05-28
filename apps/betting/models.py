@@ -30,7 +30,7 @@ class Bet(models.Model):
     status = models.CharField(max_length=15, choices=Status.choices, default=Status.PENDING)
     bet_type = models.CharField(max_length=10, choices=Type.choices, default=Type.SINGLE)
 
-    idempotency_key = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    idempotency_key = models.CharField(max_length=255, unique=True, null=True, blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
