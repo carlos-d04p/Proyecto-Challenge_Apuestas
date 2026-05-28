@@ -1,0 +1,137 @@
+{% extends "base_admin.html" %}
+{% block title %}{{ target.username }} · Ops{% endblock %}
+{% block topbar_title %}Cliente · {{ target.username }}{% endblock %}
+
+{% block crumbs %}
+  <div class="crumbs">
+    <a href="{% url 'backoffice:dashboard' %}">Dashboard</a>
+    <span class="sep">›</span>
+    <span>Clientes</span>
+    <span class="sep">›</span>
+    <span style="color:var(--text);">{{ target.username }}</span>
+  </div>
+{% endblock %}
+
+{% block content %}
+<style>
+  .stats4 {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .85rem; margin-bottom: 1.4rem;
+  }
+  .stat {
+    background: linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-elevated) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.1rem 1.1rem;
+    transition: transform .2s, border-color .2s, box-shadow .2s;
+  }
+  .stat:hover { transform: translateY(-2px); border-color: var(--border-strong); box-shadow: var(--shadow-2); }
+  .stat-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: .55rem; }
+  .stat-label { font-size: .68rem; font-weight: 600; color: var(--text-mute); letter-spacing: .06em; text-transform: uppercase; }
+  .stat-icon { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 7px; font-size: .95rem;
+               background: var(--bg-hover); border: 1px solid var(--border); }
+  .stat-value { font-family: var(--font-mono); font-size: 1.6rem; font-weight: 600; line-height: 1; letter-spacing: -.02em; color: var(--text); }
+  .stat.bal .stat-icon { color: var(--accent); background: rgba(16,185,129,.08); border-color: rgba(16,185,129,.18); }
+  .stat.bal .stat-value { color: var(--accent-soft); }
+  .stat.bets .stat-icon { color: var(--info); background: rgba(59,130,246,.08); border-color: rgba(59,130,246,.18); }
+  .stat.mov .stat-icon { color: var(--violet); background: rgba(168,85,247,.08); border-color: rgba(168,85,247,.18); }
+  .stat.kyc.ok  .stat-icon { color: var(--accent); background: rgba(16,185,129,.08); border-color: rgba(16,185,129,.18); }
+  .stat.kyc.pen .stat-icon { color: var(--warn); background: rgba(245,158,11,.08); border-color: rgba(245,158,11,.18); }
+  .stat.kyc .stat-value { font-size: 1rem; font-family: var(--font-display); font-weight: 600; }
+  .stat.kyc.ok  .stat-value { color: var(--accent-soft); }
+  .stat.kyc.pen .stat-value { color: var(--warn); }
+
+  /* tables (same as dashboard) */
+  table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+  thead th { color: var(--text-mute); font-weight: 600; font-size: .65rem; letter-spacing: .12em; text-transform: uppercase;
+             text-align: left; padding: .5rem .65rem; border-bottom: 1px solid var(--border); }
+  tbody td { padding: .65rem; border-bottom: 1px solid var(--border-soft); color: var(--text); }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: var(--bg-hover); }
+  td.num, td.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+  .pill { display: inline-flex; align-items: center; gap: .35rem; padding: 2px 8px; font-size: .68rem; font-weight: 600;
+          border-radius: 4px; border: 1px solid transparent; }
+  .pill::before { content: ""; width: 5px; height: 5px; border-radius: 999px; background: currentColor; }
+  .pill.DEPOSIT, .pill.PLACED, .pill.WON   { color: var(--accent-soft); background: rgba(16,185,129,.08); border-color: rgba(16,185,129,.2); }
+  .pill.WITHDRAWAL                          { color: var(--warn);        background: rgba(245,158,11,.08); border-color: rgba(245,158,11,.2); }
+  .pill.PENDING                             { color: var(--info);        background: rgba(59,130,246,.08); border-color: rgba(59,130,246,.2); }
+  .pill.CASHOUT, .pill.BET_PAYOUT, .pill.SETTLED { color: var(--violet); background: rgba(168,85,247,.08); border-color: rgba(168,85,247,.2); }
+  .pill.LOST                                { color: var(--danger);      background: rgba(239,68,68,.08); border-color: rgba(239,68,68,.2); }
+
+  .neg { color: var(--danger); font-weight: 600; }
+  .pos { color: var(--accent-soft); font-weight: 600; }
+
+  .panel + .panel { margin-top: 1.1rem; }
+
+  .empty { text-align: center; padding: 1.5rem .5rem; color: var(--text-mute); font-size: .82rem; }
+</style>
+
+<h1 class="page-title">
+  {{ target.username }}
+  <span class="uid">uid {{ target.id }}</span>
+</h1>
+
+<div class="stats4">
+  <div class="stat bal">
+    <div class="stat-head"><span class="stat-label">Saldo actual</span><span class="stat-icon">◈</span></div>
+    <div class="stat-value">{{ balance }}</div>
+  </div>
+  <div class="stat bets">
+    <div class="stat-head"><span class="stat-label">Apuestas totales</span><span class="stat-icon">⊟</span></div>
+    <div class="stat-value">{{ bets.count }}</div>
+  </div>
+  <div class="stat mov">
+    <div class="stat-head"><span class="stat-label">Movimientos</span><span class="stat-icon">⇅</span></div>
+    <div class="stat-value">{{ transactions|length }}</div>
+  </div>
+  <div class="stat kyc {% if target.is_email_verified %}ok{% else %}pen{% endif %}">
+    <div class="stat-head"><span class="stat-label">KYC</span><span class="stat-icon">{% if target.is_email_verified %}✓{% else %}⏳{% endif %}</span></div>
+    <div class="stat-value">{% if target.is_email_verified %}Verificado{% else %}Pendiente{% endif %}</div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-h">
+    <h2>Apuestas del cliente</h2>
+    <span class="h-meta">últimas 100</span>
+  </div>
+  <table>
+    <thead><tr><th>Fecha</th><th>Stake</th><th>Cuota</th><th>Tipo</th><th>Estado</th></tr></thead>
+    <tbody>
+      {% for b in bets %}
+        <tr>
+          <td class="mono" style="color:var(--text-soft)">{{ b.created_at|date:"d/m/Y H:i:s" }}</td>
+          <td class="num">{{ b.stake|floatformat:'4u' }}</td>
+          <td class="num">{{ b.total_odds|floatformat:'4u' }}</td>
+          <td class="mono" style="color:var(--text-soft)">{{ b.bet_type }}</td>
+          <td><span class="pill {{ b.status }}">{{ b.status }}</span></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5" class="empty">Sin apuestas</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="panel">
+  <div class="panel-h">
+    <h2>Movimientos de billetera</h2>
+    <span class="h-meta">últimos 100</span>
+  </div>
+  <table>
+    <thead><tr><th>Fecha</th><th>Tipo</th><th>Monto</th></tr></thead>
+    <tbody>
+      {% for t in transactions %}
+        <tr>
+          <td class="mono" style="color:var(--text-soft)">{{ t.created_at|slice:":19" }}</td>
+          <td><span class="pill {{ t.kind }}">{{ t.kind }}</span></td>
+          <td class="num {% if t.amount|slice:'0:1' == '-' %}neg{% else %}pos{% endif %}">{{ t.amount }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="3" class="empty">Sin movimientos</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

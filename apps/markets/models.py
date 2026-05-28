@@ -33,6 +33,13 @@ class Event(models.Model):
         default=Status.SCHEDULED,
     )
     suspended_until = models.DateTimeField(null=True, blank=True)
+
+    # Marcador en vivo (in-play state).
+    home_score = models.PositiveSmallIntegerField(default=0)
+    away_score = models.PositiveSmallIntegerField(default=0)
+    # Momento real en que el partido pasó a LIVE (puede diferir de starts_at).
+    live_started_at = models.DateTimeField(null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -17,6 +17,8 @@ urlpatterns = [
     path('backoffice/', include('apps.backoffice.urls', namespace='backoffice')),
     path('wallet/', WalletPageView.as_view(), name='wallet-dashboard'),
     path('api/wallet/', include('apps.wallet.urls')),
+    # Modulo Payments (fachada de depositos/retiros simulados)
+    path('payments/', include('apps.payments.urls', namespace='payments')),
     path('', RedirectView.as_view(url='/eventos/', permanent=False), name='home'),
     # Catalogo de eventos (HTML + API)
     path('eventos/', include('apps.markets.urls', namespace='markets')),

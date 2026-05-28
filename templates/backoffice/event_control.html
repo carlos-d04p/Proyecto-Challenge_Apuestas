@@ -1,6 +1,18 @@
-{% extends "base.html" %}
+{% extends "base_admin.html" %}
 {% load l10n %}
-{% block title %}Control de Evento — {{ event.name }} — FairBet Lab{% endblock %}
+{% block title %}Control · {{ event.name }} — Ops{% endblock %}
+
+{% block crumbs %}
+  <div class="ops-crumbs">
+    <a href="{% url 'backoffice:dashboard' %}">DASHBOARD</a>
+    <span class="sep">/</span>
+    EVENTOS
+    <span class="sep">/</span>
+    <span style="color:var(--ops-accent);">{{ event.name }}</span>
+    <span class="sep">·</span>
+    <span style="color:var(--ops-warn);">{{ event.get_status_display }}</span>
+  </div>
+{% endblock %}
 
 {% block content %}
 
@@ -101,11 +113,18 @@
 {% endif %}
 
 <!-- ═══ Header del evento ═══ -->
-<div class="bo-header">
-  <h1>🎛️ Panel de Control: {{ event.name }}</h1>
-  <p class="bo-meta">
-    {{ event.sport }} · 🕐 {{ event.starts_at|date:"d/m/Y H:i" }} · ID: <code>{{ event.id }}</code>
-  </p>
+<div class="bo-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+  <div>
+    <h1>🎛️ Panel de Control: {{ event.name }}</h1>
+    <p class="bo-meta">
+      {{ event.sport }} · 🕐 {{ event.starts_at|date:"d/m/Y H:i" }} · ID: <code>{{ event.id }}</code>
+    </p>
+  </div>
+  {% if event.status != 'FINISHED' and event.status != 'CANCELLED' %}
+  <a href="{% url 'backoffice:event_settle' event.id %}" class="bo-btn danger" style="text-decoration: none; padding: 0.75rem 1.5rem; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem; border: 1px solid #ef4444; background: rgba(239,68,68,0.1); color: #ef4444;">
+    🏁 Cerrar y Liquidar Apuestas
+  </a>
+  {% endif %}
 </div>
 
 <!-- ═══ Barra de estado y transiciones ═══ -->
@@ -136,6 +155,37 @@
   </div>
   {% else %}
   <span style="color: var(--text-soft); font-style: italic;">Estado terminal — sin transiciones disponibles</span>
+  {% endif %}
+
+  {% if event.status == 'LIVE' %}
+  <hr style="margin: 1rem 0; border-color: #334155;">
+  <h3 style="margin: 0 0 .5rem;">⚡ Evento crítico (suspensión temporal)</h3>
+  <p style="font-size:.85rem; color: var(--text-soft); margin: 0 0 .6rem;">
+    Suspende todos los mercados activos del partido por N segundos.
+    El frontend recibirá MARKET_SUSPEND y bloqueará la UI. Celery emitirá
+    MARKET_REOPEN al expirar la ventana y los mercados volverán a estar activos.
+  </p>
+  <form method="post" class="bo-actions" style="gap:.6rem; align-items:center;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="critical_event">
+    <select name="reason" class="bo-btn" style="padding:.45rem .7rem;">
+      {% for value, label in critical_event_kinds.items %}
+        <option value="{{ value }}">{{ label }}</option>
+      {% endfor %}
+    </select>
+    <input type="number" name="seconds" value="{{ default_suspension_seconds }}"
+           min="5" max="300" style="width:80px; padding:.45rem; border-radius:6px; border:1px solid #475569; background:#0f172a; color:#e2e8f0;">
+    <span style="color: var(--text-soft); font-size:.85rem;">segundos</span>
+    <button type="submit" class="bo-btn warning"
+            onclick="return confirm('¿Disparar suspensión temporal de mercados?')">
+      🚨 Disparar
+    </button>
+    {% if event.suspended_until %}
+      <span style="color:#fcd34d; font-size:.85rem;">
+        Suspensión activa hasta {{ event.suspended_until|date:"H:i:s" }}
+      </span>
+    {% endif %}
+  </form>
   {% endif %}
 </div>
 

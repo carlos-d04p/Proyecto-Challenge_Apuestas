@@ -163,6 +163,25 @@ CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = True
+
+# Beat schedule — reloj del partido (auto SCHEDULED->LIVE->FINISHED)
+CELERY_BEAT_SCHEDULE = {
+    'auto-transition-events': {
+        'task': 'apps.markets.tasks.auto_transition_events',
+        'schedule': 15.0,  # cada 15 segundos
+    },
+    'simulate-match-progress': {
+        'task': 'apps.markets.tasks.simulate_match_progress',
+        'schedule': float(os.environ.get('MATCH_TICK_SECONDS', '5')),
+    },
+}
+
+# Cuántos minutos después de iniciar un evento se considera "terminado".
+EVENT_AUTO_FINISH_AFTER_MINUTES = int(
+    os.environ.get('EVENT_AUTO_FINISH_AFTER_MINUTES', '110')
+)
 
 # Caches configuration (Redis)
 CACHES = {

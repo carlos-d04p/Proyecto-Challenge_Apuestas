@@ -1,0 +1,134 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Cerrar Evento: {{ event.name }} - OPS Console{% endblock %}
+
+{% block content %}
+<div class="row" style="margin-bottom: 2rem;">
+  <div class="col-12">
+    <h2 style="margin-top: 0; display: flex; align-items: center; gap: 1rem;">
+      <span style="font-weight: 300; color: var(--text-mute);">Cerrar Evento:</span> 
+      <span style="color: #0ea5e9;">{{ event.name }}</span>
+    </h2>
+  </div>
+</div>
+
+{% if messages %}
+  <div class="row">
+    <div class="col-12">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}" style="margin-bottom: 1.5rem; padding: 1rem; border-radius: 8px; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid #ef4444;">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
+
+<form method="POST" action="{% url 'backoffice:event_settle' event.id %}">
+  {% csrf_token %}
+  <div class="row">
+    
+    <!-- LEFT COLUMN -->
+    <div class="col-8">
+      
+      <!-- RESUMEN DEL PARTIDO -->
+      <div class="panel" style="margin-bottom: 1.5rem;">
+        <h4 style="margin-top: 0; color: var(--text-soft); font-size: 0.85rem; letter-spacing: 1px; border-bottom: 1px solid #2d3748; padding-bottom: 0.75rem; text-transform: uppercase;">Resumen del Partido</h4>
+        
+        <div style="display: flex; gap: 2rem; margin-top: 1rem; margin-bottom: 2rem;">
+          <div>
+            <div style="font-size: 0.75rem; color: var(--text-mute); text-transform: uppercase;">Fecha / Hora Inicio</div>
+            <div style="font-size: 0.95rem; font-weight: 600;">{{ event.starts_at|date:"d M Y - H:i T" }}</div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; color: var(--text-mute); text-transform: uppercase;">Deporte</div>
+            <div style="font-size: 0.95rem; font-weight: 600;">{{ event.get_sport_display }}</div>
+          </div>
+        </div>
+
+        <!-- SCOREBOARD INPUTS -->
+        <div style="background: #151a23; border-radius: 12px; padding: 2rem; display: flex; justify-content: center; align-items: center; gap: 3rem;">
+          <div style="text-align: center;">
+            <div style="font-size: 0.85rem; color: var(--text-mute); letter-spacing: 1px; margin-bottom: 0.75rem; text-transform: uppercase;">Local</div>
+            <input type="number" name="home_score" min="0" value="{{ event.home_score }}" required 
+                   style="width: 100px; height: 80px; font-size: 3rem; text-align: center; font-weight: bold; background: #fff; color: #000; border: none; border-radius: 8px; outline: none;">
+          </div>
+
+          <div style="font-size: 1.5rem; color: var(--text-mute); font-weight: 300;">VS</div>
+
+          <div style="text-align: center;">
+            <div style="font-size: 0.85rem; color: var(--text-mute); letter-spacing: 1px; margin-bottom: 0.75rem; text-transform: uppercase;">Visitante</div>
+            <input type="number" name="away_score" min="0" value="{{ event.away_score }}" required 
+                   style="width: 100px; height: 80px; font-size: 3rem; text-align: center; font-weight: bold; background: #fff; color: #000; border: none; border-radius: 8px; outline: none;">
+          </div>
+        </div>
+      </div>
+
+      <!-- INFO AUTOMATIZACION -->
+      <div class="panel" style="border-left: 4px solid #0ea5e9;">
+        <h4 style="margin-top: 0; color: var(--text-soft); font-size: 0.85rem; letter-spacing: 1px; border-bottom: 1px solid #2d3748; padding-bottom: 0.75rem; text-transform: uppercase;">🤖 Liquidación Automatizada</h4>
+        <p style="color: var(--text-mute); font-size: 0.95rem; margin-bottom: 0;">
+          El sistema determinará automáticamente los ganadores de todos los mercados activos (1X2, Más/Menos, etc.) basándose en el marcador final que ingreses arriba. Las billeteras de los clientes se actualizarán instantáneamente.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="col-4">
+      
+      <!-- MERCADOS ACTIVOS -->
+      <div class="panel" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2d3748; padding-bottom: 0.75rem; margin-bottom: 1rem;">
+          <h4 style="margin: 0; color: var(--text-soft); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;">Mercados Activos</h4>
+          <span style="font-size: 0.75rem; color: #0ea5e9; font-weight: 600;">LIQUIDACIÓN AUTO</span>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          {% for market in event.markets.all %}
+            {% if market.is_active %}
+            <div style="background: #151a23; padding: 1rem; border-radius: 8px; border: 1px solid #2d3748; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-weight: 600; font-size: 0.95rem;">{{ market.name }}</div>
+                <div style="font-size: 0.75rem; color: var(--text-mute); text-transform: uppercase; margin-top: 0.25rem;">{{ market.get_kind_display }}</div>
+              </div>
+              <span style="font-size: 0.75rem; color: var(--text-mute); background: #1e2532; padding: 0.25rem 0.5rem; border-radius: 4px;">PENDIENTE</span>
+            </div>
+            {% endif %}
+          {% empty %}
+            <div style="color: var(--text-mute); font-size: 0.9rem;">No hay mercados activos para liquidar.</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- ZONA DE CIERRE -->
+      <div class="panel" style="border: 1px solid rgba(239, 68, 68, 0.3); position: relative; overflow: hidden;">
+        <!-- Slight red glow background -->
+        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at top right, rgba(239, 68, 68, 0.05), transparent 70%); pointer-events: none;"></div>
+        
+        <h4 style="margin-top: 0; color: #ef4444; font-size: 0.85rem; letter-spacing: 1px; border-bottom: 1px solid rgba(239, 68, 68, 0.2); padding-bottom: 0.75rem; text-transform: uppercase; display: flex; align-items: center; gap: 0.5rem;">
+          <span>⚠️</span> Zona de Cierre
+        </h4>
+        
+        <label style="display: flex; gap: 1rem; margin: 1.5rem 0; cursor: pointer;">
+          <input type="checkbox" name="confirm" required style="margin-top: 0.25rem; width: 1.25rem; height: 1.25rem; accent-color: #ef4444;">
+          <span style="color: var(--text-soft); font-size: 0.9rem; line-height: 1.5;">
+            Confirmo que el resultado final es correcto y asumo la responsabilidad de liquidar los mercados. Esta acción no se puede deshacer fácilmente.
+          </span>
+        </label>
+
+        <button type="submit" class="btn" style="width: 100%; padding: 1rem; background: transparent; border: 1px solid #ef4444; color: #ef4444; font-weight: bold; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s;"
+                onmouseover="this.style.background='#ef4444'; this.style.color='#fff';"
+                onmouseout="this.style.background='transparent'; this.style.color='#ef4444';">
+          Finalizar Evento
+        </button>
+        <div style="text-align: center; font-size: 0.7rem; color: var(--text-mute); margin-top: 0.75rem;">
+          Solo personal autorizado. Todas las liquidaciones son auditadas.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</form>
+
+{% endblock %}
