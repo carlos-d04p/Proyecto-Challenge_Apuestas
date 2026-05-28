@@ -11,6 +11,8 @@
     const activityNode = app.querySelector("[data-wallet-activity]");
     const refreshButton = app.querySelector("[data-refresh-balance]");
     const forms = app.querySelectorAll("[data-wallet-form]");
+    const openDepositButton = app.querySelector("[data-open-deposit]");
+    const depositPanel = app.querySelector("[data-deposit-panel]");
 
     function getCookie(name) {
         const value = `; ${document.cookie}`;
@@ -47,6 +49,26 @@
             throw new Error("El monto debe ser mayor a cero.");
         }
         return normalized;
+    }
+
+    function validateDepositSimulation(form) {
+        const holder = form.querySelector("input[name='card_holder']").value.trim();
+        const cardNumber = form.querySelector("input[name='card_number']").value.replace(/\D/g, "");
+        const expiration = form.querySelector("input[name='expiration']").value.trim();
+        const cvv = form.querySelector("input[name='cvv']").value.trim();
+
+        if (holder.length < 2) {
+            throw new Error("Ingresa el nombre del titular simulado.");
+        }
+        if (!/^\d{12,19}$/.test(cardNumber)) {
+            throw new Error("Ingresa un numero de tarjeta simulada valido.");
+        }
+        if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiration)) {
+            throw new Error("Ingresa una fecha de expiracion simulada en formato MM/AA.");
+        }
+        if (!/^\d{3,4}$/.test(cvv)) {
+            throw new Error("Ingresa un CVV simulado de 3 o 4 digitos.");
+        }
     }
 
     async function parseResponse(response) {
@@ -102,13 +124,16 @@
 
             try {
                 const amount = validateAmount(input.value);
+                if (kind === "deposit") {
+                    validateDepositSimulation(form);
+                }
                 button.disabled = true;
                 await submitOperation(kind, amount);
                 const balance = await refreshBalance();
                 const label = kind === "deposit" ? "Recarga simulada" : "Retiro simulado";
                 setMessage(`${label} completado. Saldo actualizado: ${balance} fichas.`, "success");
                 addActivity(`${label}: ${amount} fichas virtuales`);
-                input.value = "";
+                form.reset();
             } catch (error) {
                 setMessage(error.message, "error");
             } finally {
@@ -116,6 +141,17 @@
             }
         });
     });
+
+    if (openDepositButton && depositPanel) {
+        openDepositButton.addEventListener("click", () => {
+            depositPanel.hidden = false;
+            openDepositButton.hidden = true;
+            const amountInput = depositPanel.querySelector("input[name='amount']");
+            if (amountInput) {
+                amountInput.focus();
+            }
+        });
+    }
 
     refreshButton.addEventListener("click", async () => {
         try {

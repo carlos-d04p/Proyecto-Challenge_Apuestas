@@ -245,6 +245,21 @@ h2 {
     margin-top: 34px;
 }
 
+.wallet-form-detailed {
+    margin-top: 14px;
+}
+
+.wallet-form-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 120px;
+    gap: 12px;
+}
+
+.wallet-form-row {
+    display: grid;
+    gap: 8px;
+}
+
 .wallet-form label {
     color: var(--muted);
     font-size: 0.92rem;
@@ -294,6 +309,25 @@ h2 {
 
 .wallet-button:hover {
     filter: brightness(1.08);
+}
+
+.wallet-open-button {
+    width: 100%;
+    margin-top: 34px;
+}
+
+.wallet-simulated-panel {
+    margin-top: 16px;
+}
+
+.wallet-simulated-notice {
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid rgba(250, 204, 21, 0.42);
+    border-radius: 8px;
+    background: rgba(250, 204, 21, 0.08);
+    color: #fff5bf;
+    line-height: 1.45;
 }
 
 .wallet-message-panel {
@@ -365,6 +399,10 @@ h2 {
 
     .wallet-summary-primary {
         flex-direction: column;
+    }
+
+    .wallet-form-grid {
+        grid-template-columns: 1fr;
     }
 
     .wallet-balance {
