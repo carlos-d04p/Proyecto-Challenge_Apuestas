@@ -17,6 +17,172 @@
   line-height: 1.5;
 }
 
+.responsible-banner a { color: #fbbf24; text-decoration: underline; }
+
+.responsible-banner--top {
+  margin-bottom: 1.5rem;
+}
+
+/* ── PERFIL GRID ─────────────────────────────────────────────────────────── */
+
+.perfil-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.perfil-panel {
+  background: #111e35;
+  border: 1px solid #1e2f4a;
+  border-radius: 16px;
+  padding: 1.75rem;
+  position: relative;
+}
+
+.panel-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  letter-spacing: -0.01em;
+}
+
+.panel-desc {
+  font-size: 0.82rem;
+  color: #8899b4;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+/* ── INFO GRID ───────────────────────────────────────────────────────────── */
+
+.info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #1e2f4a;
+  font-size: 0.85rem;
+}
+
+.info-label {
+  color: #8899b4;
+  font-size: 0.8rem;
+}
+
+.info-value {
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+/* ── KYC BADGES ──────────────────────────────────────────────────────────── */
+
+.badge-kyc {
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-pending   { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+.badge-verified  { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+.badge-blocked   { background: rgba(244,63,94,0.12);  color: #fb7185; border: 1px solid rgba(244,63,94,0.3); }
+.badge-self_excluded { background: rgba(71,85,105,0.15); color: #94a3b8; border: 1px solid rgba(71,85,105,0.3); }
+
+/* ── KYC NOTICE ──────────────────────────────────────────────────────────── */
+
+.kyc-notice {
+  background: rgba(37,99,235,0.08);
+  border: 1px solid rgba(37,99,235,0.2);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.82rem;
+  color: #93c5fd;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.kyc-notice a { color: #60a5fa; }
+
+/* ── AUTOEXCLUSION ───────────────────────────────────────────────────────── */
+
+.autoexclusion-section {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #1e2f4a;
+}
+
+.autoexclusion-section h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+/* ── BUTTONS ─────────────────────────────────────────────────────────────── */
+
+.btn-secondary {
+  display: inline-block;
+  background: transparent;
+  color: #8899b4;
+  border: 1px solid #1e2f4a;
+  border-radius: 8px;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  transition: all 0.15s;
+  font-family: inherit;
+  margin-top: 1rem;
+}
+
+.btn-secondary:hover { background: #1e2f4a; color: #e2e8f0; }
+
+.btn-danger {
+  background: rgba(244, 63, 94, 0.12);
+  color: #fb7185;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  border-radius: 8px;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  margin-top: 0.5rem;
+}
+
+.btn-danger:hover { background: rgba(244, 63, 94, 0.2); border-color: #f43f5e; }
+
+/* ── ALERTS ──────────────────────────────────────────────────────────────── */
+
+.alert-success {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+/* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .perfil-grid { grid-template-columns: 1fr; }
+}
+
+
 .auth-card {
   background: #111e35;
   border: 1px solid #1e2f4a;
