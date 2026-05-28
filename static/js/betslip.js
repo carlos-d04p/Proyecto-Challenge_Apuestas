@@ -11,11 +11,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        if (betSlipMode === 'COMBINADA') {
-            const existingMarketIndex = betSlip.findIndex(item => item.eventId === eventId && item.marketName === marketName);
-            if (existingMarketIndex > -1) {
-                betSlip.splice(existingMarketIndex, 1);
-            }
+        // Si el usuario agrega opciones del mismo evento, forzamos el modo SIMPLES
+        // ya que no se pueden combinar selecciones del mismo evento.
+        let hasSameEvent = betSlip.some(item => item.eventId === eventId);
+        if (hasSameEvent && betSlipMode === 'COMBINADA') {
+            betSlipMode = 'SIMPLES';
+            localStorage.setItem('fairbet_mode', 'SIMPLES');
+            // Muestra un pequeño toast o dejamos que el cambio visual hable por sí solo
         }
         
         if (betSlip.length >= 10) {
@@ -39,19 +41,18 @@ document.addEventListener('DOMContentLoaded', () => {
     
     window.setBetSlipMode = function(mode) {
         if (mode === 'COMBINADA') {
-            // Validate exclusivity
+            // Validate exclusivity by EVENT
             let conflict = false;
-            let seenMarkets = new Set();
+            let seenEvents = new Set();
             for (let item of betSlip) {
-                let key = item.eventId + '_' + item.marketName;
-                if (seenMarkets.has(key)) {
+                if (seenEvents.has(item.eventId)) {
                     conflict = true;
                     break;
                 }
-                seenMarkets.add(key);
+                seenEvents.add(item.eventId);
             }
             if (conflict) {
-                alert("No puedes cambiar a Combinada porque tienes opciones mutuamente excluyentes (del mismo mercado). Elimínalas primero.");
+                alert("No puedes armar una Combinada con selecciones del mismo evento. Se mantendrán como Simples.");
                 return;
             }
         }
