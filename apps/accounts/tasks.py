@@ -1,5 +1,15 @@
 import time
-from celery import shared_task
+try:
+    from celery import shared_task
+except ModuleNotFoundError:
+    def shared_task(func):
+        func.delay = func
+        func.apply_async = lambda args=None, kwargs=None, **_options: func(
+            *(args or ()),
+            **(kwargs or {}),
+        )
+        return func
+
 from django.utils import timezone
 from django.core.mail import send_mail
 from asgiref.sync import async_to_sync

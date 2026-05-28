@@ -1,6 +1,7 @@
 # Stack Obligatorio
 Django>=5.0,<5.1
 djangorestframework
+djangorestframework-simplejwt
 django-filter
 channels
 celery
