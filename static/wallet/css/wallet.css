@@ -120,6 +120,7 @@ h2 {
 .wallet-account-value {
     font-size: 2rem;
     line-height: 1;
+    white-space: nowrap;
 }
 
 .wallet-account-code {
@@ -151,7 +152,10 @@ h2 {
     font-size: 4.2rem;
     font-weight: 900;
     line-height: 1;
-    overflow-wrap: anywhere;
+    max-width: 100%;
+    white-space: nowrap;
+    word-break: normal;
+    overflow-wrap: normal;
 }
 
 .wallet-muted {
@@ -907,7 +911,7 @@ h2 {
 
 .wallet-balance {
     max-width: 100%;
-    font-size: 3.85rem;
+    font-size: clamp(2.3rem, 5.6vw, 3.85rem);
 }
 
 .wallet-button,

@@ -22,7 +22,7 @@
         <article class="wallet-summary-card wallet-summary-primary">
             <div>
                 <span class="wallet-label">Saldo disponible</span>
-                <div class="wallet-balance" data-wallet-balance>0.0000</div>
+                <div class="wallet-balance" data-wallet-balance>0.00</div>
                 <p class="wallet-loading-state" data-wallet-balance-state>Cargando saldo...</p>
                 <span class="wallet-account-code">Cuenta logica: USER_WALLET</span>
                 <p class="wallet-muted">Fichas educativas listas para usar</p>
@@ -32,14 +32,14 @@
 
         <article class="wallet-summary-card">
             <span class="wallet-label">Fichas en apuestas pendientes</span>
-            <strong class="wallet-account-value" data-wallet-pending>0.0000</strong>
+            <strong class="wallet-account-value" data-wallet-pending>0.00</strong>
             <span class="wallet-account-code">Cuenta logica: PENDING_BETS</span>
             <p class="wallet-muted">Fichas reservadas por jugadas aun no resueltas.</p>
         </article>
 
         <article class="wallet-summary-card">
             <span class="wallet-label">Bonos disponibles</span>
-            <strong class="wallet-account-value" data-wallet-bonus>0.0000</strong>
+            <strong class="wallet-account-value" data-wallet-bonus>0.00</strong>
             <span class="wallet-account-code">Cuenta logica: BONUS</span>
             <p class="wallet-muted">Beneficios virtuales separados del saldo principal.</p>
         </article>
@@ -107,7 +107,7 @@
                     <form class="wallet-form wallet-form-detailed" data-wallet-form="deposit" novalidate>
                         <div class="wallet-form-row">
                             <label for="deposit-amount">Monto en fichas</label>
-                            <input id="deposit-amount" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="10.0000">
+                            <input id="deposit-amount" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="10.00" step="0.01">
                         </div>
                         <div class="wallet-form-row">
                             <label for="deposit-card-holder">Nombre del titular</label>
@@ -150,7 +150,7 @@
                     <form class="wallet-form wallet-form-detailed" data-wallet-form="withdraw" novalidate>
                         <div class="wallet-form-row">
                             <label for="withdraw-amount">Monto a retirar</label>
-                            <input id="withdraw-amount" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="5.0000">
+                            <input id="withdraw-amount" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="5.00" step="0.01">
                         </div>
                         <div class="wallet-form-row">
                             <label for="withdraw-method">Metodo simulado</label>

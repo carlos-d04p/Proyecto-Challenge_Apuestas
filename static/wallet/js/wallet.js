@@ -122,7 +122,7 @@
         welcomeBonusStatus.textContent = state.label;
         welcomeBonusStatus.classList.remove("is-available", "is-applied", "is-used", "is-unavailable");
         welcomeBonusStatus.classList.add(state.className);
-        welcomeBonusAmount.textContent = amount || "0.0000";
+        welcomeBonusAmount.textContent = amount || "0.00";
         welcomeBonusHelp.textContent = state.help;
     }
 
@@ -137,8 +137,9 @@
         return states[status] || states.inactive;
     }
 
-    function formatBonusAmount(value) {
-        const numericValue = Number(value);
+    function formatWalletAmount(value) {
+        const normalizedValue = String(value ?? "0").trim().replace(",", ".");
+        const numericValue = Number(normalizedValue);
         if (!Number.isFinite(numericValue)) {
             return "0.00";
         }
@@ -185,7 +186,7 @@
                     </div>
                     <div class="wallet-bonus-amount">
                         <span>Monto</span>
-                        <b>${escapeHtml(formatBonusAmount(bonus.amount))}</b>
+                        <b>${escapeHtml(formatWalletAmount(bonus.amount))}</b>
                     </div>
                     <p class="wallet-bonus-progress">Liberacion: ${escapeHtml(progress)}</p>
                     <p class="wallet-muted">${escapeHtml(reason)}</p>
@@ -199,13 +200,17 @@
         if (!normalized) {
             throw new Error("Ingresa un monto en fichas.");
         }
-        if (!/^\d+(\.\d{1,4})?$/.test(normalized)) {
-            throw new Error("Ingresa un monto valido con hasta 4 decimales.");
+        if (!/^\d+(\.\d+)?$/.test(normalized)) {
+            throw new Error("Ingresa un monto valido.");
+        }
+        const decimals = normalized.split(".")[1] || "";
+        if (decimals.length > 2) {
+            throw new Error("El monto solo puede tener hasta 2 decimales.");
         }
         if (moneyToUnits(normalized) <= 0n) {
             throw new Error("El monto debe ser mayor a cero.");
         }
-        return normalized;
+        return formatWalletAmount(normalized);
     }
 
     function moneyToUnits(value) {
@@ -286,7 +291,7 @@
     function validateWithdrawSimulation(form, amount) {
         const method = form.querySelector("select[name='withdraw_method']").value;
         const confirmation = form.querySelector("input[name='withdraw_confirmation']").checked;
-        const available = balanceNode.textContent.trim() || "0.0000";
+        const available = balanceNode.textContent.trim() || "0.00";
 
         if (!method) {
             throw new Error("Selecciona un metodo simulado de retiro.");
@@ -321,17 +326,18 @@
                 credentials: "same-origin",
             });
             const data = await parseResponse(response);
-            balanceNode.textContent = data.balance;
+            const visibleBalance = formatWalletAmount(data.balance);
+            balanceNode.textContent = visibleBalance;
             if (data.accounts && pendingNode && bonusNode) {
-                pendingNode.textContent = data.accounts.PENDING_BETS || "0.0000";
-                bonusNode.textContent = data.accounts.BONUS || "0.0000";
+                pendingNode.textContent = formatWalletAmount(data.accounts.PENDING_BETS || "0.00");
+                bonusNode.textContent = formatWalletAmount(data.accounts.BONUS || "0.00");
                 setWelcomeBonusState(
-                    moneyToUnits(data.accounts.BONUS || "0.0000") > 0n ? "available" : "empty",
-                    data.accounts.BONUS || "0.0000",
+                    moneyToUnits(data.accounts.BONUS || "0.00") > 0n ? "available" : "empty",
+                    formatWalletAmount(data.accounts.BONUS || "0.00"),
                 );
             }
             setInlineState(balanceStateNode, "Saldo actualizado.", "success");
-            return data.balance;
+            return visibleBalance;
         } finally {
             refreshButton.disabled = false;
         }
@@ -349,7 +355,7 @@
         });
         const data = await parseResponse(response);
         if (bonusNode) {
-            bonusNode.textContent = data.bonus_balance || bonusNode.textContent || "0.0000";
+            bonusNode.textContent = formatWalletAmount(data.bonus_balance || bonusNode.textContent || "0.00");
         }
         renderBonuses(data.bonuses || []);
     }
@@ -443,7 +449,7 @@
                     <td>${formatDate(movement.date)}</td>
                     <td>${escapeHtml(movement.operation_type)}</td>
                     <td>${escapeHtml(movement.account_label)}</td>
-                    <td class="${amountClass}">${escapeHtml(movement.amount)}</td>
+                    <td class="${amountClass}">${escapeHtml(formatWalletAmount(movement.amount))}</td>
                     <td><span class="wallet-history-status">${escapeHtml(movement.status)}</span></td>
                     <td><code>${escapeHtml(reference)}</code></td>
                 </tr>
@@ -490,7 +496,7 @@
         const endpoint = promoForm.dataset.promoEndpoint || "/api/wallet/bonuses/redeem/";
         if (!endpoint) {
             setPromoState("Bono no disponible. La validacion de codigos aun no esta habilitada.", "warning");
-            setWelcomeBonusState("unavailable", welcomeBonusAmount ? welcomeBonusAmount.textContent : "0.0000");
+            setWelcomeBonusState("unavailable", welcomeBonusAmount ? welcomeBonusAmount.textContent : "0.00");
             return;
         }
 
@@ -510,7 +516,7 @@
 
         if (status === "applied") {
             setPromoState(data.message || "Bono aplicado.", "success");
-            setWelcomeBonusState("applied", data.amount || "0.0000");
+            setWelcomeBonusState("applied", formatWalletAmount(data.amount || "0.00"));
             await refreshBalance();
             await refreshBonuses();
             await refreshHistory();
@@ -518,17 +524,17 @@
         }
         if (status === "already_used") {
             setPromoState("Bono ya usado para esta cuenta.", "warning");
-            setWelcomeBonusState("used", data.amount || "0.0000");
+            setWelcomeBonusState("used", formatWalletAmount(data.amount || "0.00"));
             return;
         }
         if (status === "not_available") {
             setPromoState("Bono no disponible para esta cuenta.", "warning");
-            setWelcomeBonusState("unavailable", "0.0000");
+            setWelcomeBonusState("unavailable", "0.00");
             return;
         }
 
         setPromoState("Codigo invalido.", "error");
-        setWelcomeBonusState("unavailable", welcomeBonusAmount ? welcomeBonusAmount.textContent : "0.0000");
+        setWelcomeBonusState("unavailable", welcomeBonusAmount ? welcomeBonusAmount.textContent : "0.00");
     }
 
     forms.forEach((form) => {
