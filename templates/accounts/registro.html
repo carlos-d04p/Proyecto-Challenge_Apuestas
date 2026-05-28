@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Registro — FairBet Lab{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+
+  <!-- Banner de consumo responsable -->
+  <div class="responsible-banner">
+    ⚠️ <strong>Juego Responsable:</strong> FairBet Lab es un simulador educativo con moneda virtual.
+    Solo para mayores de 18 años. Si tienes problemas con el juego, llama al
+    <strong>0800-00-000</strong> (gratuito, 24h).
+  </div>
+
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>Crear cuenta</h1>
+      <p>Únete a FairBet Lab — Simulador educativo</p>
+    </div>
+
+    {% if errores %}
+      <div class="alert alert-error">
+        <strong>Corrige los siguientes errores:</strong>
+        <ul>
+          {% for campo, msg in errores.items %}
+            <li><em>{{ campo }}:</em> {{ msg }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <form method="POST" action="{% url 'accounts_web:registro' %}" novalidate>
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label for="username">Nombre de usuario</label>
+        <input
+          type="text" id="username" name="username"
+          value="{{ datos.username|default:'' }}"
+          placeholder="Ej: jperez2024"
+          required autocomplete="username"
+          class="{% if errores.username %}input-error{% endif %}"
+        >
+        {% if errores.username %}<span class="field-error">{{ errores.username }}</span>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="email">Correo electrónico <span class="optional">(opcional)</span></label>
+        <input
+          type="email" id="email" name="email"
+          value="{{ datos.email|default:'' }}"
+          placeholder="tucorreo@ejemplo.com"
+          autocomplete="email"
+        >
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="birth_date">Fecha de nacimiento</label>
+          <input
+            type="date" id="birth_date" name="birth_date"
+            value="{{ datos.birth_date|default:'' }}"
+            required
+            class="{% if errores.birth_date %}input-error{% endif %}"
+          >
+          {% if errores.birth_date %}<span class="field-error">{{ errores.birth_date }}</span>{% endif %}
+          <small class="hint">Debes tener al menos 18 años.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="dni">DNI peruano (con dígito verificador)</label>
+          <div style="display: flex; gap: 8px;">
+            <input
+              type="text" id="dni" name="dni"
+              value="{{ datos.dni|default:'' }}"
+              placeholder="12345678"
+              maxlength="8" minlength="8"
+              pattern="[0-9]{8}"
+              required
+              class="{% if errores.dni %}input-error{% endif %}"
+              style="flex: 3;"
+            >
+            <span style="display: flex; align-items: center; font-weight: bold; color: var(--text-muted);">-</span>
+            <input
+              type="text" id="dni_verificador" name="dni_verificador"
+              value="{{ datos.dni_verificador|default:'' }}"
+              placeholder="0"
+              maxlength="1" minlength="1"
+              required
+              class="{% if errores.dni %}input-error{% endif %}"
+              style="flex: 1; text-align: center;"
+            >
+          </div>
+          {% if errores.dni %}<span class="field-error">{{ errores.dni }}</span>{% endif %}
+          <small class="hint">Ej: 12345678 - 0.</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <input
+          type="password" id="password" name="password"
+          placeholder="Mínimo 8 caracteres"
+          minlength="8" required
+          autocomplete="new-password"
+          class="{% if errores.password %}input-error{% endif %}"
+        >
+        {% if errores.password %}<span class="field-error">{{ errores.password }}</span>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="password_confirm">Confirmar contraseña</label>
+        <input
+          type="password" id="password_confirm" name="password_confirm"
+          placeholder="Repite tu contraseña"
+          minlength="8" required
+          autocomplete="new-password"
+          class="{% if errores.password_confirm %}input-error{% endif %}"
+        >
+        {% if errores.password_confirm %}<span class="field-error">{{ errores.password_confirm }}</span>{% endif %}
+      </div>
+
+      <div class="terms-check">
+        <input type="checkbox" id="acepta_terminos" name="acepta_terminos" required>
+        <label for="acepta_terminos">
+          Confirmo que tengo 18 años o más y acepto que esta es una plataforma educativa
+          con moneda virtual — no implica dinero real.
+        </label>
+      </div>
+
+      <button type="submit" id="btn-registro" class="btn-primary btn-full">
+        Crear cuenta
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      ¿Ya tienes cuenta?
+      <a href="{% url 'accounts_web:login' %}">Iniciar sesión</a>
+    </div>
+  </div>
+
+  <div class="legal-note">
+    FairBet Lab — Simulador educativo · DS 005-2023-MINCETUR · Ley 31557<br>
+    Plataforma con moneda virtual. No constituye una casa de apuestas real.
+  </div>
+
+</div>
+{% endblock %}

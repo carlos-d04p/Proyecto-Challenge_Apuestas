@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Billetera - FairBet Lab{% endblock %}
+{% block wallet_nav_class %}active{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'wallet/css/wallet.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="wallet-shell" data-wallet-app>
+    <section class="wallet-header" aria-labelledby="wallet-title">
+        <div>
+            <p class="wallet-kicker">FairBet Lab Wallet</p>
+            <h1 id="wallet-title">Billetera</h1>
+            <p class="wallet-lead">Gestiona tus fichas educativas desde un panel claro y seguro.</p>
+        </div>
+        <p class="wallet-disclaimer">Plataforma educativa con moneda virtual. No constituye una casa de apuestas.</p>
+    </section>
+
+    <section class="wallet-summary" aria-label="Resumen financiero">
+        <article class="wallet-summary-card wallet-summary-primary">
+            <div>
+                <span class="wallet-label">Saldo disponible</span>
+                <div class="wallet-balance" data-wallet-balance>0.00</div>
+                <p class="wallet-loading-state" data-wallet-balance-state>Cargando saldo...</p>
+                <span class="wallet-account-code">Cuenta logica: USER_WALLET</span>
+                <p class="wallet-muted">Fichas educativas listas para usar</p>
+            </div>
+            <button class="wallet-icon-button" type="button" data-refresh-balance aria-label="Actualizar saldo">Actualizar</button>
+        </article>
+
+        <article class="wallet-summary-card wallet-summary-pending">
+            <span class="wallet-label">Fichas en apuestas pendientes</span>
+            <strong class="wallet-account-value" data-wallet-pending>0.00</strong>
+            <span class="wallet-account-code">Cuenta logica: PENDING_BETS</span>
+            <p class="wallet-muted">Fichas reservadas por jugadas aun no resueltas.</p>
+        </article>
+
+        <article class="wallet-summary-card wallet-summary-bonus">
+            <span class="wallet-label">Bonos disponibles</span>
+            <strong class="wallet-account-value" data-wallet-bonus>0.00</strong>
+            <span class="wallet-account-code">Cuenta logica: BONUS</span>
+            <p class="wallet-muted">Beneficios virtuales separados del saldo principal.</p>
+        </article>
+    </section>
+
+    <section class="wallet-promo" aria-labelledby="wallet-promo-title">
+        <div class="wallet-promo-main">
+            <div class="wallet-promo-copy">
+                <p class="wallet-kicker">Bonos</p>
+                <h2 id="wallet-promo-title">Codigo promocional</h2>
+                <p class="wallet-muted">Ingresa un codigo para validar bonos educativos disponibles para tu cuenta.</p>
+            </div>
+            <form class="wallet-promo-form" data-promo-form data-promo-endpoint="/api/wallet/bonuses/redeem/" novalidate>
+                <label for="promo-code">Codigo</label>
+                <div class="wallet-promo-controls">
+                    <input id="promo-code" name="promo_code" type="text" autocomplete="off" placeholder="BIENVENIDA" maxlength="32">
+                    <button class="wallet-button wallet-button-primary" type="submit">Aplicar codigo</button>
+                </div>
+                <p class="wallet-promo-state" data-promo-state>Listo para validar codigos promocionales.</p>
+            </form>
+            <div class="wallet-promo-statuses" aria-label="Estados de bonos promocionales">
+                <span class="wallet-status-chip wallet-status-chip-success">Bono disponible</span>
+                <span class="wallet-status-chip wallet-status-chip-success">Bono aplicado</span>
+                <span class="wallet-status-chip wallet-status-chip-warning">Bono ya utilizado</span>
+                <span class="wallet-status-chip">Bono no disponible</span>
+            </div>
+        </div>
+
+        <div class="wallet-bonus-panel" aria-label="Bonos promocionales">
+            <div class="wallet-bonus-heading">
+                <span class="wallet-label">Bonos promocionales</span>
+                <span class="wallet-bonus-state is-unavailable" data-bonus-list-state>Cargando bonos</span>
+            </div>
+            <p class="wallet-bonus-note">Los bonos son fichas virtuales educativas sin valor monetario real.</p>
+            <div class="wallet-bonus-list" data-bonus-list>
+                <p class="wallet-muted">Cargando bonos disponibles...</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="wallet-actions" aria-label="Operaciones del wallet">
+        <div class="wallet-section-title">
+            <div>
+                <p class="wallet-kicker">Movimientos</p>
+                <h2>Operaciones simuladas</h2>
+            </div>
+            <p class="wallet-muted">Los montos se procesan como fichas virtuales educativas.</p>
+        </div>
+
+        <div class="wallet-actions-grid">
+            <article class="wallet-card wallet-action-card wallet-deposit-card">
+                <div class="wallet-card-header">
+                    <div>
+                        <span class="wallet-label">Recarga simulada</span>
+                        <p class="wallet-card-copy">Aumenta tu saldo educativo para practicar operaciones.</p>
+                    </div>
+                    <span class="wallet-status-dot"></span>
+                </div>
+                <button class="wallet-button wallet-button-primary wallet-open-button" type="button" data-open-deposit>
+                    Recargar fichas
+                </button>
+
+                <div class="wallet-simulated-panel" data-deposit-panel hidden>
+                    <p class="wallet-simulated-notice">Esta recarga es simulada. No se procesa dinero real.</p>
+                    <form class="wallet-form wallet-form-detailed" data-wallet-form="deposit" novalidate>
+                        <div class="wallet-form-row">
+                            <label for="deposit-amount">Monto en fichas</label>
+                            <input id="deposit-amount" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="10.00" step="0.01">
+                        </div>
+                        <div class="wallet-form-row">
+                            <label for="deposit-card-holder">Nombre del titular</label>
+                            <input id="deposit-card-holder" name="card_holder" type="text" autocomplete="off" placeholder="Nombre del titular">
+                        </div>
+                        <div class="wallet-form-row">
+                            <label for="deposit-card-number">Numero de tarjeta simulada</label>
+                            <input id="deposit-card-number" name="card_number" type="text" inputmode="numeric" autocomplete="off" placeholder="4242 4242 4242 4242" maxlength="23">
+                        </div>
+                        <div class="wallet-form-grid">
+                            <div class="wallet-form-row">
+                                <label for="deposit-expiration">Fecha de expiracion</label>
+                                <input id="deposit-expiration" name="expiration" type="text" inputmode="numeric" autocomplete="off" placeholder="MM/AA" maxlength="5">
+                            </div>
+                            <div class="wallet-form-row">
+                                <label for="deposit-cvv">CVV simulado</label>
+                                <input id="deposit-cvv" name="cvv" type="password" inputmode="numeric" autocomplete="off" placeholder="123" maxlength="4" pattern="[0-9]*">
+                            </div>
+                        </div>
+                        <button class="wallet-button wallet-button-primary" type="submit">Confirmar recarga simulada</button>
+                        <p class="wallet-operation-state" data-operation-state>Esperando datos de recarga.</p>
+                    </form>
+                </div>
+            </article>
+
+            <article class="wallet-card wallet-action-card wallet-withdraw-card">
+                <div class="wallet-card-header">
+                    <div>
+                        <span class="wallet-label">Retiro simulado</span>
+                        <p class="wallet-card-copy">Reduce solo fichas del saldo disponible. No aplica a bonos ni fichas pendientes.</p>
+                    </div>
+                    <span class="wallet-status-dot wallet-status-dot-cyan"></span>
+                </div>
+                <button class="wallet-button wallet-button-secondary wallet-open-button" type="button" data-open-withdraw>
+                    Retirar fichas
+                </button>
+
+                <div class="wallet-simulated-panel" data-withdraw-panel hidden>
+                    <p class="wallet-simulated-notice">Este retiro es simulado. Las fichas no tienen valor monetario real.</p>
+                    <form class="wallet-form wallet-form-detailed" data-wallet-form="withdraw" novalidate>
+                        <div class="wallet-form-row">
+                            <label for="withdraw-amount">Monto a retirar</label>
+                            <input id="withdraw-amount" name="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="5.00" step="0.01">
+                        </div>
+                        <div class="wallet-form-row">
+                            <label for="withdraw-method">Metodo simulado</label>
+                            <select id="withdraw-method" name="withdraw_method">
+                                <option value="">Selecciona un metodo</option>
+                                <option value="educational_wallet">Billetera educativa</option>
+                                <option value="internal_record">Registro interno simulado</option>
+                                <option value="practice_account">Cuenta de practica</option>
+                            </select>
+                        </div>
+                        <label class="wallet-check" for="withdraw-confirmation">
+                            <input id="withdraw-confirmation" name="withdraw_confirmation" type="checkbox">
+                            <span>Confirmo que el retiro es simulado y solo usa saldo disponible.</span>
+                        </label>
+                        <button class="wallet-button wallet-button-secondary" type="submit">Confirmar retiro simulado</button>
+                        <p class="wallet-operation-state" data-operation-state>Esperando datos de retiro.</p>
+                    </form>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <section class="wallet-message-panel" aria-live="polite" aria-atomic="true">
+        <div class="wallet-message" data-wallet-message>Listo para operar con moneda virtual educativa.</div>
+    </section>
+
+    <section class="wallet-history" aria-labelledby="wallet-history-title">
+        <div class="wallet-history-header">
+            <div>
+                <p class="wallet-kicker">Ledger</p>
+                <h2 id="wallet-history-title">Historial de movimientos</h2>
+            </div>
+            <span class="wallet-history-note">Ordenado por fecha descendente</span>
+        </div>
+        <div class="wallet-history-filters" aria-label="Filtros de historial">
+            <div class="wallet-filter-group" aria-label="Filtrar por tipo">
+                <button class="wallet-filter-chip is-active" type="button" data-history-type-filter="all">Todos</button>
+                <button class="wallet-filter-chip" type="button" data-history-type-filter="deposit">Recargas</button>
+                <button class="wallet-filter-chip" type="button" data-history-type-filter="withdrawal">Retiros</button>
+                <button class="wallet-filter-chip" type="button" data-history-type-filter="bonus">Bonos</button>
+                <button class="wallet-filter-chip" type="button" data-history-type-filter="internal_transfer">Transferencias internas</button>
+                <button class="wallet-filter-chip" type="button" data-history-type-filter="pending_bets">Apuestas pendientes</button>
+            </div>
+            <div class="wallet-filter-group" aria-label="Filtrar por fecha">
+                <button class="wallet-filter-chip" type="button" data-history-date-filter="7">Ultimos 7 dias</button>
+                <button class="wallet-filter-chip" type="button" data-history-date-filter="30">Ultimos 30 dias</button>
+            </div>
+        </div>
+        <div class="wallet-history-table-wrap">
+            <table class="wallet-history-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Tipo de operacion</th>
+                        <th>Cuenta afectada</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                        <th>Referencia</th>
+                    </tr>
+                </thead>
+                <tbody data-wallet-history>
+                    <tr>
+                        <td colspan="6"><span class="wallet-empty-state">Sin movimientos registrados.</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+<script src="{% static 'wallet/js/wallet.js' %}" defer></script>
+{% endblock %}
