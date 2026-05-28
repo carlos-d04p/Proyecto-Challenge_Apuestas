@@ -8,6 +8,7 @@
     const pendingNode = app.querySelector("[data-wallet-pending]");
     const bonusNode = app.querySelector("[data-wallet-bonus]");
     const messageNode = app.querySelector("[data-wallet-message]");
+    const balanceStateNode = app.querySelector("[data-wallet-balance-state]");
     const historyNode = app.querySelector("[data-wallet-history]");
     const historyTypeButtons = app.querySelectorAll("[data-history-type-filter]");
     const historyDateButtons = app.querySelectorAll("[data-history-date-filter]");
@@ -39,10 +40,41 @@
 
     function setMessage(text, type) {
         messageNode.textContent = text;
-        messageNode.classList.remove("is-success", "is-error");
+        messageNode.classList.remove("is-success", "is-error", "is-loading");
         if (type) {
             messageNode.classList.add(`is-${type}`);
         }
+    }
+
+    function setInlineState(node, text, type) {
+        if (!node) {
+            return;
+        }
+        node.textContent = text;
+        node.classList.remove("is-success", "is-error", "is-loading");
+        if (type) {
+            node.classList.add(`is-${type}`);
+        }
+    }
+
+    function getFriendlyError(error) {
+        const message = String(error && error.message ? error.message : error);
+        if (message.includes("Authentication credentials")) {
+            return "Inicia sesion para operar tu wallet.";
+        }
+        if (message.toLowerCase().includes("saldo") || message.toLowerCase().includes("insufficient")) {
+            return "Saldo disponible insuficiente.";
+        }
+        if (message.toLowerCase().includes("luhn") || message.toLowerCase().includes("tarjeta")) {
+            return "Tarjeta simulada invalida.";
+        }
+        if (message.toLowerCase().includes("codigo") || message.toLowerCase().includes("code")) {
+            return "Codigo promocional invalido.";
+        }
+        if (message.toLowerCase().includes("network") || message.toLowerCase().includes("failed to fetch")) {
+            return "No se pudo conectar con el servidor.";
+        }
+        return message || "No se pudo completar la operacion.";
     }
 
     function setPromoState(text, type) {
@@ -82,7 +114,7 @@
             empty: {
                 label: "Sin bonos activos",
                 className: "is-unavailable",
-                help: "No hay bonos activos para aplicar en este momento.",
+                help: "Sin bonos activos por ahora.",
             },
         };
         const state = states[status] || states.empty;
@@ -235,13 +267,14 @@
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
             const detail = data.detail || data.amount || "No se pudo completar la operacion.";
-            throw new Error(Array.isArray(detail) ? detail.join(" ") : String(detail));
+            throw new Error(getFriendlyError(Array.isArray(detail) ? detail.join(" ") : String(detail)));
         }
         return data;
     }
 
     async function refreshBalance() {
         refreshButton.disabled = true;
+        setInlineState(balanceStateNode, "Cargando saldo...", "loading");
         try {
             const response = await fetch("/api/wallet/balance/", {
                 headers: { "Accept": "application/json" },
@@ -257,6 +290,7 @@
                     data.accounts.BONUS || "0.0000",
                 );
             }
+            setInlineState(balanceStateNode, "Saldo actualizado.", "success");
             return data.balance;
         } finally {
             refreshButton.disabled = false;
@@ -337,7 +371,7 @@
         }
         if (!movements.length) {
             const emptyText = historyMovements.length ? "Sin movimientos para el filtro seleccionado." : "Sin movimientos registrados.";
-            historyNode.innerHTML = `<tr><td colspan="6">${emptyText}</td></tr>`;
+            historyNode.innerHTML = `<tr><td colspan="6"><span class="wallet-empty-state">${emptyText}</span></td></tr>`;
             return;
         }
 
@@ -367,6 +401,7 @@
         if (!historyNode) {
             return;
         }
+        historyNode.innerHTML = '<tr><td colspan="6"><span class="wallet-empty-state">Cargando movimientos...</span></td></tr>';
         const response = await fetch("/api/wallet/history/", {
             headers: { "Accept": "application/json" },
             credentials: "same-origin",
@@ -439,6 +474,8 @@
         form.addEventListener("submit", async (event) => {
             event.preventDefault();
             const button = form.querySelector("button");
+            const defaultButtonText = button.textContent;
+            const operationState = form.querySelector("[data-operation-state]");
             const input = form.querySelector("input[name='amount']");
             const kind = form.dataset.walletForm;
 
@@ -450,17 +487,27 @@
                 if (kind === "withdraw") {
                     validateWithdrawSimulation(form, amount);
                 }
+                const processingText = kind === "deposit" ? "Procesando recarga..." : "Procesando retiro...";
+                const buttonText = kind === "deposit" ? "Procesando recarga" : "Procesando retiro";
+                setInlineState(operationState, processingText, "loading");
+                setMessage(processingText, "loading");
                 button.disabled = true;
+                button.textContent = buttonText;
                 await submitOperation(kind, amount);
                 const balance = await refreshBalance();
                 await refreshHistory();
                 const label = kind === "deposit" ? "Recarga simulada" : "Retiro simulado";
-                setMessage(`${label} completado. Saldo actualizado: ${balance} fichas.`, "success");
+                const successText = `${label} completado. Saldo: ${balance}.`;
+                setMessage(successText, "success");
+                setInlineState(operationState, successText, "success");
                 form.reset();
             } catch (error) {
-                setMessage(error.message, "error");
+                const friendlyError = getFriendlyError(error);
+                setMessage(friendlyError, "error");
+                setInlineState(operationState, friendlyError, "error");
             } finally {
                 button.disabled = false;
+                button.textContent = defaultButtonText;
             }
         });
     });
@@ -473,15 +520,16 @@
             const code = input.value.trim().toUpperCase();
 
             if (!code || !/^[A-Z0-9_-]{3,32}$/.test(code)) {
-                setPromoState("Codigo invalido. Usa letras, numeros, guion o guion bajo.", "error");
+                setPromoState("Codigo promocional invalido.", "error");
                 return;
             }
 
             try {
                 button.disabled = true;
+                setPromoState("Validando codigo...", "warning");
                 await submitPromoCode(code);
             } catch (error) {
-                setPromoState(error.message, "error");
+                setPromoState(getFriendlyError(error), "error");
             } finally {
                 button.disabled = false;
             }
@@ -553,16 +601,20 @@
     refreshButton.addEventListener("click", async () => {
         try {
             const balance = await refreshBalance();
-            setMessage(`Saldo actualizado: ${balance} fichas virtuales.`, "success");
+            setMessage(`Saldo actualizado: ${balance}.`, "success");
         } catch (error) {
-            setMessage(error.message, "error");
+            const friendlyError = getFriendlyError(error);
+            setMessage(friendlyError, "error");
+            setInlineState(balanceStateNode, "No se pudo cargar saldo.", "error");
         }
     });
 
     refreshBalance().catch((error) => {
-        setMessage(error.message, "error");
+        const friendlyError = getFriendlyError(error);
+        setMessage(friendlyError, "error");
+        setInlineState(balanceStateNode, "No se pudo cargar saldo.", "error");
     });
     refreshHistory().catch((error) => {
-        setMessage(error.message, "error");
+        setMessage(getFriendlyError(error), "error");
     });
 })();

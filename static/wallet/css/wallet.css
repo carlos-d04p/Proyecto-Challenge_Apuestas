@@ -160,6 +160,39 @@ h2 {
     line-height: 1.45;
 }
 
+.wallet-loading-state,
+.wallet-operation-state,
+.wallet-empty-state {
+    margin: 10px 0 0;
+    color: var(--muted);
+    line-height: 1.45;
+}
+
+.wallet-loading-state.is-loading,
+.wallet-operation-state.is-loading {
+    color: #b8ecf6;
+}
+
+.wallet-loading-state.is-success,
+.wallet-operation-state.is-success {
+    color: #bbf7d0;
+}
+
+.wallet-loading-state.is-error,
+.wallet-operation-state.is-error {
+    color: #fecaca;
+}
+
+.wallet-empty-state {
+    display: inline-flex;
+    min-height: 34px;
+    align-items: center;
+    padding: 0 10px;
+    border: 1px solid rgba(157, 182, 203, 0.22);
+    border-radius: 8px;
+    background: rgba(157, 182, 203, 0.08);
+}
+
 .wallet-actions {
     margin-top: 18px;
 }
@@ -672,6 +705,10 @@ h2 {
 
 .wallet-message {
     color: var(--muted);
+}
+
+.wallet-message.is-loading {
+    color: #b8ecf6;
 }
 
 .wallet-message.is-success {
