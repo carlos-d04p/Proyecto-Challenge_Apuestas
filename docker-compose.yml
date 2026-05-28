@@ -3,15 +3,35 @@ version: '3.8'
 services:
   web:
     build: .
-    # El comando por defecto cuando levantemos el servidor
     command: python manage.py runserver 0.0.0.0:8003
     volumes:
-      - .:/app  # Sincroniza tu código local con el contenedor
+      - .:/app
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - EMAIL_HOST=mailpit
     ports:
       - "8003:8003"
     depends_on:
       - db
       - redis
+      - mailpit
+
+  celery:
+    build: .
+    command: celery -A config worker -l info
+    volumes:
+      - .:/app
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - EMAIL_HOST=mailpit
+    depends_on:
+      - redis
+      - db
+      - mailpit
 
   db:
     image: postgres:15
@@ -23,6 +43,13 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
 
   redis:
     image: redis:7-alpine

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -27,7 +27,7 @@ body {
   flex-direction: column;
 }
 
-/* ── NAVBAR ─────────────────────────────────────────────── */
+/* ÔöÇÔöÇ NAVBAR ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
 .navbar {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -63,7 +63,7 @@ body {
 
 .navbar nav a:hover { color: var(--text); }
 
-/* ── MAIN ────────────────────────────────────────────────── */
+/* ÔöÇÔöÇ MAIN ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
 main {
   flex: 1;
   max-width: 1200px;
@@ -72,7 +72,7 @@ main {
   padding: 2rem 1.5rem;
 }
 
-/* ── BADGES ──────────────────────────────────────────────── */
+/* ÔöÇÔöÇ BADGES ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -97,7 +97,7 @@ main {
   50%       { opacity: 0.3; }
 }
 
-/* ── FILTERS ──────────────────────────────────────────────── */
+/* ÔöÇÔöÇ FILTERS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
 .filters {
   display: flex;
   gap: 0.5rem;
@@ -123,7 +123,7 @@ main {
   color: #fff;
 }
 
-/* ── EVENT CARD ──────────────────────────────────────────── */
+/* ÔöÇÔöÇ EVENT CARD ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
 .event-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -174,7 +174,7 @@ main {
   margin-bottom: 1rem;
 }
 
-/* ── ODDS BUTTONS (en tarjeta) ───────────────────────────── */
+/* ÔöÇÔöÇ ODDS BUTTONS (en tarjeta) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
 .odds-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -217,7 +217,7 @@ main {
 
 .odds-btn:hover .sel-odds { color: #fff; }
 
-/* ── EVENT DETAIL ─────────────────────────────────────────── */
+/* ÔöÇÔöÇ EVENT DETAIL ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
 .event-hero {
   background: var(--card);
   border: 1px solid var(--border);
@@ -295,7 +295,7 @@ main {
 
 .selection-btn:hover .s-odds { color: #fff; }
 
-/* ── EMPTY STATE ─────────────────────────────────────────── */
+/* ÔöÇÔöÇ EMPTY STATE ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
 .empty {
   text-align: center;
   padding: 4rem 1rem;
@@ -304,7 +304,7 @@ main {
 
 .empty p { margin-top: 0.5rem; font-size: 0.9rem; }
 
-/* ── PAGE TITLE ──────────────────────────────────────────── */
+/* ÔöÇÔöÇ PAGE TITLE ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
 .page-title {
   font-size: 1.5rem;
   font-weight: 700;
@@ -324,7 +324,7 @@ main {
 
 .back-link:hover { color: var(--text); }
 
-/* ── FOOTER ──────────────────────────────────────────────── */
+/* ÔöÇÔöÇ FOOTER ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
 footer {
   background: var(--surface);
   border-top: 1px solid var(--border);
@@ -336,3 +336,140 @@ footer {
 }
 
 footer strong { color: var(--text-soft); }
+
+/* ── NAVBAR ACCOUNTS BUTTON ─────────────────────────────────────── */
+.btn-nav {
+  background: var(--primary) !important;
+  color: #fff !important;
+  padding: 0.4rem 1rem !important;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: background 0.2s !important;
+}
+.btn-nav:hover { background: var(--primary-h) !important; }
+
+/* ── AUTH PAGES ──────────────────────────────────────────────────── */
+.auth-container {
+  max-width: 480px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+.auth-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+}
+.auth-header { text-align: center; margin-bottom: 1.5rem; }
+.auth-header h1 { font-size: 1.6rem; font-weight: 800; }
+.auth-header p  { color: var(--text-soft); font-size: 0.9rem; margin-top: 0.3rem; }
+.auth-footer    { text-align: center; margin-top: 1.25rem; color: var(--text-soft); font-size: 0.88rem; }
+.auth-footer a  { color: var(--primary); text-decoration: none; }
+
+/* ── FORM ────────────────────────────────────────────────────────── */
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; font-size: 0.85rem; color: var(--text-soft); margin-bottom: 0.3rem; }
+.form-group input, .form-group select {
+  width: 100%; padding: 0.65rem 0.9rem;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+.form-group input:focus, .form-group select:focus {
+  outline: none; border-color: var(--primary);
+}
+.input-error { border-color: #ef4444 !important; }
+.field-error { color: #ef4444; font-size: 0.78rem; margin-top: 0.2rem; display: block; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.hint { color: var(--muted); font-size: 0.76rem; margin-top: 0.25rem; display: block; }
+.optional { color: var(--muted); font-size: 0.78rem; }
+
+/* ── TERMS ───────────────────────────────────────────────────────── */
+.terms-check { display: flex; gap: 0.6rem; align-items: flex-start; margin-bottom: 1.25rem; }
+.terms-check label { font-size: 0.82rem; color: var(--text-soft); line-height: 1.4; }
+
+/* ── BUTTONS ─────────────────────────────────────────────────────── */
+.btn-primary {
+  background: var(--primary); color: #fff;
+  border: none; border-radius: 8px; padding: 0.75rem 1.5rem;
+  font-size: 0.95rem; font-weight: 600; cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-primary:hover { background: var(--primary-h); transform: translateY(-1px); }
+.btn-secondary {
+  background: transparent; color: var(--text-soft);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 0.65rem 1.25rem; font-size: 0.9rem; font-weight: 500;
+  cursor: pointer; text-decoration: none; display: inline-block;
+  text-align: center; transition: border-color 0.2s, color 0.2s;
+}
+.btn-secondary:hover { border-color: var(--text-soft); color: var(--text); }
+.btn-danger {
+  background: #dc2626; color: #fff;
+  border: none; border-radius: 8px; padding: 0.65rem 1.25rem;
+  font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background 0.2s;
+}
+.btn-danger:hover { background: #b91c1c; }
+.btn-full { width: 100%; display: block; text-align: center; }
+
+/* ── ALERTS ──────────────────────────────────────────────────────── */
+.alert { padding: 0.85rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.88rem; }
+.alert-error   { background: rgba(239,68,68,0.12); border: 1px solid #ef4444; color: #fca5a5; }
+.alert-success { background: rgba(34,197,94,0.12); border: 1px solid #22c55e; color: #86efac; }
+.alert ul { margin-top: 0.4rem; margin-left: 1rem; }
+
+/* ── RESPONSIBLE BANNER ──────────────────────────────────────────── */
+.responsible-banner {
+  background: rgba(234,179,8,0.1); border: 1px solid #854d0e;
+  border-radius: 10px; padding: 0.75rem 1rem;
+  font-size: 0.82rem; color: var(--yellow); margin-bottom: 1.25rem;
+  line-height: 1.5;
+}
+.responsible-banner--top {
+  margin-bottom: 1.5rem; font-size: 0.85rem;
+}
+.responsible-banner a { color: var(--yellow); text-decoration: underline; }
+
+/* ── LEGAL NOTE ──────────────────────────────────────────────────── */
+.legal-note { text-align: center; color: var(--muted); font-size: 0.76rem; margin-top: 1rem; line-height: 1.5; }
+
+/* ── PERFIL GRID ─────────────────────────────────────────────────── */
+.perfil-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+}
+@media (max-width: 768px) { .perfil-grid { grid-template-columns: 1fr; } }
+
+.perfil-panel {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.5rem;
+}
+.panel-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; }
+.panel-desc { color: var(--text-soft); font-size: 0.85rem; margin-bottom: 1rem; line-height: 1.5; }
+
+/* ── INFO GRID ───────────────────────────────────────────────────── */
+.info-grid { display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 1.25rem; }
+.info-item { display: flex; justify-content: space-between; align-items: center; }
+.info-label { font-size: 0.82rem; color: var(--text-soft); }
+.info-value { font-size: 0.9rem; font-weight: 500; }
+
+/* ── KYC BADGES ─────────────────────────────────────────────────── */
+.badge-kyc { font-size: 0.8rem; padding: 0.25rem 0.7rem; border-radius: 999px; font-weight: 600; }
+.badge-pending       { background: rgba(59,130,246,0.12); border: 1px solid #3b82f6; color: #93c5fd; }
+.badge-verified      { background: rgba(34,197,94,0.12); border: 1px solid #22c55e; color: #86efac; }
+.badge-blocked       { background: rgba(239,68,68,0.12); border: 1px solid #ef4444; color: #fca5a5; }
+.badge-self_excluded { background: rgba(234,179,8,0.12); border: 1px solid #854d0e; color: var(--yellow); }
+
+/* ── KYC NOTICE ──────────────────────────────────────────────────── */
+.kyc-notice {
+  background: rgba(59,130,246,0.08); border: 1px solid #3b82f6;
+  border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem;
+  font-size: 0.85rem; color: #93c5fd;
+}
+
+/* ── AUTOEXCLUSIÓN ───────────────────────────────────────────────── */
+.autoexclusion-section {
+  margin-top: 1.5rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+.autoexclusion-section h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--yellow); }
+.limites-form { margin-bottom: 1rem; }
