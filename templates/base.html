@@ -1109,6 +1109,12 @@
             color: var(--accent-primary);
         }
     </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}FairBet Lab{% endblock %}</title>
+  <meta name="description" content="Simulador educativo de apuestas deportivas con moneda virtual. Ley 31557.">
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+  {% block extra_head %}{% endblock %}
 </head>
 <body>
 
@@ -1967,7 +1973,7 @@
       <a href="{% url 'markets:event_list' %}?status=LIVE">🔴 En Vivo</a>
       <a href="/api/markets/events/" target="_blank">API</a>
       {% if user.is_authenticated %}
-        <a href="{% url 'wallet-dashboard' %}">💰 Billetera</a>
+        <a href="{% url 'wallet-dashboard' %}" class="{% block wallet_nav_class %}{% endblock %}">💰 Billetera</a>
         <a href="{% url 'betting:mis_apuestas' %}">🎫 Mis Apuestas</a>
         <a href="{% url 'accounts_web:perfil' %}">👤 Mi Perfil</a>
         {% if user.is_staff %}
