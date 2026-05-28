@@ -40,10 +40,33 @@
       <div class="selections-grid">
         {% for sel in market.selections.all %}
           {% if sel.is_active %}
-            <div class="selection-btn">
-              <span class="s-name">{{ sel.name }}</span>
-              <span class="s-odds">{{ sel.odds }}</span>
-            </div>
+            <form method="POST" action="{% url 'betting:colocar_apuesta' %}" style="display: block; width: 100%;">
+              {% csrf_token %}
+              <input type="hidden" name="selection_id" value="{{ sel.id }}">
+              <input type="hidden" name="expected_odds" value="{{ sel.odds }}">
+              <input type="hidden" name="idempotency_key" value="{{ event.id }}-{{ sel.id }}-{{ user.id }}">
+              
+              <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 0.8rem; color: var(--text-soft);">{{ sel.name }}</span>
+                  <span style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds }}</span>
+                </div>
+                
+                {% if event.status == 'SCHEDULED' %}
+                  <div style="display: flex; gap: 0.25rem;">
+                    <input type="number" name="stake" step="1" min="1" value="10" required
+                           style="width: 60px; background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 0.2rem; border-radius: 4px; font-size: 0.8rem; text-align: center;">
+                    <button type="submit" class="filter-btn active" style="flex: 1; padding: 0.2rem; font-size: 0.75rem; border-radius: 4px; font-weight: 600;">
+                      Apostar
+                    </button>
+                  </div>
+                {% else %}
+                  <span style="font-size: 0.75rem; color: var(--muted); text-align: center; display: block; padding-top: 0.25rem;">
+                    Bloqueado (In-Play/Cerrado)
+                  </span>
+                {% endif %}
+              </div>
+            </form>
           {% endif %}
         {% endfor %}
       </div>

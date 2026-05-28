@@ -10,18 +10,12 @@ from apps.betting.services import place_simple_bet, cash_out_bet
 
 @login_required
 def mis_apuestas(request):
-    """
-    Listado del historial de apuestas del usuario autenticado.
-    """
     apuestas = Bet.objects.filter(user=request.user).prefetch_related("selections__selection__market__event")
     return render(request, "betting/mis_apuestas.html", {"apuestas": apuestas})
 
 @login_required
 @require_POST
 def colocar_apuesta(request):
-    """
-    Procesa el formulario de colocación de una apuesta simple.
-    """
     selection_id = request.POST.get("selection_id")
     stake_str = request.POST.get("stake", "0")
     expected_odds_str = request.POST.get("expected_odds", "0")
@@ -49,9 +43,6 @@ def colocar_apuesta(request):
 @login_required
 @require_POST
 def ejecutar_cashout(request, bet_id):
-    """
-    Procesa la solicitud de cierre anticipado (Cash-out) de un ticket activo.
-    """
     bet = get_object_or_404(Bet, id=bet_id, user=request.user)
     current_odds_str = request.POST.get("current_odds")
 
