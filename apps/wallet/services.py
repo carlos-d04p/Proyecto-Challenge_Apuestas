@@ -62,7 +62,7 @@ def deposit_simulated(user, amount, created_by, idempotency_key=None):
 
     # --- REGLA DE NEGOCIO: Límites de Depósito simulado ---
     if amount < Decimal("30.0000") or amount > Decimal("30000.0000"):
-        raise ValidationError("El depósito debe estar entre 30.0000 y 30,000.0000 fichas.")
+        raise ValidationError("El depósito debe estar entre 30 y 30,000 fichas.")
 
 
     payload = _build_payload(
@@ -124,7 +124,7 @@ def withdraw_simulated(user, amount, created_by, idempotency_key=None):
 
     # --- REGLAS DE NEGOCIO: Límites y KYC ---
     if amount < Decimal("100.0000"):
-        raise ValidationError("El retiro mínimo es de 100.0000 fichas.")
+        raise ValidationError("El retiro mínimo es de 100 fichas.")
     
     if not getattr(user, 'is_email_verified', False):
         raise PermissionError("Debes verificar tu cuenta (KYC) para poder realizar retiros.")
