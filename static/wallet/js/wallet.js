@@ -732,4 +732,8 @@
     refreshHistory().catch((error) => {
         setMessage(getFriendlyError(error), "error");
     });
+
+    if (window.location.hash === '#recarga' && openDepositButton) {
+        openDepositButton.click();
+    }
 })();
