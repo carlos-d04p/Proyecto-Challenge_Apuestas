@@ -4,6 +4,34 @@
 {% block title %}Registro — FairBet Lab{% endblock %}
 
 {% block content %}
+<style>
+  body {
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('{% static "img/Imagenlogin.webp" %}') no-repeat center center fixed !important;
+    background-size: cover !important;
+  }
+  .navbar, .site-footer, .rg-banner {
+    background: rgba(18, 18, 18, 0.4) !important;
+    backdrop-filter: blur(10px);
+    border-color: rgba(255, 255, 255, 0.05) !important;
+  }
+  .auth-container {
+    min-height: 80vh;
+    padding: 2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  .auth-card {
+    background: rgba(18, 18, 18, 0.85) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+</style>
 <div class="auth-container">
 
   <!-- Banner de consumo responsable -->
