@@ -30,7 +30,7 @@ def _validate_stake(stake, expected_odds):
         )
 
 
-def place_simple_bet(user, selection_id, stake, expected_odds, idempotency_key=None):
+def place_simple_bet(user, selection_id, stake, expected_odds, idempotency_key=None, use_bonus=False):
     # GUARD: correo no verificado
     if not getattr(user, 'is_email_verified', False):
         raise PermissionError(
@@ -96,12 +96,12 @@ def place_simple_bet(user, selection_id, stake, expected_odds, idempotency_key=N
         bet.save(update_fields=["status"])
         
         # Integración con Wallet
-        record_bet_placement(user, stake, bet.id)
+        record_bet_placement(user, stake, bet.id, use_bonus=use_bonus)
         
         return bet
 
 
-def place_acca_bet(user, selection_ids, stake, expected_odds, idempotency_key=None):
+def place_acca_bet(user, selection_ids, stake, expected_odds, idempotency_key=None, use_bonus=False):
     if idempotency_key:
         existing_bet = Bet.objects.filter(idempotency_key=idempotency_key).first()
         if existing_bet:
@@ -174,7 +174,7 @@ def place_acca_bet(user, selection_ids, stake, expected_odds, idempotency_key=No
         bet.save(update_fields=["status"])
         
         # Integración con Wallet
-        record_bet_placement(user, stake, bet.id)
+        record_bet_placement(user, stake, bet.id, use_bonus=use_bonus)
         
         return bet
 

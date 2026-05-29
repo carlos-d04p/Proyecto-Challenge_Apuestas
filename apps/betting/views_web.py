@@ -25,6 +25,7 @@ def colocar_apuesta(request):
     stake_str = request.POST.get("stake", "0")
     expected_odds_str = request.POST.get("expected_odds", "0")
     bet_type = request.POST.get("bet_type", "SINGLE")
+    use_bonus = request.POST.get("use_bonus") == "true"
     idempotency_key = str(uuid.uuid4())
 
     try:
@@ -46,6 +47,7 @@ def colocar_apuesta(request):
                 stake=stake,
                 expected_odds=expected_odds,
                 idempotency_key=idempotency_key,
+                use_bonus=use_bonus,
             )
             messages.success(request, "¡Apuesta combinada colocada con éxito!")
         else:
@@ -78,6 +80,7 @@ def colocar_apuesta(request):
                         stake=stake_val,
                         expected_odds=odds_val,
                         idempotency_key=f"{idempotency_key}_{i}",
+                        use_bonus=use_bonus,
                     )
                     success_count += 1
                 except ValidationError as e:

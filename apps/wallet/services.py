@@ -264,9 +264,10 @@ def internal_transfer(
         return transaction
 
 
-def record_bet_placement(user, amount, bet_id):
+def record_bet_placement(user, amount, bet_id, use_bonus=False):
     """
     Descuenta de USER_WALLET y/o BONUS y abona a PENDING_BETS.
+    Si use_bonus=True, prioriza el BONUS.
     """
     amount = normalize_money(amount)
     
@@ -276,11 +277,16 @@ def record_bet_placement(user, amount, bet_id):
         wallet_balance = get_account_balance(locked_user, LedgerAccount.USER_WALLET)
         bonus_balance = get_account_balance(locked_user, LedgerAccount.BONUS)
         
-        if wallet_balance + bonus_balance < amount:
-            raise ValueError("Saldo total insuficiente para realizar la apuesta.")
-            
-        from_wallet = min(amount, wallet_balance)
-        from_bonus = amount - from_wallet
+        if use_bonus:
+            if wallet_balance + bonus_balance < amount:
+                raise ValueError("Saldo total insuficiente para realizar la apuesta (incluyendo bonos).")
+            from_bonus = min(amount, bonus_balance)
+            from_wallet = amount - from_bonus
+        else:
+            if wallet_balance < amount:
+                raise ValueError("Saldo insuficiente en tu billetera principal (marca 'Usar bono' si deseas usarlo).")
+            from_wallet = amount
+            from_bonus = Decimal("0.0000")
         
         transaction = Transaction.objects.create(
             kind=TransactionKind.BET_PLACEMENT,

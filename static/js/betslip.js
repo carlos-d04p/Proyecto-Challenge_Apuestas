@@ -4,6 +4,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let betSlip = JSON.parse(localStorage.getItem('fairbet_betslip')) || [];
     let betSlipMode = localStorage.getItem('fairbet_mode') || 'SIMPLES';
+    let isBetslipMinimized = false;
+
+    window.toggleBetslip = function() {
+        isBetslipMinimized = !isBetslipMinimized;
+        renderBetSlip();
+    };
 
     window.addToBetSlip = function(id, name, odds, eventId, eventName, marketName = 'Mercado') {
         const existingSelectionIndex = betSlip.findIndex(item => item.id === id);
@@ -83,6 +89,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         betSlipContainer.style.display = 'block';
+
+        if (isBetslipMinimized) {
+            betSlipContainer.innerHTML = `
+                <div class="betslip-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 0;" onclick="toggleBetslip()">
+                    <h3 style="margin: 0; font-size: 1rem;">⚽ Boleto (${betSlip.length})</h3>
+                    <span style="color: var(--primary); font-size: 0.85rem; font-weight: 600;">🔼 Maximizar</span>
+                </div>
+            `;
+            return;
+        }
 
         const tabsHtml = `
             <div class="betslip-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
@@ -205,6 +221,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         <label>Monto a apostar (Fichas):</label>
                         <input type="number" id="betslip-stake" name="stake" min="10" step="0.01" value="10" required>
                     </div>
+
+                    <div style="margin: 0.75rem 0; display: flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 6px;">
+                        <input type="checkbox" id="use_bonus_checkbox" name="use_bonus" value="true" style="accent-color: var(--primary); cursor: pointer; width: 16px; height: 16px;">
+                        <label for="use_bonus_checkbox" style="cursor: pointer; font-size: 0.85rem; margin:0; user-select: none;">Usar saldo de bono para esta apuesta</label>
+                    </div>
                     
                     <div id="betslip-alert" class="betslip-alert" style="display: none;"></div>
                     
@@ -231,6 +252,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     <!-- Selection and stakes inputs are rendered inside the items -->
                     ${selectionsHtml}
+                    
+                    <div style="margin: 0.75rem 0; display: flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 6px;">
+                        <input type="checkbox" id="use_bonus_checkbox" name="use_bonus" value="true" style="accent-color: var(--primary); cursor: pointer; width: 16px; height: 16px;">
+                        <label for="use_bonus_checkbox" style="cursor: pointer; font-size: 0.85rem; margin:0; user-select: none;">Usar saldo de bono para esta apuesta</label>
+                    </div>
                     
                     <div id="betslip-alert" class="betslip-alert" style="display: none;"></div>
                     
@@ -260,7 +286,10 @@ document.addEventListener('DOMContentLoaded', () => {
         betSlipContainer.innerHTML = `
             <div class="betslip-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h3 style="margin: 0;">Boleto</h3>
-                <span class="badge ${betSlipMode === 'COMBINADA' ? 'placed' : 'pending'}">${betSlipMode}</span>
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <span class="badge ${betSlipMode === 'COMBINADA' ? 'placed' : 'pending'}">${betSlipMode}</span>
+                    <button type="button" onclick="toggleBetslip()" style="background: none; border: none; color: var(--text-soft); cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px;" title="Minimizar">🔽</button>
+                </div>
             </div>
             ${tabsHtml}
             <div class="betslip-body">
