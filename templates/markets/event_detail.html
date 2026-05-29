@@ -59,6 +59,13 @@
     background: var(--surface);
   }
   
+  a.selection-btn.locked {
+    cursor: pointer;
+  }
+  a.selection-btn.locked:hover {
+    opacity: 0.8;
+  }
+  
   /* Animación para el cambio de cuota */
   .flash-update {
     animation: flashColor 0.8s ease-out;
@@ -193,7 +200,15 @@
     {% for sel in market.sorted_selections %}
     {% if sel.is_active %}
     {% localize off %}
-    {% if event.status in 'SCHEDULED,LIVE' and user.is_email_verified %}
+    {% if not user.is_authenticated %}
+    <a href="{% url 'accounts_web:login' %}?next={{ request.path }}" class="selection-btn locked" title="Inicia sesión para apostar" style="text-decoration:none;">
+      <span style="font-size: 0.8rem; color: var(--text-soft);">{{ sel.name }}</span>
+      <span style="display:flex; align-items:center; gap:0.4rem;">
+        <span class="odds-value" style="font-size: 1.1rem; font-weight: 800; color: var(--primary);">{{ sel.odds|floatformat:'2u' }}</span>
+        <span style="font-size:0.9rem;">🔒</span>
+      </span>
+    </a>
+    {% elif event.status in 'SCHEDULED,LIVE' and user.is_email_verified %}
     <button type="button" class="selection-btn"
       data-market-id="{{ market.id }}" 
       onclick="addToBetSlip('{{ sel.id }}', '{{ sel.name|escapejs }}', '{{ sel.odds }}', '{{ event.id }}', '{{ event.name|escapejs }}', '{{ market.name|escapejs }}')">
