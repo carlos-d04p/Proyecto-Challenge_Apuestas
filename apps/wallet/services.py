@@ -266,41 +266,61 @@ def internal_transfer(
 
 def record_bet_placement(user, amount, bet_id):
     """
-    Descuenta de USER_WALLET y abona a PENDING_BETS.
+    Descuenta de USER_WALLET y/o BONUS y abona a PENDING_BETS.
     """
     amount = normalize_money(amount)
     
     with db_transaction.atomic():
         locked_user = _lock_users_in_order(user)[user.pk]
         
-        _ensure_sufficient_balance(
-            owner=locked_user,
-            account=LedgerAccount.USER_WALLET,
-            amount=amount,
-            message="Saldo insuficiente.",
-        )
+        wallet_balance = get_account_balance(locked_user, LedgerAccount.USER_WALLET)
+        bonus_balance = get_account_balance(locked_user, LedgerAccount.BONUS)
+        
+        if wallet_balance + bonus_balance < amount:
+            raise ValueError("Saldo total insuficiente para realizar la apuesta.")
+            
+        from_wallet = min(amount, wallet_balance)
+        from_bonus = amount - from_wallet
         
         transaction = Transaction.objects.create(
             kind=TransactionKind.BET_PLACEMENT,
             description=f"Bet placement for bet {bet_id}",
             created_by=locked_user,
         )
-        entries = [
-            _create_entry(
-                transaction=transaction,
-                account=LedgerAccount.USER_WALLET,
-                account_owner=locked_user,
-                direction=LedgerDirection.DEBIT,
-                amount=amount,
-            ),
+        
+        entries = []
+        if from_wallet > Decimal("0.0000"):
+            entries.append(
+                _create_entry(
+                    transaction=transaction,
+                    account=LedgerAccount.USER_WALLET,
+                    account_owner=locked_user,
+                    direction=LedgerDirection.DEBIT,
+                    amount=from_wallet,
+                )
+            )
+            
+        if from_bonus > Decimal("0.0000"):
+            entries.append(
+                _create_entry(
+                    transaction=transaction,
+                    account=LedgerAccount.BONUS,
+                    account_owner=locked_user,
+                    direction=LedgerDirection.DEBIT,
+                    amount=from_bonus,
+                )
+            )
+            
+        entries.append(
             _create_entry(
                 transaction=transaction,
                 account=LedgerAccount.PENDING_BETS,
                 account_owner=locked_user,
                 direction=LedgerDirection.CREDIT,
                 amount=amount,
-            ),
-        ]
+            )
+        )
+        
         _validate_transaction_is_balanced(entries)
         return transaction
 

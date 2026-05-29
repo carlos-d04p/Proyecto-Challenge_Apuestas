@@ -60,13 +60,17 @@ class WalletBalanceView(APIView):
     def get(self, request):
         balances = get_wallet_account_balances(request.user)
         available = balances["available"]
+        bonus = balances["bonus"]
         
-        # El saldo retirable es siempre el saldo disponible en USER_WALLET
+        # El saldo disponible para jugar es la suma del saldo real + bonos
+        total_balance = available + bonus
+        
+        # El saldo retirable es siempre el saldo disponible en USER_WALLET únicamente
         withdrawable = available
 
         return Response(
             {
-                "balance": format_money(available),
+                "balance": format_money(total_balance),
                 "withdrawable_balance": format_money(withdrawable),
                 "accounts": {
                     "USER_WALLET": format_money(available),
