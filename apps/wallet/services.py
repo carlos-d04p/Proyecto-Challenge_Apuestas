@@ -15,7 +15,7 @@ from apps.wallet.models import (
     TransactionKind,
     WalletIdempotencyRecord,
 )
-from apps.wallet.selectors import get_wallet_balance
+from apps.wallet.selectors import get_wallet_balance, get_account_balance
 from core.idempotency import IdempotencyConflict, build_request_hash
 from core.money import normalize_money
 
