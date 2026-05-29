@@ -15,7 +15,6 @@
             <h1 id="wallet-title">Billetera</h1>
             <p class="wallet-lead">Gestiona tus fichas educativas desde un panel claro y seguro.</p>
         </div>
-        <p class="wallet-disclaimer">Plataforma educativa con moneda virtual. No constituye una casa de apuestas.</p>
     </section>
 
     <section class="wallet-summary" aria-label="Resumen financiero">
@@ -25,7 +24,6 @@
                 <div class="wallet-balance" data-wallet-balance>0.00</div>
                 <p style="font-size: 0.85rem; color: var(--accent-soft); margin-top: 4px;">Saldo retirable: <span data-wallet-withdrawable>0.00</span></p>
                 <p class="wallet-loading-state" data-wallet-balance-state>Cargando saldo...</p>
-                <span class="wallet-account-code">Cuenta logica: USER_WALLET</span>
                 <p class="wallet-muted">Fichas educativas listas para usar</p>
             </div>
             <button class="wallet-icon-button" type="button" data-refresh-balance aria-label="Actualizar saldo">Actualizar</button>
@@ -34,14 +32,12 @@
         <article class="wallet-summary-card wallet-summary-pending">
             <span class="wallet-label">Fichas en apuestas pendientes</span>
             <strong class="wallet-account-value" data-wallet-pending>0.00</strong>
-            <span class="wallet-account-code">Cuenta logica: PENDING_BETS</span>
             <p class="wallet-muted">Fichas reservadas por jugadas aun no resueltas.</p>
         </article>
 
         <article class="wallet-summary-card wallet-summary-bonus">
             <span class="wallet-label">Bonos disponibles</span>
             <strong class="wallet-account-value" data-wallet-bonus>0.00</strong>
-            <span class="wallet-account-code">Cuenta logica: BONUS</span>
             <p class="wallet-muted">Beneficios virtuales separados del saldo principal.</p>
         </article>
     </section>
