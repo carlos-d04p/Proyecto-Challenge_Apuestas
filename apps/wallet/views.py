@@ -61,14 +61,8 @@ class WalletBalanceView(APIView):
         balances = get_wallet_account_balances(request.user)
         available = balances["available"]
         
-        from apps.wallet.models import UserBonus, UserBonusStatus
-        has_locked_bonus = UserBonus.objects.filter(
-            user=request.user,
-            status=UserBonusStatus.ACTIVE,
-            is_withdrawable=False,
-        ).exists()
-        
-        withdrawable = Decimal("0.0000") if has_locked_bonus else available
+        # El saldo retirable es siempre el saldo disponible en USER_WALLET
+        withdrawable = available
 
         return Response(
             {
